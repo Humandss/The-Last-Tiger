@@ -97,3 +97,10 @@ InitTestScene*.unity*
 
 # Auto-generated scenes by play mode tests
 /[Aa]ssets/[Ii]nit[Tt]est[Ss]cene*.unity*
+
+
+# whisper binaries + models
+Assets/StreamingAssets/Whisper/Model/
+Assets/StreamingAssets/Whisper/*.bin
+Assets/StreamingAssets/Whisper/*.exe
+Assets/StreamingAssets/Whisper/*.dll
