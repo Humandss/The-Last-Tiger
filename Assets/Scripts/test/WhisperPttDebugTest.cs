@@ -7,6 +7,9 @@ using UnityEngine;
 
 public class WhisperPttDebugTest : MonoBehaviour
 {
+
+    public CrewCommandDispatcher dispatcher;
+
     [Header("PTT")]
     public KeyCode pushToTalkKey = KeyCode.V;
     public int maxRecordSeconds = 6;
@@ -101,6 +104,8 @@ public class WhisperPttDebugTest : MonoBehaviour
 
         // 4) 로그 출력
         UnityEngine.Debug.Log($"[WhisperTest] 인식 결과: {result}");
+
+        dispatcher?.EnqueueFromStt(result);
     }
 
     async Task<string> RunWhisperAsync(string wavPath)
