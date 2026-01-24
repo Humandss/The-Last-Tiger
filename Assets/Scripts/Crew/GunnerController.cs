@@ -40,6 +40,7 @@ public class GunnerController : MonoBehaviour, ITankGunner
 
     private bool _aiming;
     private Vector3 _aimPoint;
+    private bool _aligning;
 
     void Update()
     {
@@ -82,8 +83,18 @@ public class GunnerController : MonoBehaviour, ITankGunner
         }
 
         // ===== 실행(조준 추적) =====
-       if (_aiming) AimAtWorldPoint(_aimPoint);
-   
+        if (_aligning)
+        {
+            if (AlignHullStep()) // 다 맞췄으면
+            {
+                _aligning = false;
+            }
+        }
+        else if (_aiming)
+        {
+            AimAtWorldPoint(_aimPoint);
+        }
+
     }
 
     public void Aim()
@@ -103,24 +114,40 @@ public class GunnerController : MonoBehaviour, ITankGunner
 
     public void AlignHull()
     {
-        StopAimRoutine();
+    
         _aiming = false;
         // yaw를 차체 정면으로, pitch는 기본값(0)로
-        var yaw = turretYaw.eulerAngles;
-        yaw.y = hull.eulerAngles.y;
-        turretYaw.eulerAngles = yaw;
-
-        var pitch = gunPitch.localEulerAngles;
-        pitch.x = 0f;
-        gunPitch.localEulerAngles = pitch;
+        _aligning = true;
 
         Debug.Log("[Gunner] Align Hull");
     }
+    private bool AlignHullStep()
+    {
+        // 목표 yaw = 차체 yaw
+        float targetYaw = hull.eulerAngles.y;
 
+        // 현재 turret yaw를 목표로 조금씩 이동
+        var y = turretYaw.eulerAngles;
+        y.y = Mathf.MoveTowardsAngle(y.y, targetYaw, yawSpeedDeg * Time.deltaTime);
+        turretYaw.eulerAngles = y;
+
+        // pitch는 0도로 조금씩 이동 (local)
+        float curPitch = NormalizeAngle(gunPitch.localEulerAngles.x);
+        float nextPitch = Mathf.MoveTowardsAngle(curPitch, 0f, pitchSpeedDeg * Time.deltaTime);
+        var p = gunPitch.localEulerAngles;
+        p.x = nextPitch;
+        gunPitch.localEulerAngles = p;
+
+        // 완료 판정(각도 차이 거의 없으면 종료)
+        bool yawDone = Mathf.Abs(Mathf.DeltaAngle(y.y, targetYaw)) < 0.5f;
+        bool pitchDone = Mathf.Abs(Mathf.DeltaAngle(nextPitch, 0f)) < 0.5f;
+
+        return yawDone && pitchDone;
+    }
     public void CeaseAction()
     {
-        StopAimRoutine();
         _aiming = false;
+        _aligning = false;
         Debug.Log("[Gunner] Cease Action");
     }
 
@@ -128,11 +155,6 @@ public class GunnerController : MonoBehaviour, ITankGunner
     {
         rangeMeters = Mathf.Clamp(meters, 5f, 2000f);
         Debug.Log($"[Gunner] Range = {rangeMeters:0}m");
-    }
-
-    private void StopAimRoutine()
-    {
-        if (_aimCo != null) { StopCoroutine(_aimCo); _aimCo = null; }
     }
 
     private void AimAtWorldPoint(Vector3 worldPoint)
