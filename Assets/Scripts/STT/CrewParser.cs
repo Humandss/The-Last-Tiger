@@ -6,7 +6,7 @@ using System.Text.RegularExpressions;
 public enum CrewRole { Driver, Gunner, Loader }
 public enum Cmd { 
     MoveForward, MoveBackward, Stop, TurnLeft, TurnRight, PivotLeft, PivotRight,
-    Fire, 
+    Fire, CeaseAction, AimAt, AlignHull, SetRange,
     LoadAP, LoadHE 
 }
 public enum Intensity
@@ -18,28 +18,33 @@ public enum Intensity
 // cmd 구조체
 public readonly struct ParsedCmd
 {
-    public readonly Cmd cmd;
-    public readonly Intensity intensity;
+    private readonly Cmd cmd;
+    private readonly Intensity intensity;
+    private readonly float? rangeMeters;
 
-    public ParsedCmd(Cmd cmd, Intensity intensity)
+    public ParsedCmd(Cmd cmd, Intensity intensity, float? rangeMeters = null)
     {
         this.cmd = cmd;
         this.intensity = intensity;
+        this.rangeMeters = rangeMeters;
     }
 
-    public override string ToString() => intensity == Intensity.Normal ? cmd.ToString() : $"{cmd}({intensity})";
+    public override string ToString()
+        => rangeMeters.HasValue
+            ? $"{cmd}({intensity}, {rangeMeters.Value:0}m)"
+            : $"{cmd}({intensity})";
 }
 
 public static class CrewParser
 {
-    static readonly (CrewRole role, string[] keys)[] RoleKeys =
+    private static readonly (CrewRole role, string[] keys)[] RoleKeys =
     {
         (CrewRole.Driver, new[] { "조", "조종수", "조종", "운전수", "드라이버" }),
         (CrewRole.Gunner, new[] { "포", "포수", "보수", "포스", "포주", "거너" }),
         (CrewRole.Loader, new[] { "장", "장전수", "장전", "로더" }),
     };
 
-    static Intensity ParseIntensity(string seg)
+    private static Intensity ParseIntensity(string seg)
     {
         if (ContainsAny(seg, LargeK)) return Intensity.Large;
         if (ContainsAny(seg, SmallK)) return Intensity.Small;
@@ -48,24 +53,28 @@ public static class CrewParser
 
 
     //드라이버 CMD
-    static readonly string[] Fwd = { "전진", "앞으로", "전방"};
-    static readonly string[] Back = { "후진", "뒤로", "후방", "백" };
-    static readonly string[] Stop = { "정지", "멈춰", "스톱", "서", "그만" };
-    static readonly string[] TurnL = { "좌회전", "왼쪽", "좌로" };
-    static readonly string[] TurnR = { "우회전", "오른쪽", "우로" };
-    static readonly string[] PivotL = { "제자리 좌회전", "제자리 왼쪽", "피벗 좌" };
-    static readonly string[] PivotR = { "제자리 우회전", "제자리 오른쪽", "피벗 우" };
+    private static readonly string[] Fwd = { "전진", "앞으로", "전방" };
+    private static readonly string[] Back = { "후진", "뒤로", "후방", "백" };
+    private static readonly string[] Stop = { "정지", "멈춰", "스톱", "서", "그만" };
+    private static readonly string[] TurnL = { "좌회전", "왼쪽", "좌로" };
+    private static readonly string[] TurnR = { "우회전", "오른쪽", "우로" };
+    private static readonly string[] PivotL = { "제자리 좌회전", "제자리 왼쪽", "피벗 좌", "좌로 돌아" };
+    private static readonly string[] PivotR = { "제자리 우회전", "제자리 오른쪽", "피벗 우", "우로 돌아" };
     // 강도
-    static readonly string[] SmallK = { "조금", "살짝", "약하게" , "천천히" };
-    static readonly string[] LargeK = { "크게", "많이", "강하게", "빠르게","빨리"};
+    private static readonly string[] SmallK = { "조금", "살짝", "약하게", "천천히" };
+    private static readonly string[] LargeK = { "크게", "많이", "강하게", "빠르게", "빨리" };
     // 기본값 Normal
-    static readonly string[] NormalK = { "보통", "적당히", "그대로", "유지" };
+    private static readonly string[] NormalK = { "보통", "적당히", "그대로", "유지" };
 
+    //거너 CMD
+    private static readonly string[] Fire = { "발사", "사격", "격발", "쏴", "쏴라" };
+    private static readonly string[] CeaseAction = { "취소", "조준 취소", "사격 취소", "중지", "사격 중지", "기달려", "기다려", "잠깐" };
+    private static readonly string[] AimKeys = { "조준", "조준해", "맞춰", "에임" };
+    private static readonly string[] AlignKeys = { "정렬", "원위치", "정면", "리셋" };
+    private static readonly string[] RangeKeys = { "거리", "사거리", "레인지" };
 
-    static readonly string[] Fire = { "발사", "사격", "격발", "쏴", "쏴라" };
-
-    static readonly string[] AP = { "철갑", "ap", "철갑탄" };
-    static readonly string[] HE = { "고폭", "he", "고폭탄" };
+    private static readonly string[] AP = { "철갑", "ap", "철갑탄" };
+    private static readonly string[] HE = { "고폭", "he", "고폭탄" };
 
     public static Dictionary<CrewRole, List<ParsedCmd>> Parse(string stt)
     {
@@ -106,7 +115,7 @@ public static class CrewParser
         return output;
     }
 
-    static string Normalize(string s)
+    private static string Normalize(string s)
     {
         s = s.Trim();
         s = s.Replace("!", " ").Replace(".", " ").Replace(",", " ").Replace("?", " ");
@@ -114,7 +123,7 @@ public static class CrewParser
         return s;
     }
 
-    static List<(int idx, int len, CrewRole role)> FindRoleMarks(string s)
+    private static List<(int idx, int len, CrewRole role)> FindRoleMarks(string s)
     {
         var marks = new List<(int idx, int len, CrewRole role)>();
 
@@ -143,15 +152,19 @@ public static class CrewParser
         return marks;
     }
 
-    static CrewRole InferRole(string s)
+    private static CrewRole InferRole(string s)
     {
         if (ContainsAny(s, Fwd) || ContainsAny(s, Back) || ContainsAny(s, Stop)) return CrewRole.Driver;
+
         if (ContainsAny(s, AP) || ContainsAny(s, HE) || s.Contains("장전")) return CrewRole.Loader;
-        if (ContainsAny(s, Fire)) return CrewRole.Gunner;
+
+        if (ContainsAny(s, Fire) || s.Contains("조준") || s.Contains("정렬") || s.Contains("거리") || s.Contains("사거리")) return CrewRole.Gunner;
+
         return CrewRole.Driver;
     }
 
-    static List<ParsedCmd> ParseCmds(CrewRole role, string seg)
+    //CMD 파싱
+    private static List<ParsedCmd> ParseCmds(CrewRole role, string seg)
     {
         var cmds = new List<ParsedCmd>();
 
@@ -180,11 +193,33 @@ public static class CrewParser
             if (ContainsAny(seg, Back))
                 cmds.Add(new ParsedCmd(Cmd.MoveBackward, intensity));
         }
+
         else if (role == CrewRole.Gunner)
         {
+            var r = TryParseRangeMeters(seg);
+            if (r.HasValue)
+                cmds.Add(new ParsedCmd(Cmd.SetRange, Intensity.Normal, r.Value));
+
+            // 행동 취소
+            if (ContainsAny(seg, CeaseAction))
+            {
+                cmds.Add(new ParsedCmd(Cmd.CeaseAction, Intensity.Normal));
+                return cmds;
+            }
+ 
+            // 정렬(/리셋)
+            if (ContainsAny(seg, AlignKeys))
+                cmds.Add(new ParsedCmd(Cmd.AlignHull, Intensity.Normal));
+
+            // 조준
+            if (ContainsAny(seg, AimKeys))
+                cmds.Add(new ParsedCmd(Cmd.AimAt, Intensity.Normal));
+
+            // 발사
             if (ContainsAny(seg, Fire))
                 cmds.Add(new ParsedCmd(Cmd.Fire, Intensity.Normal));
         }
+
         else if (role == CrewRole.Loader)
         {
             if (ContainsAny(seg, AP))
@@ -195,8 +230,24 @@ public static class CrewParser
 
         return cmds;
     }
+    private static float? TryParseRangeMeters(string seg)
+    {
+        // 예: "거리 500", "사거리 800m", "레인지 1,200"
+        var m = System.Text.RegularExpressions.Regex.Match(
+            seg,
+            @"(거리|사거리|레인지)\s*([0-9]{1,4}(?:,[0-9]{3})?)\s*(m|미터)?",
+            System.Text.RegularExpressions.RegexOptions.IgnoreCase
+        );
 
-    static bool ContainsAny(string s, IEnumerable<string> keys)
+        if (!m.Success) return null;
+
+        string num = m.Groups[2].Value.Replace(",", "");
+        if (float.TryParse(num, out float v))
+            return v;
+
+        return null;
+    }
+    private static bool ContainsAny(string s, IEnumerable<string> keys)
     {
         foreach (var k in keys)
             if (s.Contains(k)) return true;

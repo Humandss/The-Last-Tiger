@@ -24,10 +24,13 @@ public class CrewCommandDispatcher : MonoBehaviour
 
     void Update()
     {
-        // MVP: 프레임마다 하나씩 처리
+        // 프레임마다 하나씩 처리
         if (driverQ.Count > 0) ExecuteDriver(driverQ.Dequeue());
         if (loaderQ.Count > 0) ExecuteLoader(loaderQ.Dequeue());
         if (gunnerQ.Count > 0) ExecuteGunner(gunnerQ.Dequeue());
+
+
+        
     }
 
     Queue<ParsedCmd> GetQueue(CrewRole role) => role switch
@@ -40,7 +43,7 @@ public class CrewCommandDispatcher : MonoBehaviour
 
     void ExecuteDriver(ParsedCmd c)
     {
-        Debug.Log($"[EXEC][조종수] {c},{c.intensity}");
+        Debug.Log($"[EXEC][조종수] {c},{c.ToString()}");
         // TODO: 나중에 motor.MoveForward() 같은 실제 호출로 바꾸면 됨
     }
 
