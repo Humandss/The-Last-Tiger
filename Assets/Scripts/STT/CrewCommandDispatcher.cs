@@ -7,6 +7,15 @@ public class CrewCommandDispatcher : MonoBehaviour
     private readonly Queue<ParsedCmd> gunnerQ = new();
     private readonly Queue<ParsedCmd> loaderQ = new();
 
+
+    [SerializeField] private GunnerController gunner;
+    [SerializeField] private LoaderController loader;
+
+
+    private void Awake()
+    {
+        if (loader == null) { Debug.LogError("[Loader] reference is NULL"); return; }
+    }
     public void EnqueueFromStt(string stt)
     {
         var map = CrewParser.Parse(stt);
@@ -28,9 +37,7 @@ public class CrewCommandDispatcher : MonoBehaviour
         if (driverQ.Count > 0) ExecuteDriver(driverQ.Dequeue());
         if (loaderQ.Count > 0) ExecuteLoader(loaderQ.Dequeue());
         if (gunnerQ.Count > 0) ExecuteGunner(gunnerQ.Dequeue());
-
-
-        
+    
     }
 
     Queue<ParsedCmd> GetQueue(CrewRole role) => role switch
@@ -50,7 +57,25 @@ public class CrewCommandDispatcher : MonoBehaviour
     void ExecuteLoader(ParsedCmd c)
     {
         Debug.Log($"[EXEC][장전수] {c}");
-        // TODO: loader.LoadAP(), loader.LoadHE()
+
+        switch (c.GetCmd)
+        {
+            case Cmd.LoadDefault:
+                loader.LoadDefault();
+                break;
+
+            case Cmd.LoadAP:
+                loader.Load(AmmoType.AP);
+                break;
+
+            case Cmd.LoadHE:
+                loader.Load(AmmoType.HE);
+                break;
+
+            default:
+                Debug.Log($"[Loader] 처리 안 함: {c.GetCmd}");
+                break;
+        }
     }
 
     void ExecuteGunner(ParsedCmd c)

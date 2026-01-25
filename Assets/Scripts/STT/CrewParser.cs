@@ -6,8 +6,8 @@ using System.Text.RegularExpressions;
 public enum CrewRole { Driver, Gunner, Loader }
 public enum Cmd { 
     MoveForward, MoveBackward, Stop, TurnLeft, TurnRight, PivotLeft, PivotRight,
-    Fire, CeaseAction, AimAt, AlignHull, SetRange,
-    LoadAP, LoadHE 
+    Fire, CeaseAction, AimAt, AlignHull, SetRange, TrackTarget,
+    LoadAP, LoadHE, LoadDefault
 }
 public enum Intensity
 {
@@ -33,6 +33,8 @@ public readonly struct ParsedCmd
         => rangeMeters.HasValue
             ? $"{cmd}({intensity}, {rangeMeters.Value:0}m)"
             : $"{cmd}({intensity})";
+
+    public Cmd GetCmd { get { return cmd; } }
 }
 
 public static class CrewParser
@@ -41,7 +43,7 @@ public static class CrewParser
     {
         (CrewRole.Driver, new[] { "조", "조종수", "조종", "운전수", "드라이버" }),
         (CrewRole.Gunner, new[] { "포", "포수", "보수", "포스", "포주", "거너" }),
-        (CrewRole.Loader, new[] { "장", "장전수", "장전", "로더" }),
+        (CrewRole.Loader, new[] { "장전수", "로더" }),
     };
 
     private static Intensity ParseIntensity(string seg)
@@ -72,9 +74,11 @@ public static class CrewParser
     private static readonly string[] AimKeys = { "조준", "조준해", "맞춰", "에임" };
     private static readonly string[] AlignKeys = { "정렬", "원위치", "정면", "리셋" };
     private static readonly string[] RangeKeys = { "거리", "사거리", "레인지" };
+    private static readonly string[] TrackKeys = { "추적","락온", "록온", "따라가"};
 
-    private static readonly string[] AP = { "철갑", "ap", "철갑탄" };
+    private static readonly string[] AP = { "철갑", "ap", "철갑탄", "철갑단", "척합단" };
     private static readonly string[] HE = { "고폭", "he", "고폭탄" };
+    private static readonly string[] LoadDefalut = { "장전", "장전해", "리로드", "준비", "계속" };
 
     public static Dictionary<CrewRole, List<ParsedCmd>> Parse(string stt)
     {
@@ -214,6 +218,10 @@ public static class CrewParser
             // 조준
             if (ContainsAny(seg, AimKeys))
                 cmds.Add(new ParsedCmd(Cmd.AimAt, Intensity.Normal));
+            
+            //트래킹
+            if (ContainsAny(seg, TrackKeys))
+                cmds.Add(new ParsedCmd(Cmd.TrackTarget, Intensity.Normal));
 
             // 발사
             if (ContainsAny(seg, Fire))
@@ -226,6 +234,8 @@ public static class CrewParser
                 cmds.Add(new ParsedCmd(Cmd.LoadAP, Intensity.Normal));
             if (ContainsAny(seg, HE))
                 cmds.Add(new ParsedCmd(Cmd.LoadHE, Intensity.Normal));
+            if (ContainsAny(seg, LoadDefalut))
+                cmds.Add(new ParsedCmd(Cmd.LoadDefault, Intensity.Normal));
         }
 
         return cmds;

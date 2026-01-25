@@ -17,30 +17,27 @@ public interface ITankGunner
 public class GunnerController : MonoBehaviour, ITankGunner
 {
     [Header("Refs")]
-
     [SerializeField] private Camera commanderCam;
     [SerializeField] private Transform hull;
     [SerializeField] private Transform turretYaw;
     [SerializeField] private Transform gunPitch;
 
     [Header("Aim")]
+    private Vector3? targetPoint;
     private LayerMask aimMask = ~0;
     private float maxAimDistance = 8000f;
     private float rangeMeters = 800f;
+    private bool isAiming;
+    private Vector3 aimPoint;
+    private bool isAligning;
+
 
     [SerializeField] private float yawSpeedDeg = 120f;
     [SerializeField] private float pitchSpeedDeg = 90f;
     [SerializeField] private Vector2 pitchLimits = new Vector2(-10f, 20f);
 
-    public Vector3? LastPoint { get; private set; }
-    [Header("Optional Marker")]
-    public Transform marker;
-    Coroutine _aimCo;
+   
 
-
-    private bool _aiming;
-    private Vector3 _aimPoint;
-    private bool _aligning;
 
     void Update()
     {
@@ -49,7 +46,7 @@ public class GunnerController : MonoBehaviour, ITankGunner
             var ray = commanderCam.ScreenPointToRay(Input.mousePosition);
             if (Physics.Raycast(ray, out var hit, maxAimDistance, aimMask, QueryTriggerInteraction.Ignore))
             {
-                LastPoint = hit.point;
+                targetPoint = hit.point;
                 Debug.Log($"[Designator] point = {hit.point}");
 
             }
@@ -79,51 +76,46 @@ public class GunnerController : MonoBehaviour, ITankGunner
         }
         if (Input.GetKeyDown(KeyCode.R))
         {
-            Debug.Log($"[GunnerDebug] Range = {rangeMeters:0}m");
+            SetRange(rangeMeters);
         }
 
         // ===== 실행(조준 추적) =====
-        if (_aligning)
+        if (isAligning)
         {
-            if (AlignHullStep()) // 다 맞췄으면
-            {
-                _aligning = false;
-            }
+            if (AlignHullStep())isAligning = false;
+      
         }
-        else if (_aiming)
-        {
-            AimAtWorldPoint(_aimPoint);
-        }
+        else if (isAiming) AimAtWorldPoint(aimPoint);
 
     }
 
     public void Aim()
     {
-        if (LastPoint.HasValue)
+        if (targetPoint.HasValue)
         {
-            _aiming = true;
-            _aimPoint = LastPoint.Value;
+            isAiming = true;
+            aimPoint = targetPoint.Value;
         }
         else
         {
             Debug.LogWarning("[Gunner] 저장된 지점이 없어. 먼저 클릭으로 지점 지정해줘.");
             return;
         }
-        Debug.Log($"[Gunner] Aim -> {LastPoint}");
+        Debug.Log($"[Gunner] Aim -> {targetPoint}");
     }
 
     public void AlignHull()
     {
-    
-        _aiming = false;
+
+        isAiming = false;
         // yaw를 차체 정면으로, pitch는 기본값(0)로
-        _aligning = true;
+        isAligning = true;
 
         Debug.Log("[Gunner] Align Hull");
     }
     private bool AlignHullStep()
     {
-        // 목표 yaw = 차체 yaw
+        //차체 yaw
         float targetYaw = hull.eulerAngles.y;
 
         // 현재 turret yaw를 목표로 조금씩 이동
@@ -146,8 +138,8 @@ public class GunnerController : MonoBehaviour, ITankGunner
     }
     public void CeaseAction()
     {
-        _aiming = false;
-        _aligning = false;
+        isAiming = false;
+        isAligning = false;
         Debug.Log("[Gunner] Cease Action");
     }
 
