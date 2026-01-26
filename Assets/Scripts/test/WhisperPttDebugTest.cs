@@ -15,11 +15,9 @@ public class WhisperPttDebugTest : MonoBehaviour
     public int maxRecordSeconds = 6;
 
     [Header("Audio")]
-    [Tooltip("녹음 샘플레이트(저장은 16kHz로 변환됨)")]
     public int recordSampleRate = 44100;
 
     [Header("Whisper Options")]
-    [Tooltip("스레드 수 (CPU 코어 많으면 8~12 추천)")]
     public int threads = 8;
 
     private string _micDevice;

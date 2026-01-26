@@ -35,14 +35,16 @@ public readonly struct ParsedCmd
             : $"{cmd}({intensity})";
 
     public Cmd GetCmd { get { return cmd; } }
+
+    public float? GetRangeMeters { get { return rangeMeters; } }
 }
 
 public static class CrewParser
 {
     private static readonly (CrewRole role, string[] keys)[] RoleKeys =
     {
-        (CrewRole.Driver, new[] { "조", "조종수", "조종", "운전수", "드라이버" }),
-        (CrewRole.Gunner, new[] { "포", "포수", "보수", "포스", "포주", "거너" }),
+        (CrewRole.Driver, new[] { "조종수", "조종", "운전수", "드라이버" }),
+        (CrewRole.Gunner, new[] { "포수", "보수", "포스", "포주", "거너" }),
         (CrewRole.Loader, new[] { "장전수", "로더" }),
     };
 
@@ -69,13 +71,14 @@ public static class CrewParser
     private static readonly string[] NormalK = { "보통", "적당히", "그대로", "유지" };
 
     //거너 CMD
-    private static readonly string[] Fire = { "발사", "사격", "격발", "쏴", "쏴라" };
+    private static readonly string[] Fire = { "발사", "사격", "격발", "쏴", "쏴라", "벌써" };
     private static readonly string[] CeaseAction = { "취소", "조준 취소", "사격 취소", "중지", "사격 중지", "기달려", "기다려", "잠깐" };
     private static readonly string[] AimKeys = { "조준", "조준해", "맞춰", "에임" };
     private static readonly string[] AlignKeys = { "정렬", "원위치", "정면", "리셋" };
     private static readonly string[] RangeKeys = { "거리", "사거리", "레인지" };
     private static readonly string[] TrackKeys = { "추적","락온", "록온", "따라가"};
 
+    //로더 CMD
     private static readonly string[] AP = { "철갑", "ap", "철갑탄", "철갑단", "척합단" };
     private static readonly string[] HE = { "고폭", "he", "고폭탄" };
     private static readonly string[] LoadDefalut = { "장전", "장전해", "리로드", "준비", "계속" };
@@ -160,9 +163,9 @@ public static class CrewParser
     {
         if (ContainsAny(s, Fwd) || ContainsAny(s, Back) || ContainsAny(s, Stop)) return CrewRole.Driver;
 
-        if (ContainsAny(s, AP) || ContainsAny(s, HE) || s.Contains("장전")) return CrewRole.Loader;
+        if (ContainsAny(s, AP) || ContainsAny(s, HE) || ContainsAny(s, LoadDefalut)) return CrewRole.Loader;
 
-        if (ContainsAny(s, Fire) || s.Contains("조준") || s.Contains("정렬") || s.Contains("거리") || s.Contains("사거리")) return CrewRole.Gunner;
+        if (ContainsAny(s, Fire) || ContainsAny(s, AimKeys) || ContainsAny(s, AlignKeys) || ContainsAny(s, RangeKeys)) return CrewRole.Gunner;
 
         return CrewRole.Driver;
     }
@@ -230,12 +233,32 @@ public static class CrewParser
 
         else if (role == CrewRole.Loader)
         {
-            if (ContainsAny(seg, AP))
+            bool hasAP = ContainsAny(seg, AP);
+            bool hasHE = ContainsAny(seg, HE);
+
+            if (hasAP && hasHE)
+            {
                 cmds.Add(new ParsedCmd(Cmd.LoadAP, Intensity.Normal));
-            if (ContainsAny(seg, HE))
+                return cmds;
+            }
+            // EX: 철갑탄 장전해 -> 철갑탄 우선 할당
+            if (hasAP)
+            {
+                cmds.Add(new ParsedCmd(Cmd.LoadAP, Intensity.Normal));
+                return cmds;
+            }
+
+            if (hasHE)
+            {
                 cmds.Add(new ParsedCmd(Cmd.LoadHE, Intensity.Normal));
+                return cmds;
+            }
+
+            // 3) 탄종이 없고 “장전”류만 있으면 기본 장전
             if (ContainsAny(seg, LoadDefalut))
+            {
                 cmds.Add(new ParsedCmd(Cmd.LoadDefault, Intensity.Normal));
+            }
         }
 
         return cmds;

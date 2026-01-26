@@ -9,9 +9,9 @@ public interface ITankLoader
 {
     void LoadDefault();
     void Load(AmmoType type);
-    bool GetIsReloading();
-    bool GetIsReloaded();
-
+    bool GetIsLoading();
+    bool GetIsLoaded();
+    void IsShot();
 }
 public class LoaderController : MonoBehaviour, ITankLoader
 {
@@ -32,6 +32,8 @@ public class LoaderController : MonoBehaviour, ITankLoader
     void Awake()
     {
         LastSelectedAmmo = defaultAmmo;
+        isLoaded = false;
+        isLoading = false;
     }
 
     public void LoadDefault()
@@ -41,9 +43,9 @@ public class LoaderController : MonoBehaviour, ITankLoader
 
     public void Load(AmmoType type)
     {
-        LastSelectedAmmo = type;
-
         if (type == AmmoType.None) return;
+
+        LastSelectedAmmo = type;
 
         if (isLoaded)
         {
@@ -53,7 +55,6 @@ public class LoaderController : MonoBehaviour, ITankLoader
      
         // 장전 중이면 취소 후 재시작
         CeaseAction();
-
         isLoaded = false;
         co = StartCoroutine(LoadRoutine(type));
     }
@@ -67,11 +68,8 @@ public class LoaderController : MonoBehaviour, ITankLoader
         }
 
         isLoading = false;
-        loading01 = 0f;
+        loading01 = 0.0f;
 
-        // 장전 완료 탄까지 날릴지(취소 시 탄 제거) 정책 선택:
-        // 보통 '장전 취소'는 진행 중만 취소하고, 이미 장전된 탄은 유지해도 됨.
-        // 여기선 "진행 중 취소"만 의미로 두자.
         Debug.Log("[Loader] CeaseAction (장전 취소)");
     }
 
@@ -80,10 +78,10 @@ public class LoaderController : MonoBehaviour, ITankLoader
         isLoading = true;
         isLoaded = false;
 
-        loading01 = 0f;
+        loading01 = 0.0f;
 
-        float t = 0f;
-        float dur = reloadTime;
+        float t = 0.0f;
+        float dur = reloadTime * timeMul;
 
         Debug.Log($"[Loader] {type} 장전 시작 ({dur:0.0}s)");
 
@@ -95,7 +93,7 @@ public class LoaderController : MonoBehaviour, ITankLoader
         }
 
         isLoading = false;
-        loading01 = 1f;
+        loading01 = 1.0f;
         shellType = type;
         isLoaded = true;
 
@@ -103,13 +101,16 @@ public class LoaderController : MonoBehaviour, ITankLoader
         co = null;
     }
 
-    public bool GetIsReloading()
+    public bool GetIsLoading()
     {
         return isLoading;
     }
-    public bool GetIsReloaded()
+    public bool GetIsLoaded()
     {
         return isLoaded;
     }
-
+    public void IsShot()
+    {
+        isLoaded = false;
+    }
  }

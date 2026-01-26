@@ -21,11 +21,13 @@ public class GunnerController : MonoBehaviour, ITankGunner
     [SerializeField] private Transform hull;
     [SerializeField] private Transform turretYaw;
     [SerializeField] private Transform gunPitch;
+    private LoaderController loader;
+    private ITankLoader loaderFunc;
 
     [Header("Aim")]
     private Vector3? targetPoint;
     private LayerMask aimMask = ~0;
-    private float maxAimDistance = 8000f;
+    private float maxAimDistance = 5000f;
     private float rangeMeters = 800f;
     private bool isAiming;
     private Vector3 aimPoint;
@@ -36,10 +38,15 @@ public class GunnerController : MonoBehaviour, ITankGunner
     [SerializeField] private float pitchSpeedDeg = 90f;
     [SerializeField] private Vector2 pitchLimits = new Vector2(-10f, 20f);
 
-   
 
+    private void Awake()
+    {
+        loader = GetComponent<LoaderController>();
 
-    void Update()
+        loaderFunc = loader as ITankLoader;
+    }
+
+    private void Update()
     {
         if (Input.GetMouseButtonDown(0))
         {
@@ -101,17 +108,15 @@ public class GunnerController : MonoBehaviour, ITankGunner
             Debug.LogWarning("[Gunner] 저장된 지점이 없어. 먼저 클릭으로 지점 지정해줘.");
             return;
         }
-        Debug.Log($"[Gunner] Aim -> {targetPoint}");
+        Debug.Log($"[Gunner] 에임 포인트 -> {targetPoint}");
     }
 
     public void AlignHull()
     {
-
         isAiming = false;
-        // yaw를 차체 정면으로, pitch는 기본값(0)로
         isAligning = true;
 
-        Debug.Log("[Gunner] Align Hull");
+        Debug.Log("[Gunner] 포신 정렬!");
     }
     private bool AlignHullStep()
     {
@@ -140,13 +145,18 @@ public class GunnerController : MonoBehaviour, ITankGunner
     {
         isAiming = false;
         isAligning = false;
-        Debug.Log("[Gunner] Cease Action");
+        Debug.Log("[Gunner] 행동 취소!");
     }
 
     public void SetRange(float meters)
     {
-        rangeMeters = Mathf.Clamp(meters, 5f, 2000f);
-        Debug.Log($"[Gunner] Range = {rangeMeters:0}m");
+        if(meters > maxAimDistance)
+        {
+            Debug.Log($"[Gunner] 사거리 한도 초과! 최대 사거리{maxAimDistance}에 맞춥니다.");
+            meters = maxAimDistance;
+        }
+        rangeMeters = Mathf.Clamp(meters, 5f, maxAimDistance);
+        Debug.Log($"[Gunner] 사거리 = {rangeMeters:0}m");
     }
 
     private void AimAtWorldPoint(Vector3 worldPoint)
@@ -174,8 +184,16 @@ public class GunnerController : MonoBehaviour, ITankGunner
     }
     public void Fire()
     {
-        Debug.Log("[Gunner] Fire");
-        // TODO: weapon.Fire();
+        if (!loaderFunc.GetIsLoaded() || loaderFunc.GetIsLoading())
+        {
+            Debug.Log("[Gunner] 장전이 되지 않았습니다! 사격 불가");
+            return;
+        }
+
+        Debug.Log("[Gunner] 발사!");
+
+        loaderFunc.IsShot();
+        loaderFunc.LoadDefault();
     }
     private static float NormalizeAngle(float a)
     {
