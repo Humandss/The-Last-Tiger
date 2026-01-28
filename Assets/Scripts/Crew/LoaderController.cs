@@ -36,6 +36,10 @@ public class LoaderController : MonoBehaviour, ITankLoader
         isLoading = false;
     }
 
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Alpha3)) Load(LastSelectedAmmo);
+    }
     public void LoadDefault()
     {
         Load(LastSelectedAmmo);

@@ -534,7 +534,7 @@ PrefabInstance:
     - target: {fileID: 6915712528612896390, guid: 2ebf979aaaeff1a45966f55f233733e7,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: 2.19
+      value: -5.1
       objectReference: {fileID: 0}
     - target: {fileID: 6915712528612896390, guid: 2ebf979aaaeff1a45966f55f233733e7,
         type: 3}
@@ -544,7 +544,7 @@ PrefabInstance:
     - target: {fileID: 6915712528612896390, guid: 2ebf979aaaeff1a45966f55f233733e7,
         type: 3}
       propertyPath: m_LocalPosition.z
-      value: 39.53
+      value: 222.8
       objectReference: {fileID: 0}
     - target: {fileID: 6915712528612896390, guid: 2ebf979aaaeff1a45966f55f233733e7,
         type: 3}
@@ -682,6 +682,7 @@ GameObject:
   - component: {fileID: 1644377949}
   - component: {fileID: 1644377948}
   - component: {fileID: 1644377950}
+  - component: {fileID: 1644377951}
   m_Layer: 0
   m_Name: Panzer_VI_E
   m_TagString: Untagged
@@ -739,6 +740,21 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   timeMul: 1
   defaultAmmo: 1
+--- !u!114 &1644377951
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1644377947}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 04ea10cbbf9dae542988c6d90c560164, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  muzzle: {fileID: 1544385120109349211}
+  projectile: {fileID: 7643823996785504197, guid: 253c318ce14ccf84dabc7e96fbe85195,
+    type: 3}
 --- !u!1 &1752999798
 GameObject:
   m_ObjectHideFlags: 0

@@ -22,6 +22,7 @@ public class GunnerController : MonoBehaviour, ITankGunner
     [SerializeField] private Transform turretYaw;
     [SerializeField] private Transform gunPitch;
     private LoaderController loader;
+    private CannonFireController fireController;
     private ITankLoader loaderFunc;
 
     [Header("Aim")]
@@ -42,6 +43,8 @@ public class GunnerController : MonoBehaviour, ITankGunner
     private void Awake()
     {
         loader = GetComponent<LoaderController>();
+        fireController = GetComponent<CannonFireController>();
+
 
         loaderFunc = loader as ITankLoader;
     }
@@ -67,24 +70,9 @@ public class GunnerController : MonoBehaviour, ITankGunner
         if (Input.GetKeyDown(KeyCode.Alpha1)) Aim();
         
 
-        if (Input.GetKeyDown(KeyCode.Alpha2)) AlignHull();
+        if (Input.GetKeyDown(KeyCode.Alpha2)) Fire();
   
-        if (Input.GetKeyDown(KeyCode.Alpha3)) CeaseAction();
-     
-        if (Input.GetKeyDown(KeyCode.LeftBracket))
-        {
-            rangeMeters = Mathf.Max(5f, rangeMeters - 50f);
-            Debug.Log($"[GunnerDebug] Range = {rangeMeters:0}m");
-        }
-        if (Input.GetKeyDown(KeyCode.RightBracket))
-        {
-            rangeMeters = Mathf.Min(2000f, rangeMeters + 50f);
-            Debug.Log($"[GunnerDebug] Range = {rangeMeters:0}m");
-        }
-        if (Input.GetKeyDown(KeyCode.R))
-        {
-            SetRange(rangeMeters);
-        }
+
 
         // ===== 실행(조준 추적) =====
         if (isAligning)
@@ -191,6 +179,7 @@ public class GunnerController : MonoBehaviour, ITankGunner
         }
 
         Debug.Log("[Gunner] 발사!");
+        fireController.FireProjectile();
 
         loaderFunc.IsShot();
         loaderFunc.LoadDefault();
