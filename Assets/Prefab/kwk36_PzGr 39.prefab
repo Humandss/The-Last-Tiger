@@ -220,6 +220,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   shell: {fileID: 11400000, guid: d2ccdf09c3c88a549873825eae6c04fe, type: 2}
+  hitMeshMask:
+    serializedVersion: 2
+    m_Bits: 128
+  armorZoneMask:
+    serializedVersion: 2
+    m_Bits: 64
+  zoneSearchRadius: 0.35
+  minCosForArmor: 0.05
   trail: {fileID: 878920183239464695}
   tracerLight: {fileID: 7709520345625933040}
   igniteDelay: 0.01

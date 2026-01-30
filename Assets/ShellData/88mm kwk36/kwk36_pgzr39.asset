@@ -16,9 +16,14 @@ MonoBehaviour:
   caliber: 88
   projectileMass: 10.2
   muzzleVelocity: 773
+  penVelocityExponent: 1.7
+  minPenScale: 0.25
   dragCoeff: 0.3
   refAreaScale: 1
   penetrationPower: 165
   fuzeDealy: 1.2
   fuzeSensitivity: 14
+  baseRicochetAngleDeg: 73
+  afterRicochetEnergyPercent: 0.62
+  randomRicochetAngle: 0.28
   lifeTime: 15
