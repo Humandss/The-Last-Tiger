@@ -220,14 +220,28 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   shell: {fileID: 11400000, guid: d2ccdf09c3c88a549873825eae6c04fe, type: 2}
+  worldMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
   hitMeshMask:
     serializedVersion: 2
     m_Bits: 128
   armorZoneMask:
     serializedVersion: 2
     m_Bits: 64
+  groundMask:
+    serializedVersion: 2
+    m_Bits: 256
+  penetrationSpeedLoss: 0.25
+  minSpeedAfterPen: 30
+  maxPenetrations: 5
   zoneSearchRadius: 0.35
   minCosForArmor: 0.05
+  maxDist: 20
+  probeDist: 0.4
+  penCostPerMeter: 80
+  speedLossPerCost: 0.002
+  minThicknessM: 0.01
   trail: {fileID: 878920183239464695}
   tracerLight: {fileID: 7709520345625933040}
   igniteDelay: 0.01

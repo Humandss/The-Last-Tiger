@@ -18,17 +18,11 @@ public class ArmorManager : MonoBehaviour
     [Tooltip("기본 장갑 두께(mm)")]
     public float armorMm = 45f;
 
-    [Tooltip("곡면/구조/겹장 같은 보정(mm). 포방패 등에 +로 주면 '두꺼운 맛'이 남")]
-    public float shapeBonusMm = 0f;
-
     [Header("Material")]
     public ArmorMaterial material = ArmorMaterial.RHA;
 
-    [Tooltip("재질 보정(곱). 예: 주강은 약간 약하게 0.95 같은 느낌. 기본 1.0")]
-    public float materialFactor = 1.0f;
-
     [Header("Ricochet")]
-    [Tooltip("도탄 임계각 보정(+면 더 잘 튕김). 각도는 0=정면, 90=스침 기준")]
+    [Tooltip("도탄 임계각 보정")]
     public float ricochetBonusDeg = 0f;
 
     [Header("Debug")]
@@ -40,7 +34,7 @@ public class ArmorManager : MonoBehaviour
     /// </summary>
     public float GetBaseArmorMm()
     {
-        float a = Mathf.Max(0f, armorMm + shapeBonusMm);
+        float a = Mathf.Max(0f, armorMm);
         float f = Mathf.Max(0.01f, MaterialFactor(material));
         return a * f;
     }
@@ -64,8 +58,7 @@ public class ArmorManager : MonoBehaviour
 #if UNITY_EDITOR
     private void OnValidate()
     {
-        armorMm = Mathf.Max(0f, armorMm);
-        materialFactor = Mathf.Max(0.01f, materialFactor);
+        armorMm = Mathf.Max(0.0f, armorMm);
     }
 
     private void OnDrawGizmos()
@@ -73,7 +66,6 @@ public class ArmorManager : MonoBehaviour
         if (!drawGizmo) return;
         Gizmos.color = gizmoColor;
 
-        // Collider가 있으면 그 bounds를 대충 표시
         var col = GetComponent<Collider>();
         if (col != null)
         {
