@@ -16,7 +16,7 @@ public interface ITankLoader
 public class LoaderController : MonoBehaviour, ITankLoader
 {
     [Header("Load Times (sec)")]
-    private float reloadTime = 10.0f;
+    [SerializeField] private float reloadTime = 10.0f;
     [SerializeField] private float timeMul = 1.0f;
 
     [Header("Defaults")]

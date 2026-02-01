@@ -14,6 +14,7 @@ public class BallisticManager : MonoBehaviour
     [SerializeField] private LayerMask hitMeshMask;     // HitMesh 레이어만
     [SerializeField] private LayerMask armorZoneMask;   // ArmorZone 레이어만
     [SerializeField] private LayerMask groundMask;  // Ground만
+    private LayerMask fragmentHitMask = ~0;
 
     [Header("Bullet Value")]
     private int id = 0; // 총알 아이디
@@ -42,9 +43,8 @@ public class BallisticManager : MonoBehaviour
     [Header("Penetration")]
     [SerializeField] private float penetrationSpeedLoss = 0.25f; // 관통 시 추가 속도 손실
     [SerializeField] private float minSpeedAfterPen = 30f;        // 너무 느려지면 소멸
-    [SerializeField] private int maxPenetrations = 5;             // 몇 번까지 관통 허용
+    [SerializeField] private int maxPenetrations = 3;             // 몇 번까지 관통 허용
     private int penCount = 0;
-    private bool skipImpactThisStep = false; // 관통 직후 같은 스텝(중복) 충돌 재검사 방지
 
     [Header("Hit Cast")]
     [SerializeField] private float zoneSearchRadius = 0.35f; // ArmorZone 찾는 반경
@@ -57,6 +57,15 @@ public class BallisticManager : MonoBehaviour
     [SerializeField] private float speedLossPerCost = 0.002f; // cost->속도 감쇠(튜닝)
     [SerializeField] private float minThicknessM = 0.01f;     // 엣지/오차 방지
 
+
+    [SerializeField] private float radiusAt1Kg = 6.0f;
+    [SerializeField] private int raysAt1Kg = 120;
+    [SerializeField] private float baseFragDamage = 100.0f;
+
+    private float fuzeTimer = 0.0f;
+    private bool fuzeArmed;
+
+
 #if true// 탄 트레일 남기는 로직
     [SerializeField] private TrailRenderer trail;
     [SerializeField] private Light tracerLight;
@@ -67,7 +76,7 @@ public class BallisticManager : MonoBehaviour
     {
         if (trail) trail.emitting = false;
         if (tracerLight) tracerLight.enabled = false;
-
+        fuzeArmed = false;
     }
 
     void OnEnable()
@@ -128,16 +137,11 @@ public class BallisticManager : MonoBehaviour
         velocity += g * dt;
         pos += velocity * dt;
 
-        //관통중이라면->관통 직후 한 스텝 스킵
-        if (!skipImpactThisStep)
-            HandleImpact(prevPos);
-        else
-            skipImpactThisStep = false;
-
-       // HandleImpact(prevPos);
+        HandleImpact(prevPos);
 
         transform.position = pos;
 
+        TickFuze(Time.fixedDeltaTime);
         //Debug.Log($"ammo type ={ammo.name}, pos={pos}, Vector_velocity={velocity}, time={flightTime}, distance={(flightTime*velocity).z}");
     }
 
@@ -150,7 +154,6 @@ public class BallisticManager : MonoBehaviour
 
         Vector3 segDir = seg / segLen;
 
-        // 여기서 hitMeshMask가 아니라 worldMask로 잡는다
         if (!Physics.SphereCast(prevPos, radius, segDir, out var hit, segLen, worldMask, QueryTriggerInteraction.Ignore))
             return;
 
@@ -181,8 +184,9 @@ public class BallisticManager : MonoBehaviour
 
         // 기타 월드: 두께 관통
         HandleWorldHit(hit, segDir, angleToNormal);
-    
-}
+       
+
+    }
     private ArmorManager FindZone(Vector3 point)
     {
         var cols = Physics.OverlapSphere(point, zoneSearchRadius, armorZoneMask, QueryTriggerInteraction.Collide);
@@ -208,7 +212,7 @@ public class BallisticManager : MonoBehaviour
     private void HandleArmorHit(RaycastHit hit, Vector3 segDir, float cosToNormal, float angleToNormal, ArmorManager zone)
     {
         //도탄
-        float ricTh = zone.GetRicochetThresholdDeg(shell.baseRicochetAngleDeg); // base + bonus
+        float ricTh = zone.GetRicochetThresholdDeg(shell.baseRicochetAngleDeg);
         if (angleToNormal >= ricTh)
         {
             HandleRicochet(hit, segDir);
@@ -231,7 +235,11 @@ public class BallisticManager : MonoBehaviour
         {
             float penLeft = penMm - effectiveMm;
             Debug.Log($"[PEN] zone={zone.zoneName}, original pen ={pen:0}, effective pen={penMm:0}, original armor ={baseArmorMm:0}, eff={effectiveMm:0} angleN={angleToNormal:0}");
-            HandlePenetration(hit, segDir, penMm, penLeft);
+
+            //폭발성 탄약이면 폭발 신관 체크
+            if (shell.canExplode) TryArmFuzeAfterPen(effectiveMm);
+
+            HandleArmorPenetration(hit, segDir, penMm, penLeft);
             return;
         }
         else
@@ -281,7 +289,7 @@ public class BallisticManager : MonoBehaviour
 
     }
 
-    private void HandlePenetration(RaycastHit hit, Vector3 segDir, float penBefore, float penLeft)
+    private void HandleArmorPenetration(RaycastHit hit, Vector3 segDir, float penBefore, float penLeft)
     {
         penCount++;
         if (penCount > maxPenetrations)
@@ -290,36 +298,44 @@ public class BallisticManager : MonoBehaviour
             return;
         }
 
+        // 방향 보정 (enter 밀어넣을 때 필수)
+        Vector3 dirN = segDir.sqrMagnitude > 1e-8f ? segDir.normalized : velocity.normalized;
+        if (dirN.sqrMagnitude < 1e-8f) { Destroy(gameObject); return; }
+
         // 관통 후 위치를 살짝 안쪽으로 이동
-        pos = hit.point + segDir * enter;
+        pos = hit.point + dirN * enter;
         prevPos = pos;
         transform.position = pos;
 
-        // 속도 감쇠: 남은 관통력 비율로 에너지 깎는 느낌
-        float keep = (penBefore <= 1e-3f) ? 0.5f : Mathf.Clamp01(penLeft / penBefore);
-
-        // 에너지 ~ v^2 라고 보고 v는 sqrt(keep)로 줄이기
-        float vScale = Mathf.Sqrt(Mathf.Max(0.05f, keep));
-
-        // 추가 손실(장갑 통과로 파편/변형/요동)
-        vScale *= (1f - Mathf.Clamp01(penetrationSpeedLoss));
-
-        velocity *= vScale;
-
-        // 너무 느려졌으면 제거
-        if (velocity.magnitude < minSpeedAfterPen)
+        // 관통력 저장(직관적으로)
+        pen = penLeft;
+        if (pen <= 0f)
         {
             Destroy(gameObject);
             return;
         }
 
-        // 남은 관통력은 다음 히트에 반영되도록 저장
-        pen *= Mathf.Clamp01(penLeft / Mathf.Max(1e-3f, penBefore));
+        // 속도 감쇠: 남은 관통력 비율로 에너지 깎는 느낌
+        float keep = (penBefore <= 1e-3f) ? 0.5f : Mathf.Clamp01(penLeft / penBefore);
 
-        // 4) 관통 직후 같은 스텝에 재충돌 방지
-        skipImpactThisStep = true;
+        // 에너지 ~ v^2 라고 보고 v는 sqrt(keep)
+        float vScale = Mathf.Sqrt(Mathf.Max(0.05f, keep));
 
-        // TODO: 여기서 내부 모듈/승무원 히트 처리도 붙일 수 있음(다음 단계)
+        // 추가 손실(장갑 통과로 파편/변형/요동)
+        vScale *= (1f - Mathf.Clamp01(penetrationSpeedLoss));
+
+        // 속도 적용
+        velocity *= vScale;
+
+        // speed도 같이 갱신
+        speed = velocity.magnitude;
+
+        // 너무 느려졌으면 제거
+        if (speed < minSpeedAfterPen)
+        {
+            Destroy(gameObject);
+            return;
+        }
     }
     private void HandleObjectPenetration(RaycastHit hit, Vector3 dirN)
     {
@@ -327,31 +343,10 @@ public class BallisticManager : MonoBehaviour
         dirN.Normalize();
 
         // ===== 출구 찾기 =====
-        bool found = false;
-        RaycastHit exitHit = default;
-
         Vector3 startInside = hit.point + dirN * enter;
+        RaycastHit exitHit;
 
-        // 1) 정방향
-        if (hit.collider.Raycast(new Ray(startInside, dirN), out exitHit, maxDist))
-        {
-            found = true;
-        }
-        else
-        {
-            // 2) 역방향 보완
-            Vector3 probeStart = hit.point + dirN * probeDist;
-            if (hit.collider.Raycast(new Ray(probeStart, -dirN), out exitHit, probeDist * 1.5f))
-            {
-                found = true;
-
-                // (선택) 역방향 점이 입구 표면일 수 있으니, 다시 정방향 재시도하고 싶으면 주석 해제
-                // var retry = new Ray(exitHit.point + dirN * enter, dirN);
-                // if (hit.collider.Raycast(retry, out var exitHit2, maxDist)) exitHit = exitHit2;
-            }
-        }
-
-        if (!found)
+        if (!TryFindExitPoint(hit.collider, startInside, dirN, out exitHit))
         {
             Debug.Log("[ObjPen] exit not found -> destroy");
             Destroy(gameObject);
@@ -401,6 +396,71 @@ public class BallisticManager : MonoBehaviour
 
         Debug.Log($"[ObjPen] pass thickness={thicknessM:F3}m cost={cost:F1} pen={pen:F1} speed={speed:F1}");
     }
+
+
+    private bool TryFindExitPoint(Collider col, Vector3 entryPoint, Vector3 dirN, out RaycastHit exitHit)
+    {
+        exitHit = default;
+
+        if (col == null) return false;
+
+        // dirN은 단위벡터여야 함
+        if (dirN.sqrMagnitude < 1e-8f) return false;
+        dirN.Normalize();
+
+        // 1) 정방향: 입구에서 살짝 내부로 넣고 정방향 레이
+        Vector3 startInside = entryPoint + dirN * enter;
+        if (col.Raycast(new Ray(startInside, dirN), out exitHit, maxDist))
+            return true;
+
+        // 2) 역방향 보완: 조금 앞에서 역방향으로 찾기
+        Vector3 probeStart = entryPoint + dirN * probeDist;
+        if (col.Raycast(new Ray(probeStart, -dirN), out exitHit, probeDist * 1.5f))
+            return true;
+
+        return false;
+    }
+    private void TryArmFuzeAfterPen(float traversedArmorMm)
+    {
+        if (!shell.canExplode || fuzeArmed) return;
+
+        if (traversedArmorMm < shell.fuzeSensitivity)
+        {
+            Debug.Log($"[APHE] FUZE NOT ARMED (thin) {traversedArmorMm:0.0}mm < {shell.fuzeSensitivity:0.0}mm");
+            return;
+        }
+
+        fuzeArmed = true;
+        fuzeTimer = Mathf.Max(0f, shell.fuzeDelay);
+
+        Debug.Log($"[APHE] FUZE ARMED armor={traversedArmorMm:0.0}mm delay={fuzeTimer:0.000}s");
+    }
+    private void TickFuze(float dt)
+    {
+        if (!fuzeArmed || !shell.canExplode) return;
+
+        fuzeTimer -= dt;
+        if (fuzeTimer > 0f) return;
+
+        ExplodeNow();
+    }
+
+
+    private void ExplodeNow()
+    {
+        ShellExplosion.ExplodeFragmentsFromTntGrams(
+            origin: pos,                 // 폭발 위치(현재 탄 위치)
+            tntGrams: shell.tntMass,
+            hitMask: fragmentHitMask,
+            baseDamageAtCenter: baseFragDamage,
+            radiusAt1Kg: radiusAt1Kg,
+            raysAt1Kg: raysAt1Kg,
+            debugRays: false
+        );
+
+        Destroy(gameObject);
+    }
+
     private void HandleGroundHit(RaycastHit hit, Vector3 dirN, float angleToNormal)
     {
         if (angleToNormal >= shell.baseRicochetAngleDeg && ricochetChance < 2)

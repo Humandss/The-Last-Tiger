@@ -17,8 +17,10 @@ public class ShellData : ScriptableObject
     [Range(5.0f, 500.0f)] public float penetrationPower = 165.0f; // 관통력
 
     [Header("Fuze")]
-    [SerializeField] public float fuzeDealy = 0.0f;
+    [SerializeField] public bool canExplode = true;
+    [SerializeField] public float fuzeDelay = 0.0f;
     [SerializeField] public float fuzeSensitivity = 0.0f;
+    [SerializeField] public float tntMass = 0.0f;
 
     [Header("Ricochet")]
     [Range(0.0f, 100.0f)] public float baseRicochetAngleDeg = 24.0f;

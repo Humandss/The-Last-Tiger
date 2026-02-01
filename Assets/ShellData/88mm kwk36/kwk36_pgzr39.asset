@@ -21,8 +21,10 @@ MonoBehaviour:
   dragCoeff: 0.3
   refAreaScale: 1
   penetrationPower: 165
-  fuzeDealy: 1.2
+  canExplode: 1
+  fuzeDelay: 0.12
   fuzeSensitivity: 14
+  tntMass: 109
   baseRicochetAngleDeg: 73
   afterRicochetEnergyPercent: 0.62
   randomRicochetAngle: 0.28
