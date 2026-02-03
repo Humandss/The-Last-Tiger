@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Burst.CompilerServices;
 using UnityEditor.EditorTools;
 using UnityEngine;
 
@@ -14,7 +15,8 @@ public class BallisticManager : MonoBehaviour
     [SerializeField] private LayerMask hitMeshMask;     // HitMesh 레이어만
     [SerializeField] private LayerMask armorZoneMask;   // ArmorZone 레이어만
     [SerializeField] private LayerMask groundMask;  // Ground만
-    private LayerMask fragmentHitMask = ~0;
+    [SerializeField] private LayerMask fragmentHitMask;
+    [SerializeField] private LayerMask occluderMask;
 
     [Header("Bullet Value")]
     private int id = 0; // 총알 아이디
@@ -64,7 +66,9 @@ public class BallisticManager : MonoBehaviour
 
     private float fuzeTimer = 0.0f;
     private bool fuzeArmed;
-
+    private bool hasFuzeOrigin;
+    private Vector3 fuzeOrigin;
+    [SerializeField] private float fuzeOriginNudge = 0.05f;
 
 #if true// 탄 트레일 남기는 로직
     [SerializeField] private TrailRenderer trail;
@@ -100,6 +104,11 @@ public class BallisticManager : MonoBehaviour
 
     public void Initialize(Vector3 position, Vector3 direction)
     {
+        fuzeArmed = false;
+        fuzeTimer = 0f;
+        hasFuzeOrigin = false;
+        fuzeOrigin = Vector3.zero;
+
         id = System.Threading.Interlocked.Increment(ref idSeq);
         isPenetratingTerrain = false;
         ricochetChance = 0;
@@ -223,7 +232,7 @@ public class BallisticManager : MonoBehaviour
         float baseArmorMm = zone.GetBaseArmorMm();
         float effectiveMm = baseArmorMm / Mathf.Max(minCosForArmor, cosToNormal);
 
-        //관통력 (지금은 pen 그대로 쓰고, 나중에 거리감쇠 붙이면 됨)
+        //관통력
         float vNow = velocity.magnitude;
         float v0 = Mathf.Max(1e-3f, shell.muzzleVelocity);
         float scale = Mathf.Pow(Mathf.Clamp01(vNow / v0), shell.penVelocityExponent);
@@ -237,7 +246,11 @@ public class BallisticManager : MonoBehaviour
             Debug.Log($"[PEN] zone={zone.zoneName}, original pen ={pen:0}, effective pen={penMm:0}, original armor ={baseArmorMm:0}, eff={effectiveMm:0} angleN={angleToNormal:0}");
 
             //폭발성 탄약이면 폭발 신관 체크
-            if (shell.canExplode) TryArmFuzeAfterPen(effectiveMm);
+            if (shell.canExplode)
+            {
+                TryArmFuzeAfterPen(effectiveMm, hit.point);
+            }
+
 
             HandleArmorPenetration(hit, segDir, penMm, penLeft);
             return;
@@ -420,7 +433,7 @@ public class BallisticManager : MonoBehaviour
 
         return false;
     }
-    private void TryArmFuzeAfterPen(float traversedArmorMm)
+    private void TryArmFuzeAfterPen(float traversedArmorMm, Vector3 originCandidate)
     {
         if (!shell.canExplode || fuzeArmed) return;
 
@@ -429,6 +442,9 @@ public class BallisticManager : MonoBehaviour
             Debug.Log($"[APHE] FUZE NOT ARMED (thin) {traversedArmorMm:0.0}mm < {shell.fuzeSensitivity:0.0}mm");
             return;
         }
+
+        fuzeOrigin = originCandidate;
+        hasFuzeOrigin = true;
 
         fuzeArmed = true;
         fuzeTimer = Mathf.Max(0f, shell.fuzeDelay);
@@ -448,14 +464,18 @@ public class BallisticManager : MonoBehaviour
 
     private void ExplodeNow()
     {
+        Vector3 origin = hasFuzeOrigin ? fuzeOrigin : pos;
+
         ShellExplosion.ExplodeFragmentsFromTntGrams(
-            origin: pos,                 // 폭발 위치(현재 탄 위치)
+            origin: origin,                 // 폭발 위치(현재 탄 위치)
             tntGrams: shell.tntMass,
-            hitMask: fragmentHitMask,
+            occluderMask: occluderMask,
+            damageMask: fragmentHitMask,
             baseDamageAtCenter: baseFragDamage,
             radiusAt1Kg: radiusAt1Kg,
             raysAt1Kg: raysAt1Kg,
-            debugRays: false
+            includeTriggers: true,
+            debug: false
         );
 
         Destroy(gameObject);

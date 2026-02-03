@@ -22,7 +22,7 @@ MonoBehaviour:
   refAreaScale: 1
   penetrationPower: 165
   canExplode: 1
-  fuzeDelay: 0.12
+  fuzeDelay: 0.001
   fuzeSensitivity: 14
   tntMass: 109
   baseRicochetAngleDeg: 73

@@ -2,12 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public interface IDamageable
-{
-    void TakeDamage(float amount);
-}
-
-public class ShellExplosion : MonoBehaviour
+public class ShellExplosion
 {
     // g -> kg 변환
     public static float GramsToKg(float grams) => Mathf.Max(0.001f, grams) * 0.001f;
@@ -41,50 +36,71 @@ public class ShellExplosion : MonoBehaviour
     public static void ExplodeFragmentsFromTntGrams(
         Vector3 origin,
         float tntGrams,
-        LayerMask hitMask,
+        LayerMask occluderMask,
+        LayerMask damageMask,
         float baseDamageAtCenter = 120f,
         float radiusAt1Kg = 6f,
         int raysAt1Kg = 80,
-        bool debugRays = false,
+        bool includeTriggers = true,
+        bool debug = false,
         float debugTime = 0.25f)
     {
         float radius = ComputeRadiusFromTntGrams(tntGrams, radiusAt1Kg);
-        int rays = ComputeFragmentRaysFromTntGrams(tntGrams, raysAt1Kg);
 
-        // 같은 대상에 여러 번 맞는 걸 과딜로 만들기 싫으면 "최댓값 1회"로 처리
-        Dictionary<IDamageable, float> bestHit = new Dictionary<IDamageable, float>();
+        var qti = includeTriggers ? QueryTriggerInteraction.Collide : QueryTriggerInteraction.Ignore;
 
-        for (int i = 0; i < rays; i++)
+        // 1) 폭발 반경 안의 모듈 콜라이더 후보 수집
+        Collider[] cols = Physics.OverlapSphere(origin, radius, damageMask, qti);
+        if (cols == null || cols.Length == 0)
         {
-            Vector3 dir = Random.onUnitSphere;
-
-            if (Physics.Raycast(origin, dir, out var hit, radius, hitMask, QueryTriggerInteraction.Ignore))
-            {
-                float dist01 = Mathf.Clamp01(hit.distance / radius);
-
-                // 거리 감쇠(가까울수록 강): (1-d)^2 형태
-                float dmg = baseDamageAtCenter * (1f - dist01) * (1f - dist01);
-
-                var d = hit.collider.GetComponentInParent<IDamageable>();
-                if (d != null)
-                {
-                    if (bestHit.TryGetValue(d, out float prev))
-                        bestHit[d] = Mathf.Max(prev, dmg);
-                    else
-                        bestHit.Add(d, dmg);
-                }
-
-                if (debugRays) Debug.DrawLine(origin, hit.point, Color.red, debugTime);
-            }
-            else
-            {
-                if (debugRays) Debug.DrawRay(origin, dir * radius, Color.yellow, debugTime);
-            }
+            Debug.Log($"[EXPLOSION] tnt={tntGrams:0.#}g radius={radius:0.00}m modules=0 (mask?)");
+            return;
         }
 
-        foreach (var kv in bestHit)
+        // 2) 같은 대상(모듈/크루) 여러 콜라이더 있으면 1회만 적용(최대 데미지)
+        Dictionary<IDamageable, float> best = new Dictionary<IDamageable, float>();
+        int considered = 0;
+        int blocked = 0;
+
+        for (int i = 0; i < cols.Length; i++)
+        {
+            var col = cols[i];
+            if (!col) continue;
+
+            // IDamageable은 보통 콜라이더의 부모에 붙어있음
+            var d = col.GetComponentInParent<IDamageable>();
+            if (d == null) continue;
+
+            // 가장 가까운 지점으로 “직선” 확인 (파편이 그쪽으로 날아간다고 가정)
+            Vector3 target = col.ClosestPoint(origin);
+
+            // 거리 기반 감쇠
+            float dist = Vector3.Distance(origin, target);
+            float dist01 = Mathf.Clamp01(dist / radius);
+            float dmg = baseDamageAtCenter * (1f - dist01) * (1f - dist01);
+
+            considered++;
+
+            // 3) 가림 체크: origin -> target 사이에 장갑/히트메쉬가 먼저 있으면 피해 X
+            //    단, 자기 자신(모듈 콜라이더)이 occluder에 포함되어 있으면 막힐 수 있으니 occluderMask에 모듈 레이어는 넣지 마
+            if (Physics.Linecast(origin, target, out var blockHit, occluderMask, qti))
+            {
+                blocked++;
+                if (debug) Debug.DrawLine(origin, blockHit.point, Color.blue, debugTime);
+                continue;
+            }
+
+            if (debug) Debug.DrawLine(origin, target, Color.red, debugTime);
+
+            if (best.TryGetValue(d, out float prev))
+                best[d] = Mathf.Max(prev, dmg);
+            else
+                best.Add(d, dmg);
+        }
+
+        foreach (var kv in best)
             kv.Key.TakeDamage(kv.Value);
 
-        Debug.Log($"[EXPLOSION] tnt={tntGrams:0.#}g radius={radius:0.00}m rays={rays}");
+        Debug.Log($"[EXPLOSION] tnt={tntGrams:0.#}g radius={radius:0.00}m modules={cols.Length} considered={considered} blocked={blocked} hits={best.Count}");
     }
 }

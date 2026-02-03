@@ -232,6 +232,12 @@ MonoBehaviour:
   groundMask:
     serializedVersion: 2
     m_Bits: 256
+  fragmentHitMask:
+    serializedVersion: 2
+    m_Bits: 512
+  occluderMask:
+    serializedVersion: 2
+    m_Bits: 193
   penetrationSpeedLoss: 0.25
   minSpeedAfterPen: 30
   maxPenetrations: 5
@@ -244,7 +250,8 @@ MonoBehaviour:
   minThicknessM: 0.01
   radiusAt1Kg: 6
   raysAt1Kg: 120
-  baseFragDamage: 100
+  baseFragDamage: 120
+  fuzeOriginNudge: 0.05
   trail: {fileID: 878920183239464695}
   tracerLight: {fileID: 7709520345625933040}
   igniteDelay: 0.01
