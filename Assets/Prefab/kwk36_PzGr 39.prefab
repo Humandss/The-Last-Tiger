@@ -237,7 +237,7 @@ MonoBehaviour:
     m_Bits: 512
   occluderMask:
     serializedVersion: 2
-    m_Bits: 193
+    m_Bits: 65
   penetrationSpeedLoss: 0.25
   minSpeedAfterPen: 30
   maxPenetrations: 5
@@ -251,7 +251,7 @@ MonoBehaviour:
   radiusAt1Kg: 6
   raysAt1Kg: 120
   baseFragDamage: 120
-  fuzeOriginNudge: 0.05
+  fuzeOriginNudge: 0.1
   trail: {fileID: 878920183239464695}
   tracerLight: {fileID: 7709520345625933040}
   igniteDelay: 0.01
@@ -390,7 +390,7 @@ Light:
   m_Type: 2
   m_Shape: 0
   m_Color: {r: 1, g: 0.42219353, b: 0, a: 1}
-  m_Intensity: 1
+  m_Intensity: 5
   m_Range: 10
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208

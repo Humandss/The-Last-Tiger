@@ -68,7 +68,7 @@ public class BallisticManager : MonoBehaviour
     private bool fuzeArmed;
     private bool hasFuzeOrigin;
     private Vector3 fuzeOrigin;
-    [SerializeField] private float fuzeOriginNudge = 0.05f;
+    [SerializeField] private float fuzeOriginNudge = 0.1f;
 
 #if true// 탄 트레일 남기는 로직
     [SerializeField] private TrailRenderer trail;
@@ -248,7 +248,7 @@ public class BallisticManager : MonoBehaviour
             //폭발성 탄약이면 폭발 신관 체크
             if (shell.canExplode)
             {
-                TryArmFuzeAfterPen(effectiveMm, hit.point);
+                TryArmFuzeAfterPen(effectiveMm, hit.point, segDir);
             }
 
 
@@ -433,9 +433,9 @@ public class BallisticManager : MonoBehaviour
 
         return false;
     }
-    private void TryArmFuzeAfterPen(float traversedArmorMm, Vector3 originCandidate)
+    private void TryArmFuzeAfterPen(float traversedArmorMm, Vector3 originCandidate, Vector3 shotDir)
     {
-        if (!shell.canExplode || fuzeArmed) return;
+        if(!shell.canExplode || fuzeArmed) return;
 
         if (traversedArmorMm < shell.fuzeSensitivity)
         {
@@ -443,7 +443,11 @@ public class BallisticManager : MonoBehaviour
             return;
         }
 
-        fuzeOrigin = originCandidate;
+        Vector3 dirN = shotDir.sqrMagnitude > 1e-8f ? shotDir.normalized : velocity.normalized;
+        if (dirN.sqrMagnitude < 1e-8f) dirN = transform.forward;
+
+        float nudge = Mathf.Max(fuzeOriginNudge, enter + 0.04f); // 최소 6cm
+        fuzeOrigin = originCandidate + dirN * nudge;
         hasFuzeOrigin = true;
 
         fuzeArmed = true;
@@ -477,6 +481,12 @@ public class BallisticManager : MonoBehaviour
             includeTriggers: true,
             debug: false
         );
+
+        float radius = ShellExplosion.ComputeRadiusFromTntGrams(shell.tntMass, radiusAt1Kg);
+        int candidates = Physics.OverlapSphere(origin, radius, fragmentHitMask, QueryTriggerInteraction.Collide).Length;
+        bool insideOcc = Physics.CheckSphere(origin, 0.01f, occluderMask, QueryTriggerInteraction.Collide);
+
+        Debug.Log($"[EXPDBG] candidates={candidates} insideOcc={insideOcc} nudge={fuzeOriginNudge}");
 
         Destroy(gameObject);
     }
