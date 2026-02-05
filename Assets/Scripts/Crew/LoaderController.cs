@@ -12,6 +12,7 @@ public interface ITankLoader
     bool GetIsLoading();
     bool GetIsLoaded();
     void IsShot();
+    ShellData GetLoadedShell();
 }
 public class LoaderController : MonoBehaviour, ITankLoader
 {
@@ -22,6 +23,11 @@ public class LoaderController : MonoBehaviour, ITankLoader
     [Header("Defaults")]
     [SerializeField] private AmmoType defaultAmmo = AmmoType.AP;
     private AmmoType shellType = AmmoType.None;
+
+    [Header("Shell Data Table")]
+    [SerializeField] private ShellData apShell;
+    [SerializeField] private ShellData heShell;
+    private ShellData loadedShell; // 현재 장전된 ShellData
 
     private bool isLoading;
     private bool isLoaded;
@@ -61,6 +67,7 @@ public class LoaderController : MonoBehaviour, ITankLoader
         CeaseAction();
         isLoaded = false;
         co = StartCoroutine(LoadRoutine(type));
+        loadedShell = GetShellDataFor(LastSelectedAmmo);
     }
 
     private void CeaseAction()
@@ -99,12 +106,16 @@ public class LoaderController : MonoBehaviour, ITankLoader
         isLoading = false;
         loading01 = 1.0f;
         shellType = type;
+      
         isLoaded = true;
 
-        Debug.Log($"[Loader] {type} 장전 완료");
+        Debug.Log($"[Loader] {shellType} 장전 완료");
         co = null;
     }
-
+    public ShellData GetLoadedShell()
+    {
+        return loadedShell;
+    }
     public bool GetIsLoading()
     {
         return isLoading;
@@ -116,5 +127,17 @@ public class LoaderController : MonoBehaviour, ITankLoader
     public void IsShot()
     {
         isLoaded = false;
+        shellType = AmmoType.None;
+        loadedShell = null;
     }
- }
+
+    private ShellData GetShellDataFor(AmmoType type)
+    {
+        switch (type)
+        {
+            case AmmoType.AP: return apShell;
+            case AmmoType.HE: return heShell;
+            default: return null;
+        }
+    }
+}

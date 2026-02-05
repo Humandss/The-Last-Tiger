@@ -2893,7 +2893,7 @@ Transform:
   m_GameObject: {fileID: 414415415}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 1, z: -0, w: 0}
-  m_LocalPosition: {x: -5.1, y: -0.05, z: 222.8}
+  m_LocalPosition: {x: 8.77, y: -0.05, z: 102.15}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -8814,9 +8814,16 @@ MonoBehaviour:
   hull: {fileID: 5941749916303751010}
   turretYaw: {fileID: 3974867960145884146}
   gunPitch: {fileID: 792932911802802576}
+  fcsSolveMaxTime: 8
+  fcsDt: 0.01
+  fcsIterations: 18
+  fcsHighArc: 0
   yawSpeedDeg: 10
   pitchSpeedDeg: 5
-  pitchLimits: {x: -3, y: 10}
+  pitchLimits: {x: -20, y: 20}
+  rangeStep: 5
+  repeatDelay: 0.35
+  repeatRate: 0.08
 --- !u!4 &1644377949
 Transform:
   m_ObjectHideFlags: 0
@@ -8850,6 +8857,8 @@ MonoBehaviour:
   reloadTime: 1
   timeMul: 1
   defaultAmmo: 1
+  apShell: {fileID: 11400000, guid: d2ccdf09c3c88a549873825eae6c04fe, type: 2}
+  heShell: {fileID: 0}
 --- !u!114 &1644377951
 MonoBehaviour:
   m_ObjectHideFlags: 0
