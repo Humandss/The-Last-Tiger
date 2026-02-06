@@ -251,7 +251,7 @@ MonoBehaviour:
   radiusAt1Kg: 6
   raysAt1Kg: 120
   baseFragDamage: 120
-  fuzeOriginNudge: 0.1
+  fuzeOriginNudge: 0.15
   trail: {fileID: 878920183239464695}
   tracerLight: {fileID: 7709520345625933040}
   igniteDelay: 0.01

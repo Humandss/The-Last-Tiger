@@ -104,6 +104,10 @@ public class CrewCommandDispatcher : MonoBehaviour
                 gunner.Fire();
                 break;
 
+            case Cmd.TrackTarget:
+                gunner.StartTracking();
+                break;
+
             default:
                 Debug.Log($"[Gunner] 처리 안 함: {c.GetCmd}");
                 break;

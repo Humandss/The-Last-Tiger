@@ -21,6 +21,7 @@ public class GunnerController : MonoBehaviour, ITankGunner
     [SerializeField] private Transform hull;
     [SerializeField] private Transform turretYaw;
     [SerializeField] private Transform gunPitch;
+    [SerializeField] private LayerMask trackableMask;
     private LoaderController loader;
     private CannonFireController fireController;
     private ShellData shell;
@@ -50,7 +51,18 @@ public class GunnerController : MonoBehaviour, ITankGunner
     private float _rangeRepeatTimer = 0f;
     private int _rangeRepeatDir = 0; // +1 up, -1 down, 0 none
     private float _pitchTargetLocalX = 0f;
- 
+
+    [Header("Tracking (No Rigidbody)")]
+    [SerializeField] private bool tracking = false;
+    [SerializeField] private Transform trackingTarget;
+    private Transform designatedTarget;
+    [SerializeField] private float velSmoothing = 12f;   // 속도 스무딩(8~16)
+    [SerializeField] private int leadIterations = 4;     // 예측 반복(3~5)
+    [SerializeField] private float maxLeadTime = 6f;     // 예측 최대 시간 제한
+
+    private Vector3 _prevTargetPos;
+    private bool _hasPrevTarget;
+    private Vector3 _targetVelSmoothed;
 
     private void Awake()
     {
@@ -74,25 +86,42 @@ public class GunnerController : MonoBehaviour, ITankGunner
             if (Physics.Raycast(ray, out var hit, maxAimDistance, aimMask, QueryTriggerInteraction.Ignore))
             {
                 targetPoint = hit.point;
-                Debug.Log($"[Designator] point = {hit.point}");
+
+                int hitLayerBit = 1 << hit.collider.gameObject.layer;
+                if ((trackableMask.value & hitLayerBit) != 0)
+                {
+                    designatedTarget = hit.collider.transform;
+                    Debug.Log($"[Designator] TRACK target={designatedTarget.name}, point={hit.point}");
+                }
+                else
+                {
+                    designatedTarget = null;
+                    Debug.Log($"[Designator] POINT only, point={hit.point}");
+                }
 
             }
             else
             {
-                // 아무것도 안 맞으면 저장 안 하거나, 전방 maxDistance로 저장(선택)
+                designatedTarget = null;
                 Debug.Log("[Designator] no hit");
             }
         }
 
         HandleRangeHotkeys();
-
         // ===== 실행(조준 추적) =====
         if (isAligning)
         {
-            if (AlignHullStep())isAligning = false;
-      
+            if (AlignHullStep()) isAligning = false;
         }
-        else if (isAiming) AimAtWorldPoint(aimPoint);
+        else if (tracking && trackingTarget != null)
+        {
+            UpdateTracking(Time.deltaTime);
+        }
+        else if (isAiming)
+        {
+            AimAtWorldPoint(aimPoint);
+            ApplyFcsToWorldPoint();
+        }
 
         DriveGunPitchToTarget();
     }
@@ -103,6 +132,12 @@ public class GunnerController : MonoBehaviour, ITankGunner
 
 
         if (Input.GetKeyDown(KeyCode.Alpha2)) Fire();
+
+
+        if (Input.GetKeyDown(KeyCode.T))
+        {
+            CeaseAction();
+        }
 
         // 1) 첫 입력(탭) 처리
         if (Input.GetKeyDown(KeyCode.UpArrow))
@@ -161,17 +196,28 @@ public class GunnerController : MonoBehaviour, ITankGunner
 
     public void Aim()
     {
-        if (targetPoint.HasValue)
-        {
-            isAiming = true;
-            aimPoint = targetPoint.Value;
-        }
-        else
+
+        if (!targetPoint.HasValue)
         {
             Debug.LogWarning("[Gunner] 저장된 지점이 없어. 먼저 클릭으로 지점 지정해줘.");
             return;
         }
-        Debug.Log($"[Gunner] 에임 포인트 -> {targetPoint}");
+
+        // 1) 트래킹 가능한 타겟이 찍혀있으면 트래킹
+        if (designatedTarget != null)
+        {
+            trackingTarget = designatedTarget;
+            StartTracking();
+            isAiming = false;
+            Debug.Log($"[Gunner] 트래킹 에임 시작 -> {trackingTarget.name}");
+            return;
+        }
+
+        // 2) 아니면 고정점 에임(땅 포함)
+        StopTracking();
+        isAiming = true;
+        aimPoint = targetPoint.Value;
+        Debug.Log($"[Gunner] 고정 포인트 에임 -> {aimPoint}");
     }
 
     public void AlignHull()
@@ -208,6 +254,9 @@ public class GunnerController : MonoBehaviour, ITankGunner
     {
         isAiming = false;
         isAligning = false;
+        designatedTarget = null;
+        targetPoint = null;
+        StopTracking();
         Debug.Log("[Gunner] 행동 취소!");
     }
 
@@ -244,7 +293,7 @@ public class GunnerController : MonoBehaviour, ITankGunner
         targetLocalX = Mathf.Clamp(targetLocalX, pitchLimits.x, pitchLimits.y);
 
         _pitchTargetLocalX = targetLocalX;     //  여기로 통일
-        isAligning = false;                    // (선택) 정렬중이면 풀어서 바로 움직이게
+        isAligning = false;     
 
         Debug.Log($"[Gunner] 고각 목표 -> {pitchDeg:0.00}deg (localX={_pitchTargetLocalX:0.00})");
     
@@ -276,11 +325,163 @@ public class GunnerController : MonoBehaviour, ITankGunner
         loaderFunc.IsShot();
         loaderFunc.LoadDefault();
     }
+
+    public void StartTracking()
+    {
+        if (trackingTarget == null)
+        {
+            Debug.LogWarning("[Gunner] Tracking fail, target lost!");
+            tracking = false;
+            return;
+        }
+
+        tracking = true;
+        isAiming = false;  
+        _hasPrevTarget = false;
+        _targetVelSmoothed = Vector3.zero;
+
+        Debug.Log($"[Gunner] Tracking start: {trackingTarget.name}");
+    }
+
+    private void StopTracking()
+    {
+        tracking = false;
+        isAiming = false;
+        trackingTarget = null;
+        _hasPrevTarget = false;
+        Debug.Log("[Gunner] Tracking stop");
+    }
+
     private static float NormalizeAngle(float a)
     {
         a %= 360f;
         if (a > 180f) a -= 360f;
         return a;
+    }
+
+    private void UpdateTracking(float dt)
+    {
+        // 1) 목표 속도 추정(위치 미분 + 스무딩)
+        Vector3 vel = EstimateTargetVelocity(dt);
+
+        // 2) 예측 지점 계산(리드)
+        Vector3 predicted = PredictFutureAimPointIterative(trackingTarget.position, vel);
+
+        // 3) 포탑 yaw는 예측 지점으로
+        AimAtWorldPoint(predicted);
+
+        // 4) FCS(사거리+높이차)도 예측 지점 기준으로 갱신해서 포신 pitch 목표각 업데이트
+        ApplyFcsToWorldPoint();
+    }
+
+    private Vector3 EstimateTargetVelocity(float dt)
+    {
+        dt = Mathf.Max(1e-5f, dt);
+
+        Vector3 cur = trackingTarget.position;
+        Vector3 rawVel;
+
+        if (!_hasPrevTarget)
+        {
+            _prevTargetPos = cur;
+            _hasPrevTarget = true;
+            rawVel = Vector3.zero;
+        }
+        else
+        {
+            rawVel = (cur - _prevTargetPos) / dt;
+            _prevTargetPos = cur;
+        }
+
+        // 지글지글 떨림 방지(저역통과)
+        float a = 1f - Mathf.Exp(-velSmoothing * dt);
+        _targetVelSmoothed = Vector3.Lerp(_targetVelSmoothed, rawVel, a);
+
+        return _targetVelSmoothed;
+    }
+
+    private Vector3 PredictFutureAimPointIterative(Vector3 targetPos, Vector3 targetVel)
+    {
+        Vector3 predicted = targetPos;
+
+        // 탄 데이터 확보
+        var loaded = loaderFunc.GetLoadedShell();
+        if (loaded == null) return predicted;
+        shell = loaded;
+
+        // 반복 예측
+        for (int i = 0; i < leadIterations; i++)
+        {
+
+            // 플레이어가 설정한 rangeMeters에 도달하는 시간(대략)을 구함
+            // 고각은 "현재 사거리 설정"으로부터 나온 값이 필요함
+            if (!TrySolvePitchForRange(out float pitchDeg)) break;
+
+            float tof = EstimateTimeToHorizontalRange(pitchDeg, turretYaw.forward); // 이 함수는 rangeMeters를 사용
+            tof = Mathf.Clamp(tof, 0f, maxLeadTime);
+
+            predicted = targetPos + targetVel * tof;
+        }
+
+        return predicted;
+    }
+
+    private float EstimateTimeToHorizontalRange(float pitchDeg, Vector3 yawForward)
+    {
+        Vector3 startPos = gunPitch.position;
+
+        Vector3 flatYaw = Vector3.ProjectOnPlane(yawForward, Vector3.up);
+        if (flatYaw.sqrMagnitude < 1e-6f) return maxLeadTime;
+        flatYaw.Normalize();
+
+        Quaternion yawRot = Quaternion.LookRotation(flatYaw, Vector3.up);
+        Vector3 pitchAxis = yawRot * Vector3.right;
+
+        Quaternion rot = Quaternion.AngleAxis(-pitchDeg, pitchAxis) * yawRot;
+        Vector3 dir = (rot * Vector3.forward).normalized;
+
+        Vector3 velocity = dir * shell.muzzleVelocity;
+        Vector3 pos = startPos;
+
+        float airDensity = 1.225f;
+        Vector3 windWorld = Vector3.zero;
+        float invMass = 1f / Mathf.Max(1e-6f, shell.projectileMass);
+        float r = Mathf.Max(1e-6f, (shell.caliber * 0.001f)) * 0.5f;
+        float refArea = Mathf.PI * r * r * shell.refAreaScale;
+        float k = 0.5f * airDensity * shell.dragCoeff * refArea * invMass;
+
+        float t = 0f;
+
+        while (t < fcsSolveMaxTime)
+        {
+            Vector3 vRel = velocity - windWorld;
+            float spd = vRel.magnitude + 1e-6f;
+            Vector3 accel = Physics.gravity + (-k * vRel * spd);
+
+            velocity += accel * fcsDt;
+            pos += velocity * fcsDt;
+
+            float traveled = Vector3.ProjectOnPlane(pos - startPos, Vector3.up).magnitude;
+            t += fcsDt;
+
+            if (traveled >= rangeMeters) return t;
+            if (pos.y < startPos.y - 200f) break;
+        }
+
+        return maxLeadTime;
+    }
+    private void ApplyFcsToWorldPoint()
+    {
+        var loaded = loaderFunc.GetLoadedShell();
+        if (loaded == null) return;
+        shell = loaded;
+
+        if (!TrySolvePitchForRange(out float pitchDeg))
+            return;
+
+        float targetLocalX = -pitchDeg;
+        targetLocalX = Mathf.Clamp(targetLocalX, pitchLimits.x, pitchLimits.y);
+        _pitchTargetLocalX = targetLocalX;
     }
 
     private void DriveGunPitchToTarget()
@@ -364,11 +565,8 @@ public class GunnerController : MonoBehaviour, ITankGunner
         Vector3 yawForward = turretYaw.forward;
 
         // 저각/고각 선택에 따라 탐색 범위를 다르게
-        float lo = 0.0f;
-        float hi = Mathf.Max(1f, pitchLimits.y); // 위로 드는 최대(예: 20도)
-
-        // 만약 너가 더 큰 고각을 허용하고 싶으면 pitchLimits.y를 올려야 함
-        // (포물선 고각은 보통 20도 넘어갈 수 있음)
+        float lo = pitchLimits.x;   // -10 같은 값 포함
+        float hi = pitchLimits.y;   // +20
 
         // 양끝 샘플
         float fLo = SimulateRangeForPitch(lo, yawForward);
