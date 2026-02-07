@@ -37,6 +37,8 @@ public readonly struct ParsedCmd
     public Cmd GetCmd { get { return cmd; } }
 
     public float? GetRangeMeters { get { return rangeMeters; } }
+
+    public Intensity? GetIntensity { get { return intensity; } }
 }
 
 public static class CrewParser

@@ -10,7 +10,7 @@ public class CrewCommandDispatcher : MonoBehaviour
 
     [SerializeField] private GunnerController gunner;
     [SerializeField] private LoaderController loader;
-
+    [SerializeField] private DriverController driver;
 
     
     public void EnqueueFromStt(string stt)
@@ -46,10 +46,101 @@ public class CrewCommandDispatcher : MonoBehaviour
         _ => driverQ
     };
 
+    private float IntensityMul(Intensity? i)
+    {
+        return i switch
+        {
+            Intensity.Small => 0.35f,
+            Intensity.Normal => 0.65f,
+            Intensity.Large => 1.0f,
+            _ => 0.65f
+        };
+    }
+
     void ExecuteDriver(ParsedCmd c)
     {
         Debug.Log($"[EXEC][조종수] {c},{c.ToString()}");
-        // TODO: 나중에 motor.MoveForward() 같은 실제 호출로 바꾸면 됨
+
+        var intensity = c.GetIntensity;
+        float mul = IntensityMul(intensity);
+
+        switch (c.GetCmd)
+        {
+            case Cmd.Stop:
+                {
+                    driver.Stop();
+                    driver.SetThrottle(0f);
+                    driver.SetSteer(0f);
+                    driver.SetPivot(0f);
+                    break;
+                }
+       
+
+            case Cmd.MoveForward:
+                {
+                    driver.ClearPivot();
+                    driver.SetPivot(0f);
+
+                    float throttle = Mathf.Clamp01(1f * mul);     // 0~1
+                    driver.SetThrottle(+throttle);
+                    break;
+                }
+               
+            case Cmd.MoveBackward:
+                {
+                    driver.ClearPivot();
+                    driver.SetPivot(0f);
+
+                    float throttle = Mathf.Clamp01(1f * mul);
+                    driver.SetThrottle(-throttle);
+                    break;
+                }
+   
+            case Cmd.TurnRight:
+                {
+                    driver.ClearPivot();
+                    driver.SetPivot(0f);
+
+                    float steer = Mathf.Clamp(1f * mul, 0f, 1f);  // 0~1
+                    driver.SetSteer(+steer);
+                    break;
+                }
+                    
+            case Cmd.TurnLeft:
+                {
+                    driver.ClearPivot();
+                    driver.SetPivot(0f);
+
+                    float steer = Mathf.Clamp(1f * mul, 0f, 1f);  // 0~1
+                    driver.SetSteer(-steer);
+                    break;
+                }
+
+            case Cmd.PivotRight:
+                {
+                    driver.SetThrottle(0f);
+                    driver.SetSteer(0f);
+
+                    float pivot = Mathf.Clamp(1f * mul, 0f, 1f);
+                    driver.SetPivot(+pivot);
+                    break;
+                }
+                
+
+            case Cmd.PivotLeft:
+                {
+                    driver.SetThrottle(0f);
+                    driver.SetSteer(0f);
+
+                    float pivot = Mathf.Clamp(1f * mul, 0f, 1f);
+                    driver.SetPivot(-pivot);
+                    break;
+                }
+
+            default:
+                Debug.Log($"[Driver] 처리 안 함: {c.GetCmd}");
+                break;
+        }
     }
 
     void ExecuteLoader(ParsedCmd c)

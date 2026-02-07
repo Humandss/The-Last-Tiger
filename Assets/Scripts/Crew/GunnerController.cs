@@ -257,7 +257,7 @@ public class GunnerController : MonoBehaviour, ITankGunner
         designatedTarget = null;
         targetPoint = null;
         StopTracking();
-        Debug.Log("[Gunner] 행동 취소!");
+        Debug.Log("[Gunner] 사격 대기!");
     }
 
     public void SetRange(float meters)
