@@ -5,158 +5,160 @@ using UnityEngine;
 public class DriverController : MonoBehaviour
 {
     [Header("Refs")]
-    [SerializeField] private Transform hull; // 차체
-
+    [SerializeField] private Transform hull; // 차체(없으면 transform)
+    [SerializeField] private Rigidbody rb;
     [Header("Speeds")]
-    [SerializeField] private float fwdMaxSpeed = 6.0f;
-    [SerializeField] private float bckMaxSpeed = 2.0f;    // m/s (Normal)
-    [SerializeField] private float turnSpeedDeg = 45.0f;      // deg/s (Normal) - 이동 중 회전
-    [SerializeField] private float pivotSpeedDeg = 90.0f;     // deg/s (Normal) - 제자리 회전
+    [SerializeField] private float fwdMaxSpeed = 6.0f;   // m/s (Large=1.0일 때 기준)
+    [SerializeField] private float bckMaxSpeed = 2.0f;   // m/s
+    [SerializeField] private float turnSpeedDeg = 45.0f; // deg/s (주행 회전)
+    [SerializeField] private float pivotSpeedDeg = 90.0f;// deg/s (제자리 회전)
 
     [Header("Smoothing")]
-    [SerializeField] private float accel = 5f;         // m/s^2 가속(3~8)
-    [SerializeField] private float steerAccel = 5.0f;
-    [SerializeField] private float intensitySharpness = 8f; // 6~12 추천
-    [SerializeField] private float speedAccel = 5f;         // m/s^2 가속(3~8)
-    [SerializeField] private float brakeAccel = 8f;         // 감속(6~12)
-    private float _mulSmoothed = 0.65f; // Normal 시작이면
-    private float _curSpeed = 0f; // 실제 현재 속도(m/s)
+    [SerializeField] private float axisSharpness = 10f;      // W/A/S/D/Q/E 입력 스무딩
+    [SerializeField] private float speedAccel = 5f;          // 목표속도 따라가기 가속
+    [SerializeField] private float brakeAccel = 8f;          // 감속
+    [SerializeField] private float intensitySharpness = 8f;  // 강도 스무딩
 
     [Header("Intensity Keys")]
     [SerializeField] private KeyCode highKey = KeyCode.LeftShift;
     [SerializeField] private KeyCode lowKey = KeyCode.LeftControl;
 
-    // ===== input targets (raw) =====
-    private float targetThrottle;   // -1..+1
-    private float targetSteer;      // -1..+1
-    private float targetPivot;      // -1..+1
-
-    // ===== smoothed state =====
-    private float throttle;         // -1..+1
-    private float steer;            // -1..+1
-    private float pivot;            // -1..+1
-
     [Header("Intensity Multipliers")]
-    [SerializeField] private float smallMul = 0.5f;
-    [SerializeField] private float normalMul = 1.0f;
-    [SerializeField] private float largeMul = 1.5f;
+    [SerializeField] private float smallMul = 0.35f;
+    [SerializeField] private float normalMul = 0.65f;
+    [SerializeField] private float largeMul = 1.00f;
+
+
+    // ===== raw targets (명령/키 입력이 세팅) =====
+    float targetThrottle; // -1..+1
+    float targetSteer;    // -1..+1
+    float targetPivot;    // -1..+1
+
+    // ===== smoothed axes =====
+    float throttle;       // -1..+1
+    float steer;          // -1..+1
+    float pivot;          // -1..+1
+
+    // ===== intensity smoothed =====
+    float _mulSmoothed = 0.65f;
+
+    // ===== speed state =====
+    float _curSpeed = 0f; // m/s
 
 
     [Header("Debug")]
     [SerializeField] private bool debugLog = true;
-    [SerializeField] private float debugLogInterval = 0.2f;
+    [SerializeField] private float debugLogInterval = 0.25f;
 
-    private float _debugTimer;
+    private float _dbgTimer;
     private Vector3 _prevPos;
-    private float _curYawRate; // deg/s (실제)
     private float _prevYaw;
 
-    private void Start()
+    private float _lastSpeed;   // measured m/s
+    private float _lastYawRate; // measured deg/s
+
+
+    private void Awake()
     {
-        _prevPos = hull.position;
-        _prevYaw = hull.eulerAngles.y;
+        if (!hull) hull = transform;
     }
-    private void Update()
+
+    private void FixedUpdate()
     {
         float dt = Time.deltaTime;
-        if (hull == null) hull = transform;
 
-        // 입력은 먼저 처리하는 게 직관적 (이번 프레임 target 갱신 -> 바로 반영)
+        // (디버깅용) 키 입력 -> target 갱신
         DriverHotKeys();
 
-        // 2) 스무딩 (target -> state)
-        throttle = SmoothAxis(throttle, targetThrottle, accel, dt);
-        steer = SmoothAxis(steer, targetSteer, steerAccel, dt);
-        pivot = SmoothAxis(pivot, targetPivot, steerAccel, dt);
+        // 입력축 스무딩
+        throttle = Smooth(throttle, targetThrottle, axisSharpness, dt);
+        steer = Smooth(steer, targetSteer, axisSharpness, dt);
+        pivot = Smooth(pivot, targetPivot, axisSharpness, dt);
 
-        // 3) 강도(mul) 스무딩
+        // 강도 스무딩
         float desiredMul = IntensityMul(CurrentIntensity());
-        float a = 1f - Mathf.Exp(-intensitySharpness * dt);
-        _mulSmoothed = Mathf.Lerp(_mulSmoothed, desiredMul, a);
+        float ia = 1f - Mathf.Exp(-intensitySharpness * dt);
+        _mulSmoothed = Mathf.Lerp(_mulSmoothed, desiredMul, ia);
 
-        float st = steer * _mulSmoothed;
+        // 제자리 회전 우선: pivot 있으면 속도 0으로 감속 + 회전만
         float pv = pivot * _mulSmoothed;
-
-        // ===== 1) Pivot 우선: 제자리 회전중이면 속도는 0으로 감속시키고 return
         if (Mathf.Abs(pv) > 0.0001f)
         {
-            // pivot 중에도 속도 서서히 0으로 (원하면 brakeAccel로 더 빨리)
-            _curSpeed = Mathf.MoveTowards(_curSpeed, 0f, brakeAccel * dt);
-
-            hull.Rotate(0f, pv * pivotSpeedDeg * dt, 0f, Space.World);
-
-            // 디버그용 yawRate는 아래 블록에서 계산하려면 return 전에 prev 갱신이 필요할 수 있음
-            if (debugLog) UpdateDebug(dt);
+            Quaternion nextRot = rb.rotation * Quaternion.Euler(0f, pv * pivotSpeedDeg * dt, 0f);
+            rb.MoveRotation(nextRot);
             return;
         }
 
-        // ===== 2) 목표 속도(targetSpeed) 계산
-        // throttle의 부호로 전/후진 최대속도 선택
+        // 목표 속도 계산(강도 포함)
         float max = (throttle >= 0f) ? fwdMaxSpeed : bckMaxSpeed;
-
-        // 강도까지 적용된 "목표 속도"
         float targetSpeed = throttle * max * _mulSmoothed;
 
-        // ===== 3) 실제 속도 상태(_curSpeed)를 가속/감속으로 따라가게
+        // 실제 속도 상태(_curSpeed)를 가감속으로 따라가게
         float accelUse = (Mathf.Abs(targetSpeed) < Mathf.Abs(_curSpeed)) ? brakeAccel : speedAccel;
         _curSpeed = Mathf.MoveTowards(_curSpeed, targetSpeed, accelUse * dt);
 
-        // ===== 4) 이동 적용 (이제 move*max가 아니라 _curSpeed를 사용!)
+        // 이동
         if (Mathf.Abs(_curSpeed) > 0.0001f)
-            hull.position += hull.forward * (_curSpeed * dt);
-
-        // ===== 5) 주행 중 회전
-        if (Mathf.Abs(st) > 0.0001f)
         {
-            float turnMul = (_curSpeed < 0f) ? 0.6f : 1.0f; // 후진시 조향 약화
-            hull.Rotate(0f, st * turnSpeedDeg * turnMul * dt, 0f, Space.World);
+            Vector3 nextPos = rb.position + (rb.transform.forward * (_curSpeed * dt));
+            rb.MovePosition(nextPos);
         }
 
-        // ===== Debug
-        if (debugLog) UpdateDebug(dt);
+        // 주행 회전
+        float st = steer * _mulSmoothed;
+        if (Mathf.Abs(st) > 0.0001f)
+        {
+            float turnMul = (_curSpeed < 0f) ? 0.6f : 1.0f;
+            Quaternion nextRot = rb.rotation * Quaternion.Euler(0f, st * turnSpeedDeg * turnMul * dt, 0f);
+            rb.MoveRotation(nextRot);
+        }
+
+        UpdateDebugFixed(dt, hull.position, hull.rotation);
     }
 
-    public void SetThrottle(float throttle01) => throttle = Mathf.Clamp(throttle01, -1f, 1f);
-    public void SetSteer(float steer01) => steer = Mathf.Clamp(steer01, -1f, 1f);
-    public void SetPivot(float pivot01) => pivot = Mathf.Clamp(pivot01, -1f, 1f);
-
-    public void ClearSteer() => steer = 0f;
-    public void ClearPivot() => pivot = 0f;
-    public void Stop()
+    // ====== 외부(디스패처/보이스)에서 쓰는 API ======
+    public void SetDesired(float thr, float st, float pv)
     {
+        targetThrottle = Mathf.Clamp(thr, -1f, 1f);
+        targetSteer = Mathf.Clamp(st, -1f, 1f);
+        targetPivot = Mathf.Clamp(pv, -1f, 1f);
+    }
+
+    public void StopAll()
+    {
+        targetThrottle = 0f;
+        targetSteer = 0f;
+        targetPivot = 0f;
+
         throttle = 0f;
         steer = 0f;
         pivot = 0f;
+
+        _curSpeed = 0f;
     }
 
+    // ====== 디버깅용 키입력 ======
     public void DriverHotKeys()
     {
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            Stop();
-            targetThrottle = 0f;
-            targetSteer = 0f;
-            targetPivot = 0f;
+            StopAll();
             return;
         }
 
-        // throttle: W/S
         float t = 0f;
         if (Input.GetKey(KeyCode.W)) t += 1f;
         if (Input.GetKey(KeyCode.S)) t -= 1f;
 
-        // pivot: Q/E (제자리 회전)
         float p = 0f;
         if (Input.GetKey(KeyCode.Q)) p -= 1f;
         if (Input.GetKey(KeyCode.E)) p += 1f;
 
-        // steer: A/D (주행 회전)
         float s = 0f;
         if (Input.GetKey(KeyCode.A)) s -= 1f;
         if (Input.GetKey(KeyCode.D)) s += 1f;
 
-        // pivot이 있으면 steer는 의미 없게(원하면 유지해도 됨)
-        if (Mathf.Abs(p) > 0.0001f) s = 0f;
+        if (Mathf.Abs(p) > 0.001f) s = 0f;
 
         targetThrottle = Mathf.Clamp(t, -1f, 1f);
         targetSteer = Mathf.Clamp(s, -1f, 1f);
@@ -167,45 +169,52 @@ public class DriverController : MonoBehaviour
     {
         bool hi = Input.GetKey(highKey);
         bool lo = Input.GetKey(lowKey);
-
         if (hi && !lo) return Intensity.Large;
         if (lo && !hi) return Intensity.Small;
         return Intensity.Normal;
     }
+
     private float IntensityMul(Intensity i)
     {
-        switch (i)
+        return i switch
         {
-            case Intensity.Small: return smallMul;
-            case Intensity.Large: return largeMul;
-            default: return normalMul;
-        }
+            Intensity.Small => smallMul,
+            Intensity.Large => largeMul,
+            _ => normalMul
+        };
     }
-    private static float SmoothAxis(float cur, float target, float sharpness, float dt)
+
+    private static float Smooth(float cur, float target, float sharpness, float dt)
     {
-        sharpness = Mathf.Max(0.0001f, sharpness);
-        // Exponential smoothing: 프레임레이트 독립
-        float a = 1f - Mathf.Exp(-sharpness * dt);
+        float a = 1f - Mathf.Exp(-Mathf.Max(0.01f, sharpness) * dt);
         return Mathf.Lerp(cur, target, a);
     }
-    // 디버그 계산은 함수로 빼두는게 깔끔
-    private void UpdateDebug(float dt)
+
+    private void UpdateDebugFixed(float dt, Vector3 curPos, Quaternion curRot)
     {
-        // yawRate(deg/s)
-        float yaw = hull.eulerAngles.y;
+        if (!debugLog) return;
+
+        // measured speed (m/s)
+        Vector3 dp = curPos - _prevPos;
+        _lastSpeed = (dt > 1e-6f) ? (dp.magnitude / dt) : 0f;
+        _prevPos = curPos;
+
+        // measured yawRate (deg/s)
+        float yaw = curRot.eulerAngles.y;
         float dyaw = Mathf.DeltaAngle(_prevYaw, yaw);
-        _curYawRate = (dt > 1e-6f) ? (dyaw / dt) : 0f;
+        _lastYawRate = (dt > 1e-6f) ? (dyaw / dt) : 0f;
         _prevYaw = yaw;
 
-        _debugTimer -= dt;
-        if (_debugTimer <= 0f)
+        _dbgTimer -= dt;
+        if (_dbgTimer <= 0f)
         {
-            _debugTimer = debugLogInterval;
+            _dbgTimer = debugLogInterval;
 
-            Debug.Log(
-                $"[DriverDBG] thr={throttle:0.00} mul={_mulSmoothed:0.00} " +
-                $"curSpd={_curSpeed:0.00}m/s yawRate={_curYawRate:0.0}deg/s pos={hull.position:F1}"
-            );
+           /* Debug.Log(
+                $"[DriverDBG] thr={throttle:0.00} steer={steer:0.00} pivot={pivot:0.00} " +
+                $"mul={_mulSmoothed:0.00} targetSpd={(_curSpeed):0.00}m/s measSpd={_lastSpeed:0.00}m/s " +
+                $"yawRate={_lastYawRate:0.0}deg/s pos={curPos:F1}"
+            );*/
         }
     }
 }

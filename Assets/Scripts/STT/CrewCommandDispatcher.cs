@@ -1,5 +1,23 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
+
+[Serializable]
+public struct DriverDesired
+{
+    public bool stop;
+    public float throttle; // -1..1
+    public float steer;    // -1..1
+    public float pivot;    // -1..1
+
+    public void Clear()
+    {
+        stop = false;
+        throttle = 0f;
+        steer = 0f;
+        pivot = 0f;
+    }
+}
 
 public class CrewCommandDispatcher : MonoBehaviour
 {
@@ -12,7 +30,10 @@ public class CrewCommandDispatcher : MonoBehaviour
     [SerializeField] private LoaderController loader;
     [SerializeField] private DriverController driver;
 
-    
+    [Header("Driver Cmd Processing")]
+    [SerializeField] private int maxDriverCmdsPerFrame = 16; // 무한루프 방지
+    [SerializeField] private bool driverConsumeAllEachFrame = true;
+
     public void EnqueueFromStt(string stt)
     {
         var map = CrewParser.Parse(stt);
@@ -31,11 +52,19 @@ public class CrewCommandDispatcher : MonoBehaviour
 
     void Update()
     {
-        // 프레임마다 하나씩 처리
-        if (driverQ.Count > 0) ExecuteDriver(driverQ.Dequeue());
+        DriverDesired d = default;
+        d.Clear();
+
+        while (driverQ.Count > 0)
+            ExecuteDriver(ref d, driverQ.Dequeue());
+
+        if (d.stop)
+            driver.StopAll();
+        else
+            driver.SetDesired(d.throttle, d.steer, d.pivot);
+
         if (loaderQ.Count > 0) ExecuteLoader(loaderQ.Dequeue());
         if (gunnerQ.Count > 0) ExecuteGunner(gunnerQ.Dequeue());
-    
     }
 
     Queue<ParsedCmd> GetQueue(CrewRole role) => role switch
@@ -56,90 +85,45 @@ public class CrewCommandDispatcher : MonoBehaviour
             _ => 0.65f
         };
     }
-
-    void ExecuteDriver(ParsedCmd c)
+    void ExecuteDriver(ref DriverDesired d, ParsedCmd c)
     {
-        Debug.Log($"[EXEC][조종수] {c},{c.ToString()}");
-
-        var intensity = c.GetIntensity;
-        float mul = IntensityMul(intensity);
+        float mul = IntensityMul(c.GetIntensity);
 
         switch (c.GetCmd)
         {
             case Cmd.Stop:
-                {
-                    driver.Stop();
-                    driver.SetThrottle(0f);
-                    driver.SetSteer(0f);
-                    driver.SetPivot(0f);
-                    break;
-                }
-       
+                d.stop = true;
+                return;
 
             case Cmd.MoveForward:
-                {
-                    driver.ClearPivot();
-                    driver.SetPivot(0f);
+                d.throttle = Mathf.Clamp(+1f * mul, -1f, 1f);
+                return;
 
-                    float throttle = Mathf.Clamp01(1f * mul);     // 0~1
-                    driver.SetThrottle(+throttle);
-                    break;
-                }
-               
             case Cmd.MoveBackward:
-                {
-                    driver.ClearPivot();
-                    driver.SetPivot(0f);
+                d.throttle = Mathf.Clamp(-1f * mul, -1f, 1f);
+                return;
 
-                    float throttle = Mathf.Clamp01(1f * mul);
-                    driver.SetThrottle(-throttle);
-                    break;
-                }
-   
             case Cmd.TurnRight:
-                {
-                    driver.ClearPivot();
-                    driver.SetPivot(0f);
+                d.steer = Mathf.Clamp(+1f * mul, -1f, 1f);
+                d.pivot = 0f;
+                return;
 
-                    float steer = Mathf.Clamp(1f * mul, 0f, 1f);  // 0~1
-                    driver.SetSteer(+steer);
-                    break;
-                }
-                    
             case Cmd.TurnLeft:
-                {
-                    driver.ClearPivot();
-                    driver.SetPivot(0f);
-
-                    float steer = Mathf.Clamp(1f * mul, 0f, 1f);  // 0~1
-                    driver.SetSteer(-steer);
-                    break;
-                }
+                d.steer = Mathf.Clamp(-1f * mul, -1f, 1f);
+                d.pivot = 0f;
+                return;
 
             case Cmd.PivotRight:
-                {
-                    driver.SetThrottle(0f);
-                    driver.SetSteer(0f);
-
-                    float pivot = Mathf.Clamp(1f * mul, 0f, 1f);
-                    driver.SetPivot(+pivot);
-                    break;
-                }
-                
+                d.pivot = Mathf.Clamp(+1f * mul, -1f, 1f);
+                d.steer = 0f;
+                d.throttle = 0f;
+                return;
 
             case Cmd.PivotLeft:
-                {
-                    driver.SetThrottle(0f);
-                    driver.SetSteer(0f);
-
-                    float pivot = Mathf.Clamp(1f * mul, 0f, 1f);
-                    driver.SetPivot(-pivot);
-                    break;
-                }
-
-            default:
-                Debug.Log($"[Driver] 처리 안 함: {c.GetCmd}");
-                break;
+                d.pivot = Mathf.Clamp(-1f * mul, -1f, 1f);
+                d.steer = 0f;
+                d.throttle = 0f;
+                return;
         }
     }
 
