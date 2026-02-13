@@ -493,7 +493,17 @@ public class GunnerController : MonoBehaviour, ITankGunner
         e.x = next;
         gunPitch.localEulerAngles = e;
 
-        //Debug.Log($"[PITCH] cur={cur:0.00} next={next:0.00} target={_pitchTargetLocalX:0.00} actualX={NormalizeAngle(gunPitch.localEulerAngles.x):0.00}");
+       // Debug.Log($"cur={NormalizeAngle(gunPitch.localEulerAngles.x):0.00} target={_pitchTargetLocalX:0.00}");
+    }
+    private float GetTargetHeightDelta()
+    {
+        // aiming이면 클릭한 aimPoint(또는 targetPoint)를 쓰고
+        // tracking이면 trackingTarget.position을 쓰는게 자연스러움
+        Vector3 targetPos =
+            (tracking && trackingTarget != null) ? trackingTarget.position :
+            (targetPoint.HasValue ? targetPoint.Value : gunPitch.position);
+
+        return targetPos.y - gunPitch.position.y; // 목표 - 포신 높이
     }
 
     private float SimulateRangeForPitch(float pitchDeg, Vector3 yawForward, float targetHeightDelta = 0f)
@@ -564,13 +574,17 @@ public class GunnerController : MonoBehaviour, ITankGunner
         // yawForward는 현재 포탑이 향하는 방향으로 (혹은 aimDirWorld)
         Vector3 yawForward = turretYaw.forward;
 
+        float heightDelta = GetTargetHeightDelta();
+
         // 저각/고각 선택에 따라 탐색 범위를 다르게
         float lo = pitchLimits.x;   // -10 같은 값 포함
         float hi = pitchLimits.y;   // +20
 
         // 양끝 샘플
-        float fLo = SimulateRangeForPitch(lo, yawForward);
-        float fHi = SimulateRangeForPitch(hi, yawForward);
+        float fLo = SimulateRangeForPitch(lo, yawForward, heightDelta);
+        float fHi = SimulateRangeForPitch(hi, yawForward, heightDelta);
+
+        //Debug.Log($"[FCS] lo={lo} fLo={fLo:0.000}, hi={hi} fHi={fHi:0.000}, range={rangeMeters}");
 
         // 부호가 같으면(둘 다 위/아래) 해결 불가일 수 있음
         // 이런 경우는 hi를 더 키워서 다시 시도하거나, 도달 불가로 처리
@@ -584,7 +598,7 @@ public class GunnerController : MonoBehaviour, ITankGunner
         for (int i = 0; i < fcsIterations; i++)
         {
             float mid = 0.5f * (lo + hi);
-            float fMid = SimulateRangeForPitch(mid, yawForward);
+            float fMid = SimulateRangeForPitch(mid, yawForward, heightDelta);
 
             if (Mathf.Abs(fMid) < 0.02f) // 2cm 높이 오차면 충분히 정확
             {
@@ -606,6 +620,7 @@ public class GunnerController : MonoBehaviour, ITankGunner
         }
 
         solvedPitchDeg = 0.5f * (lo + hi);
+
         return true;
     }
 

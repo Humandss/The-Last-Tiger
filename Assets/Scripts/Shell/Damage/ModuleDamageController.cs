@@ -1,11 +1,34 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using static UnityEngine.CullingGroup;
 using static UnityEngine.InputManagerEntry;
 
 public enum DamageType { DirectHit, Fragment }
 
+public enum ModuleState { Healthy, Damaged, Destroyed }
+
 public enum PartSide { Internal, External }
+
+public enum ModuleType
+{
+    Engine,
+    Transmission,
+    LeftTrack,
+    RightTrack,
+    Gun,
+    Breech,
+    Loader,
+    Gunner,
+    Driver,
+    Commander,
+    MachineGunner,
+    Ammo,
+    FuelTank
+    
+}
+
 public interface IDamageable
 {
     void TakeDamage(float amount);
@@ -14,6 +37,7 @@ public interface IDamageable
 public class ModuleDamageController : MonoBehaviour, IDamageable
 {
     [Header("Info")]
+    [SerializeField] private ModuleType moduleType = ModuleType.Engine;
     [SerializeField] private PartSide side = PartSide.Internal;
     [SerializeField] private string partName = "Part";
 
@@ -21,11 +45,22 @@ public class ModuleDamageController : MonoBehaviour, IDamageable
     [SerializeField] private float maxHp = 100f;
     [SerializeField] private float hp = 100f;
 
+    [Header("State Thresholds")]
+    [Range(0.05f, 0.99f)]
+    [SerializeField] private float damagedThreshold01 = 0.6f;
+
     [Header("Multipliers")]
     [SerializeField] private float directMul = 1.0f;   // 직격 배수
     [SerializeField] private float fragMul = 1.0f;     // 파편 배수
     [Header("Tuning")]
     [SerializeField] private bool destroyObjectOnZero = false;
+
+    public event Action<ModuleDamageController, float, DamageType> OnDamaged; // (who, appliedDmg, type)
+    public event Action<ModuleDamageController, ModuleState, ModuleState> OnStateChanged;
+
+    public float MaxHp => maxHp;
+    public float Hp => hp;
+    public float Hp01 => (maxHp <= 1e-6f) ? 0f : Mathf.Clamp01(hp / maxHp);
 
     void Awake()
     {
@@ -35,18 +70,48 @@ public class ModuleDamageController : MonoBehaviour, IDamageable
         hp = Mathf.Clamp(hp, 0f, maxHp);
     }
 
-    public void TakeDamage(float amount)
+    public ModuleState State
+    {
+        get
+        {
+            if (hp <= 0.001f) return ModuleState.Destroyed;
+            if (Hp01 < damagedThreshold01) return ModuleState.Damaged;
+            return ModuleState.Healthy;
+        }
+    }
+
+    // 기존 인터페이스 유지(기본은 Fragment로 처리)
+    public void TakeDamage(float amount) => TakeDamage(amount, DamageType.Fragment);
+
+    //타입 포함 버전
+    public void TakeDamage(float amount, DamageType type)
     {
         if (hp <= 0f) return;
 
-        float dmg = Mathf.Max(0f, amount) * Mathf.Max(0f, fragMul);
-        hp -= dmg;
+        var prevState = State;
 
-        Debug.Log($"[DMG] {partName} side={side}, dmg={dmg:0.0} hp={hp:0.0}/{maxHp:0.0}");
-        if (hp > 0f) return;
+        float mul = (type == DamageType.DirectHit) ? directMul : fragMul;
+        float dmg = Mathf.Max(0f, amount) * Mathf.Max(0f, mul);
 
-        hp = 0f;
-        Debug.LogWarning($"[DESTROYED] {partName} ({side})");
+        hp = Mathf.Max(0f, hp - dmg);
 
+        //Debug.Log($"[DMG] {partName} ({moduleType}) side={side}, type={type}, dmg={dmg:0.0} hp={hp:0.0}/{maxHp:0.0}");
+
+        OnDamaged?.Invoke(this, dmg, type);
+
+        var nextState = State;
+        if (prevState != nextState)
+        {
+            Debug.LogWarning($"[STATE] {partName} ({moduleType}) {prevState} -> {nextState}");
+            OnStateChanged?.Invoke(this, prevState, nextState);
+
+            if (destroyObjectOnZero && nextState == ModuleState.Destroyed)
+                gameObject.SetActive(false);
+        }
+    }
+
+    public ModuleType GetModuleType()
+    {
+        return moduleType;
     }
 }
