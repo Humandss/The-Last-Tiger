@@ -15,8 +15,7 @@ public enum ModuleType
 {
     Engine,
     Transmission,
-    LeftTrack,
-    RightTrack,
+    Track,
     Gun,
     Breech,
     Loader,
@@ -40,7 +39,7 @@ public class ModuleDamageController : MonoBehaviour, IDamageable
     [SerializeField] private ModuleType moduleType = ModuleType.Engine;
     [SerializeField] private PartSide side = PartSide.Internal;
     [SerializeField] private string partName = "Part";
-
+    private ModuleManager mgr;
     [Header("HP")]
     [SerializeField] private float maxHp = 100f;
     [SerializeField] private float hp = 100f;
@@ -52,6 +51,7 @@ public class ModuleDamageController : MonoBehaviour, IDamageable
     [Header("Multipliers")]
     [SerializeField] private float directMul = 1.0f;   // 직격 배수
     [SerializeField] private float fragMul = 1.0f;     // 파편 배수
+
     [Header("Tuning")]
     [SerializeField] private bool destroyObjectOnZero = false;
 
@@ -61,6 +61,9 @@ public class ModuleDamageController : MonoBehaviour, IDamageable
     public float MaxHp => maxHp;
     public float Hp => hp;
     public float Hp01 => (maxHp <= 1e-6f) ? 0f : Mathf.Clamp01(hp / maxHp);
+    public string PartName => partName;
+
+    public void BindManager(ModuleManager mgr) => this.mgr = mgr;
 
     void Awake()
     {
@@ -68,16 +71,6 @@ public class ModuleDamageController : MonoBehaviour, IDamageable
             partName = gameObject.name;
 
         hp = Mathf.Clamp(hp, 0f, maxHp);
-    }
-
-    public ModuleState State
-    {
-        get
-        {
-            if (hp <= 0.001f) return ModuleState.Destroyed;
-            if (Hp01 < damagedThreshold01) return ModuleState.Damaged;
-            return ModuleState.Healthy;
-        }
     }
 
     // 기존 인터페이스 유지(기본은 Fragment로 처리)
@@ -108,10 +101,21 @@ public class ModuleDamageController : MonoBehaviour, IDamageable
             if (destroyObjectOnZero && nextState == ModuleState.Destroyed)
                 gameObject.SetActive(false);
         }
+
+        if (dmg > 0f)
+            mgr?.NotifyHitEvent();
     }
 
-    public ModuleType GetModuleType()
+    public ModuleType Type => moduleType;
+
+
+    public ModuleState State
     {
-        return moduleType;
+        get
+        {
+            if (hp <= 0.001f) return ModuleState.Destroyed;
+            if (Hp01 < damagedThreshold01) return ModuleState.Damaged;
+            return ModuleState.Healthy;
+        }
     }
 }
