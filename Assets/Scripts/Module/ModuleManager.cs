@@ -9,11 +9,15 @@ public class ModuleManager : MonoBehaviour
     [SerializeField] private bool autoCollectOnAwake = true;
     [SerializeField] private bool includeInactive = true;
     [SerializeField] private List<ModuleDamageController> modules = new();
+    private List<ModuleDamageController> aModules = new();
 
     [Header("HUD")]
     [SerializeField] private DebugHudChannel hudChannel = DebugHudChannel.Enemy;
     [SerializeField] private bool showOnHitOnly = true;
     [SerializeField] private int maxLines = 20;
+
+    [Header("Prefabs")]
+    [SerializeField] private GameObject firePrefab;
 
     private void Awake()
     {
@@ -33,6 +37,23 @@ public class ModuleManager : MonoBehaviour
             if (modules[i]) modules[i].BindManager(this);
         }
         Debug.Log($"obj : {gameObject.name}, total module : {modules.Count}");
+    }
+
+    public IReadOnlyList<ModuleDamageController> GetAliveInternalModules()
+    {
+        aModules.Clear();
+
+        for (int i = 0; i < modules.Count; i++)
+        {
+            var m = modules[i];
+            if (!m) continue;
+            if (m.State == ModuleState.Destroyed) continue;
+            if (m.Side == PartSide.External) continue;
+
+            aModules.Add(m);
+        }
+
+        return aModules;
     }
 
     /// <summary>

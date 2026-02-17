@@ -5,7 +5,7 @@ using UnityEngine;
 using static UnityEngine.CullingGroup;
 using static UnityEngine.InputManagerEntry;
 
-public enum DamageType { DirectHit, Fragment }
+public enum DamageType { DirectHit, Fragment, Fire }
 
 public enum ModuleState { Healthy, Damaged, Destroyed }
 
@@ -51,6 +51,7 @@ public class ModuleDamageController : MonoBehaviour, IDamageable
     [Header("Multipliers")]
     [SerializeField] private float directMul = 1.0f;   // 직격 배수
     [SerializeField] private float fragMul = 1.0f;     // 파편 배수
+    [SerializeField] private float fireDam =1.0f;
 
     [Header("Tuning")]
     [SerializeField] private bool destroyObjectOnZero = false;
@@ -62,7 +63,7 @@ public class ModuleDamageController : MonoBehaviour, IDamageable
     public float Hp => hp;
     public float Hp01 => (maxHp <= 1e-6f) ? 0f : Mathf.Clamp01(hp / maxHp);
     public string PartName => partName;
-
+    public PartSide Side => side;
     public void BindManager(ModuleManager mgr) => this.mgr = mgr;
 
     void Awake()
@@ -82,13 +83,21 @@ public class ModuleDamageController : MonoBehaviour, IDamageable
         if (hp <= 0f) return;
 
         var prevState = State;
+        float dmg;
 
-        float mul = (type == DamageType.DirectHit) ? directMul : fragMul;
-        float dmg = Mathf.Max(0f, amount) * Mathf.Max(0f, mul);
+        if (type == DamageType.Fire)
+        {
+            dmg = fireDam;
+        }
+        else
+        {
+            float mul = (type == DamageType.DirectHit) ? directMul : fragMul;
+            dmg = Mathf.Max(0f, amount) * Mathf.Max(0f, mul);
+        }
 
         hp = Mathf.Max(0f, hp - dmg);
 
-        //Debug.Log($"[DMG] {partName} ({moduleType}) side={side}, type={type}, dmg={dmg:0.0} hp={hp:0.0}/{maxHp:0.0}");
+        Debug.Log($"[DMG] {partName} ({moduleType}) side={side}, type={type}, dmg={dmg:0.0} hp={hp:0.0}/{maxHp:0.0}");
 
         OnDamaged?.Invoke(this, dmg, type);
 
@@ -102,7 +111,7 @@ public class ModuleDamageController : MonoBehaviour, IDamageable
                 gameObject.SetActive(false);
         }
 
-        if (dmg > 0f)
+        if (dmg > 0f && type != DamageType.Fire) 
             mgr?.NotifyHitEvent();
     }
 

@@ -9,6 +9,7 @@ public class BallisticManager : MonoBehaviour
 
     [Header("Refs")]
     [SerializeField] private ShellData shell;
+    [SerializeField] private GameObject explosionPrefab;
 
     [Header("Hit Layers")]
     [SerializeField] private LayerMask worldMask;
@@ -171,6 +172,8 @@ public class BallisticManager : MonoBehaviour
 
         int layerBit = 1 << hit.collider.gameObject.layer;
 
+        SpawnExplosion(hit);
+
         // Ground면: 도탄/파괴
         if ((groundMask.value & layerBit) != 0)
         {
@@ -193,7 +196,6 @@ public class BallisticManager : MonoBehaviour
 
         // 기타 월드: 두께 관통
         HandleWorldHit(hit, segDir, angleToNormal);
-       
 
     }
     private ArmorManager FindZone(Vector3 point)
@@ -500,5 +502,18 @@ public class BallisticManager : MonoBehaviour
         }
 
         Destroy(gameObject);
+    }
+
+    private void SpawnExplosion(RaycastHit hit)
+    {
+        if (explosionPrefab == null) return;
+
+        var go = Instantiate(explosionPrefab, hit.point + hit.normal * enter,
+                       Quaternion.LookRotation(hit.normal));
+
+        // 안전: 파티클이 끝나면 자동 제거
+        var ps = go.GetComponentInChildren<ParticleSystem>();
+        if (ps) Destroy(go, ps.main.duration + ps.main.startLifetime.constantMax + 0.5f);
+        else Destroy(go, 1.3f);
     }
 }

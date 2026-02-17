@@ -220,6 +220,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   shell: {fileID: 11400000, guid: d2ccdf09c3c88a549873825eae6c04fe, type: 2}
+  explosionPrefab: {fileID: 1836639356757348, guid: 90275866da1844b42a6ede3f4ee0c68b,
+    type: 3}
   worldMask:
     serializedVersion: 2
     m_Bits: 4294967295
