@@ -5,7 +5,7 @@ using UnityEngine;
 using static UnityEngine.CullingGroup;
 using static UnityEngine.InputManagerEntry;
 
-public enum DamageType { DirectHit, Fragment, Fire }
+public enum DamageType { DirectHit, Fragment, FuelTankFire, AmmoRack, AmmoFire }
 
 public enum ModuleState { Healthy, Damaged, Destroyed }
 
@@ -51,7 +51,9 @@ public class ModuleDamageController : MonoBehaviour, IDamageable
     [Header("Multipliers")]
     [SerializeField] private float directMul = 1.0f;   // 직격 배수
     [SerializeField] private float fragMul = 1.0f;     // 파편 배수
-    [SerializeField] private float fireDam =1.0f;
+    [SerializeField] private float fuelFireDam =1.0f;
+    [SerializeField] private float ammoFireDam = 10.0f;
+    [SerializeField] private float explosionDam = 150.0f;
 
     [Header("Tuning")]
     [SerializeField] private bool destroyObjectOnZero = false;
@@ -85,10 +87,9 @@ public class ModuleDamageController : MonoBehaviour, IDamageable
         var prevState = State;
         float dmg;
 
-        if (type == DamageType.Fire)
-        {
-            dmg = fireDam;
-        }
+        if (type == DamageType.FuelTankFire) dmg = fuelFireDam;
+        else if (type == DamageType.AmmoRack) dmg = explosionDam;
+        else if (type == DamageType.AmmoFire) dmg = ammoFireDam;
         else
         {
             float mul = (type == DamageType.DirectHit) ? directMul : fragMul;
@@ -111,7 +112,7 @@ public class ModuleDamageController : MonoBehaviour, IDamageable
                 gameObject.SetActive(false);
         }
 
-        if (dmg > 0f && type != DamageType.Fire) 
+        if (dmg > 0.0f && (type != DamageType.FuelTankFire && type !=DamageType.AmmoFire)) 
             mgr?.NotifyHitEvent();
     }
 

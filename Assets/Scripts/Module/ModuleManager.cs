@@ -16,8 +16,6 @@ public class ModuleManager : MonoBehaviour
     [SerializeField] private bool showOnHitOnly = true;
     [SerializeField] private int maxLines = 20;
 
-    [Header("Prefabs")]
-    [SerializeField] private GameObject firePrefab;
 
     private void Awake()
     {

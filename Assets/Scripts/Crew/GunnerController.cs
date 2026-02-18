@@ -35,7 +35,7 @@ public class GunnerController : MonoBehaviour, ITankGunner
     private Vector3? targetPoint;
     private LayerMask aimMask = ~0;
     private float maxAimDistance = 5000f;
-    private float rangeMeters = 800f;
+    [SerializeField] private float rangeMeters = 800f;
     private bool isAiming;
     private Vector3 aimPoint;
     private bool isAligning;

@@ -83,6 +83,8 @@ public class FuelTankFireEffects : MonoBehaviour
     private void OnStateChanged(ModuleDamageController who, ModuleState prev, ModuleState next)
     {
         if (next != ModuleState.Destroyed) return;
+        if (who.Type != ModuleType.FuelTank) return;
+
 
         // 이미 불이 있으면 또 만들지 않기
         if (onlyOnce && fireInstance != null) return;
@@ -114,7 +116,7 @@ public class FuelTankFireEffects : MonoBehaviour
         var list = moduleMgr.GetAliveInternalModules();
         for (int i = 0; i < list.Count; i++)
         {
-            list[i].TakeDamage(0.0f, DamageType.Fire);
+            list[i].TakeDamage(0.0f, DamageType.FuelTankFire);
         }
     }
 }
