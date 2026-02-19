@@ -5,7 +5,7 @@ using UnityEngine;
 using static UnityEngine.CullingGroup;
 using static UnityEngine.InputManagerEntry;
 
-public enum DamageType { DirectHit, Fragment, FuelTankFire, AmmoRack, AmmoFire }
+public enum DamageType { DirectHit, Fragment, DefaultFire, AmmoRack, AmmoFire }
 
 public enum ModuleState { Healthy, Damaged, Destroyed }
 
@@ -51,7 +51,7 @@ public class ModuleDamageController : MonoBehaviour, IDamageable
     [Header("Multipliers")]
     [SerializeField] private float directMul = 1.0f;   // 직격 배수
     [SerializeField] private float fragMul = 1.0f;     // 파편 배수
-    [SerializeField] private float fuelFireDam =1.0f;
+    [SerializeField] private float defaultFireDam =1.0f;
     [SerializeField] private float ammoFireDam = 10.0f;
     [SerializeField] private float explosionDam = 150.0f;
 
@@ -87,7 +87,7 @@ public class ModuleDamageController : MonoBehaviour, IDamageable
         var prevState = State;
         float dmg;
 
-        if (type == DamageType.FuelTankFire) dmg = fuelFireDam;
+        if (type == DamageType.DefaultFire) dmg = defaultFireDam;
         else if (type == DamageType.AmmoRack) dmg = explosionDam;
         else if (type == DamageType.AmmoFire) dmg = ammoFireDam;
         else
@@ -98,21 +98,21 @@ public class ModuleDamageController : MonoBehaviour, IDamageable
 
         hp = Mathf.Max(0f, hp - dmg);
 
-        Debug.Log($"[DMG] {partName} ({moduleType}) side={side}, type={type}, dmg={dmg:0.0} hp={hp:0.0}/{maxHp:0.0}");
+        //Debug.Log($"[DMG] {partName} ({moduleType}) side={side}, type={type}, dmg={dmg:0.0} hp={hp:0.0}/{maxHp:0.0}");
 
         OnDamaged?.Invoke(this, dmg, type);
 
         var nextState = State;
         if (prevState != nextState)
         {
-            Debug.LogWarning($"[STATE] {partName} ({moduleType}) {prevState} -> {nextState}");
+           // Debug.LogWarning($"[STATE] {partName} ({moduleType}) {prevState} -> {nextState}");
             OnStateChanged?.Invoke(this, prevState, nextState);
 
             if (destroyObjectOnZero && nextState == ModuleState.Destroyed)
                 gameObject.SetActive(false);
         }
 
-        if (dmg > 0.0f && (type != DamageType.FuelTankFire && type !=DamageType.AmmoFire)) 
+        if (dmg > 0.0f && (type != DamageType.DefaultFire && type !=DamageType.AmmoFire)) 
             mgr?.NotifyHitEvent();
     }
 

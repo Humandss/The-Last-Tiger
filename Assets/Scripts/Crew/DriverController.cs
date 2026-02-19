@@ -19,6 +19,18 @@ public class DriverController : MonoBehaviour
     [SerializeField] private float brakeAccel = 8f;          // 감속
     [SerializeField] private float intensitySharpness = 8f;  // 강도 스무딩
 
+    [Header("Mobility (from tracks)")]
+    [SerializeField] private bool leftTrackDestroyed;
+    [SerializeField] private bool rightTrackDestroyed;
+    private bool PivotAllowed => (leftTrackDestroyed ^ rightTrackDestroyed);      // 한쪽만 파괴
+    private bool ImmobilizedByTracks => (leftTrackDestroyed && rightTrackDestroyed); // 둘다 파괴
+
+    [Header("Mobility (from engine or transmission)")]
+    [SerializeField, Range(0f, 1f)] private float mobilityMul = 1f; // 엔진/미션 체력 기반
+    [SerializeField] private bool immobilized = false;              // 둘중 하나 파괴면 true
+    [SerializeField] private float mobilitySmooth = 8f;             // 배율 변화 부드럽게
+    private float mobilityMulSmoothed = 1f;
+
     [Header("Intensity Keys")]
     [SerializeField] private KeyCode highKey = KeyCode.LeftShift;
     [SerializeField] private KeyCode lowKey = KeyCode.LeftControl;
@@ -67,8 +79,36 @@ public class DriverController : MonoBehaviour
     {
         float dt = Time.deltaTime;
 
+        // 모빌리티 배율 스무딩
+        float ma = 1f - Mathf.Exp(-mobilitySmooth * dt);
+        mobilityMulSmoothed = Mathf.Lerp(mobilityMulSmoothed, mobilityMul, ma);
+
         // (디버깅용) 키 입력 -> target 갱신
         DriverHotKeys();
+
+        // 기동 불가면 입력/속도 다 끊고 멈추기
+        if (immobilized)
+        {
+            StopAll();
+            Debug.Log("[Driver] 기동 모듈 파괴 기동불가!");
+            return;
+        }
+
+        if (leftTrackDestroyed || rightTrackDestroyed)
+        {
+            // 둘 다 파괴면 완전 정지
+            if (ImmobilizedByTracks)
+            {
+                StopAll();
+                Debug.Log("[Driver] 궤도 파괴 기동불가!");
+                return;
+            }
+
+            // 한쪽만 파괴: 피벗 외 이동은 막음
+            targetThrottle = 0f;
+
+        }
+
 
         // 입력축 스무딩
         throttle = Smooth(throttle, targetThrottle, axisSharpness, dt);
@@ -91,7 +131,7 @@ public class DriverController : MonoBehaviour
 
         // 목표 속도 계산(강도 포함)
         float max = (throttle >= 0f) ? fwdMaxSpeed : bckMaxSpeed;
-        float targetSpeed = throttle * max * _mulSmoothed;
+        float targetSpeed = throttle * max * _mulSmoothed * mobilityMulSmoothed;
 
         // 실제 속도 상태(_curSpeed)를 가감속으로 따라가게
         float accelUse = (Mathf.Abs(targetSpeed) < Mathf.Abs(_curSpeed)) ? brakeAccel : speedAccel;
@@ -116,6 +156,16 @@ public class DriverController : MonoBehaviour
         UpdateDebugFixed(dt, hull.position, hull.rotation);
     }
 
+    public void SetMobilityState(bool canMove, float maxSpeedMul01)
+    {
+        immobilized = !canMove;
+        mobilityMul = Mathf.Clamp01(maxSpeedMul01);
+    }
+    public void SetTrackDestroyed(bool left, bool right)
+    {
+        leftTrackDestroyed = left;
+        rightTrackDestroyed = right;
+    }
     // ====== 외부(디스패처/보이스)에서 쓰는 API ======
     public void SetDesired(float thr, float st, float pv)
     {
@@ -210,11 +260,11 @@ public class DriverController : MonoBehaviour
         {
             _dbgTimer = debugLogInterval;
 
-           /* Debug.Log(
+            Debug.Log(
                 $"[DriverDBG] thr={throttle:0.00} steer={steer:0.00} pivot={pivot:0.00} " +
                 $"mul={_mulSmoothed:0.00} targetSpd={(_curSpeed):0.00}m/s measSpd={_lastSpeed:0.00}m/s " +
                 $"yawRate={_lastYawRate:0.0}deg/s pos={curPos:F1}"
-            );*/
+            );
         }
     }
 }

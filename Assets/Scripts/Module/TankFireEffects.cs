@@ -1,9 +1,10 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
+using Unity.VisualScripting;
 using UnityEngine;
 
-public class FuelTankFireEffects : MonoBehaviour
+public class TankFireEffects : MonoBehaviour
 {
     [Header("Refs")]
     [SerializeField] private ModuleDamageController module;
@@ -21,6 +22,7 @@ public class FuelTankFireEffects : MonoBehaviour
 
     [Header("Options")]
     [SerializeField] private bool onlyOnce = true; // Destroyed 이벤트가 중복 호출돼도 안전
+    [SerializeField] private float engineFireChance = 0.3f;
 
     [Header("Lifetime")]
     [SerializeField] private bool autoStopAfterTime = false;
@@ -34,24 +36,23 @@ public class FuelTankFireEffects : MonoBehaviour
     private bool onFire = false;
     private void Update()
     {
-        if(onFire)
+        if (!onFire) return;
+
+        if (autoStopAfterTime)
         {
-            if(autoStopAfterTime)
-        {
-                life += Time.deltaTime;
-                if (life >= stopAfterSeconds)
-                {
-                    Destroy(gameObject);
-                    return;
-                }
+            life += Time.deltaTime;
+            if (life >= stopAfterSeconds)
+            {
+                StopFire();
+                return;
             }
-
-            t -= Time.deltaTime;
-            if (t > 0f) return;
-            t = Mathf.Max(0.05f, tickInterval);
-
-            TickDamage();
         }
+
+        t -= Time.deltaTime;
+        if (t > 0f) return;
+        t = Mathf.Max(0.05f, tickInterval);
+
+        TickDamage();
 
     }
     private void Reset()
@@ -65,38 +66,51 @@ public class FuelTankFireEffects : MonoBehaviour
         if (!module) module = GetComponent<ModuleDamageController>();
         if (!fireSpawnPoint) fireSpawnPoint = transform;
 
-        // Destroyed 상태면(씬 시작부터 이미 파괴) 바로 스폰할지 옵션 원하면 여기서 처리 가능
-        // if (module && module.State == ModuleState.Destroyed) SpawnFire();
+        if (module == null)
+        {
+            Debug.LogWarning("[TankFireEffects] ModuleDamageController not found!");
+            enabled = false;
+            return;
+        }
 
-        if (module != null)
-            module.OnStateChanged += OnStateChanged;
-        else
-            Debug.LogWarning("[FuelTankFireEffects] ModuleDamageController not found!");
+        // FuelTank: destroyed에서 발화
+        module.OnStateChanged += OnStateChanged;
+
+        // Engine: damaged에서 30% 발화
+        module.OnDamaged += OnDamaged;
     }
 
     private void OnDestroy()
     {
-        if (module != null)
-            module.OnStateChanged -= OnStateChanged;
+        if (!module) return;
+        module.OnStateChanged -= OnStateChanged;
+        module.OnDamaged -= OnDamaged;
     }
 
     private void OnStateChanged(ModuleDamageController who, ModuleState prev, ModuleState next)
     {
         if (next != ModuleState.Destroyed) return;
-        if (who.Type != ModuleType.FuelTank) return;
 
+        // FuelTank 파괴 시 불
+        if (who.Type == ModuleType.FuelTank) SpawnFire();
 
-        // 이미 불이 있으면 또 만들지 않기
+    }
+    private void OnDamaged(ModuleDamageController who, float dmg, DamageType type)
+    {
+        // 엔진 피격 시 30% 확률 불 (파괴 전에도 가능)
+        if (who.Type != ModuleType.Engine) return;
+
+        // 이미 불이면 또 시도하지 않기
         if (onlyOnce && fireInstance != null) return;
 
-        SpawnFire();
+        if (Random.value < engineFireChance) SpawnFire();
+      
     }
-
     private void SpawnFire()
     {
         if (!firePrefab)
         {
-            Debug.LogWarning("[FuelTankFireEffects] firePrefab not set!");
+            Debug.LogWarning("[TankFireEffects] firePrefab not set!");
             return;
         }
         onFire = true;
@@ -108,15 +122,25 @@ public class FuelTankFireEffects : MonoBehaviour
         if (followParent)
             fireInstance.transform.SetParent(t, worldPositionStays: true);
 
-        Debug.Log($"[FIRE] Fuel tank destroyed -> fire spawned on {gameObject.name}");
+        Debug.Log($"[FIRE] fire spawned on {gameObject.name}");
     }
+    private void StopFire()
+    {
+        onFire = false;
+        life = 0f;
+        t = 0f;
 
+        if (fireInstance) Destroy(fireInstance);
+        fireInstance = null;
+
+        Debug.Log($"[FIRE] fire stopped on {gameObject.name}");
+    }
     private void TickDamage()
     {
         var list = moduleMgr.GetAliveInternalModules();
         for (int i = 0; i < list.Count; i++)
         {
-            list[i].TakeDamage(0.0f, DamageType.FuelTankFire);
+            list[i].TakeDamage(0.0f, DamageType.DefaultFire);
         }
     }
 }
