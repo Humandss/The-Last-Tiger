@@ -64,6 +64,18 @@ public class GunnerController : MonoBehaviour, ITankGunner
     private bool _hasPrevTarget;
     private Vector3 _targetVelSmoothed;
 
+    [SerializeField] private bool gunDestroyed;
+    [SerializeField] private bool breechDestroyed;
+    [SerializeField] private bool gunnerDead;
+    public void SetGunDestroyed(bool v) => gunDestroyed = v;
+    public void SetBreechDestroyed(bool v) => breechDestroyed = v;
+
+    public void SetGunnerDead(bool dead) => gunnerDead = dead;
+    private bool CanFire => !gunDestroyed && !breechDestroyed && !gunnerDead;
+
+    [SerializeField, Range(0f, 1f)] private float gunnerMul = 1f; // 회전/조절 속도 배율
+
+
     private void Awake()
     {
         loader = GetComponent<LoaderController>();
@@ -105,6 +117,15 @@ public class GunnerController : MonoBehaviour, ITankGunner
                 designatedTarget = null;
                 Debug.Log("[Designator] no hit");
             }
+        }
+
+        if (gunnerDead)
+        {
+            Debug.Log("[Gunner] 사망! 포탑 조종 불가");
+            isAiming = false;
+            isAligning = false;
+            StopTracking();
+            return;
         }
 
         HandleRangeHotkeys();
@@ -229,17 +250,18 @@ public class GunnerController : MonoBehaviour, ITankGunner
     }
     private bool AlignHullStep()
     {
+        if (gunnerDead) isAligning = false;
         //차체 yaw
         float targetYaw = hull.eulerAngles.y;
 
         // 현재 turret yaw를 목표로 조금씩 이동
         var y = turretYaw.eulerAngles;
-        y.y = Mathf.MoveTowardsAngle(y.y, targetYaw, yawSpeedDeg * Time.deltaTime);
+        y.y = Mathf.MoveTowardsAngle(y.y, targetYaw, yawSpeedDeg * gunnerMul * Time.deltaTime);
         turretYaw.eulerAngles = y;
 
         // pitch는 0도로 조금씩 이동 (local)
         float curPitch = NormalizeAngle(gunPitch.localEulerAngles.x);
-        float nextPitch = Mathf.MoveTowardsAngle(curPitch, 0f, pitchSpeedDeg * Time.deltaTime);
+        float nextPitch = Mathf.MoveTowardsAngle(curPitch, 0f, pitchSpeedDeg * gunnerMul * Time.deltaTime);
         var p = gunPitch.localEulerAngles;
         p.x = nextPitch;
         gunPitch.localEulerAngles = p;
@@ -307,12 +329,19 @@ public class GunnerController : MonoBehaviour, ITankGunner
         if (flat.sqrMagnitude > 0.0001f)
         {
             Quaternion targetYaw = Quaternion.LookRotation(flat, Vector3.up);
-            turretYaw.rotation = Quaternion.RotateTowards(turretYaw.rotation, targetYaw, yawSpeedDeg * Time.deltaTime);
+            float yawStep = yawSpeedDeg * gunnerMul * Time.deltaTime;
+            turretYaw.rotation = Quaternion.RotateTowards(turretYaw.rotation, targetYaw, yawStep);
         }
 
     }
     public void Fire()
     {
+        if (!CanFire)
+        {
+            Debug.Log("[Gunner] 포신 고장! 사격 불가");
+            return;
+        }
+
         if (!loaderFunc.GetIsLoaded() || loaderFunc.GetIsLoading())
         {
             Debug.Log("[Gunner] 장전이 되지 않았습니다! 사격 불가");
@@ -486,8 +515,11 @@ public class GunnerController : MonoBehaviour, ITankGunner
 
     private void DriveGunPitchToTarget()
     {
+        if (gunnerDead) return;
+
         float cur = NormalizeAngle(gunPitch.localEulerAngles.x);
-        float next = Mathf.MoveTowardsAngle(cur, _pitchTargetLocalX, pitchSpeedDeg * Time.deltaTime);
+        float step = pitchSpeedDeg * gunnerMul * Time.deltaTime;
+        float next = Mathf.MoveTowardsAngle(cur, _pitchTargetLocalX, step);
 
         var e = gunPitch.localEulerAngles;
         e.x = next;
@@ -623,6 +655,10 @@ public class GunnerController : MonoBehaviour, ITankGunner
 
         return true;
     }
+    public void SetGunnerState(bool dead, float hpRatio)
+    {
+        gunnerDead = dead;
+        gunnerMul = Mathf.Lerp(0.45f, 1f, Mathf.Clamp01(hpRatio)); // 최소 45%까지
+    }
 
-   
 }

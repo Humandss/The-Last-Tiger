@@ -80,7 +80,7 @@ public class TurretBlowOff : MonoBehaviour
     {
         if (!flying || !turretRoot) return;
 
-        Debug.Log($"flying={flying} grounded={grounded} spinMag={spin.magnitude:0.0} vel={vel}");
+      //  Debug.Log($"flying={flying} grounded={grounded} spinMag={spin.magnitude:0.0} vel={vel}");
 
         float dt = Time.deltaTime;
         life += dt;

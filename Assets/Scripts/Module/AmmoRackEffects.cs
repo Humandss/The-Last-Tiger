@@ -28,7 +28,9 @@ public class AmmoRackEffects : MonoBehaviour
     [Header("Lifetime")]
     [SerializeField] private bool autoStopAfterTime = false;
     [SerializeField] private float stopAfterSeconds = 15f;
-
+    [SerializeField] private float fadeOutSeconds = 2.5f;
+    [SerializeField] private float destroyBuffer = 0.5f;
+ 
     private readonly List<ModuleDamageController> modules = new();
     private float t;
     private float life;
@@ -49,7 +51,7 @@ public class AmmoRackEffects : MonoBehaviour
                 life += Time.deltaTime;
                 if (life >= stopAfterSeconds)
                 {
-                    StopFireAndSpawnSmoke();
+                    StopFire();
                     Destroy(gameObject);
                     return;
                 }
@@ -130,7 +132,7 @@ public class AmmoRackEffects : MonoBehaviour
             m.TakeDamage(0.0f, DamageType.AmmoRack);
         }
 
-        Invoke(nameof(SpawnSmoke), 1.5f);
+        Invoke(nameof(SpawnSmoke), 0.5f);
         Debug.LogWarning("[AMMO] Explosion!");
     }
 
@@ -149,6 +151,8 @@ public class AmmoRackEffects : MonoBehaviour
 
         if (followParent)
             fireInstance.transform.SetParent(t, worldPositionStays: true);
+
+        Invoke(nameof(SpawnSmoke), 2.5f);
 
         Debug.Log($"[FIRE] Ammo destroyed -> fire spawned on {gameObject.name}");
     }
@@ -172,13 +176,18 @@ public class AmmoRackEffects : MonoBehaviour
 
         Debug.Log($"[FIRE] AmmoRack Finish -> smoke spawned on {gameObject.name}");
     }
-    private void StopFireAndSpawnSmoke()
+    private void StopFire()
     {
         onFire = false;
 
-        if (fireInstance) Destroy(fireInstance);
+        if (fireInstance)
+        {
 
-        SpawnSmoke();
+            StopVfxSlow(fireInstance);
+            fireInstance = null;
+          
+        }
+        
     }
 
     private void TickDamage()
@@ -189,5 +198,30 @@ public class AmmoRackEffects : MonoBehaviour
             list[i].TakeDamage(0.0f, DamageType.AmmoFire);
         }
     }
-   
+    private void StopVfxSlow(GameObject vfx)
+    {
+        if (!vfx) return;
+
+        float maxLife = 0f;
+
+        var psList = vfx.GetComponentsInChildren<ParticleSystem>(true);
+        foreach (var ps in psList)
+        {
+            var main = ps.main;
+            maxLife = Mathf.Max(maxLife, main.startLifetime.constantMax);
+
+            // 새로 방출 멈추고 남은 파티클만 자연 소멸
+            ps.Stop(withChildren: true, stopBehavior: ParticleSystemStopBehavior.StopEmitting);
+        }
+
+        // 트레일 잔상까지 고려(있으면)
+        float maxTrail = 0f;
+        var trails = vfx.GetComponentsInChildren<TrailRenderer>(true);
+        foreach (var tr in trails) maxTrail = Mathf.Max(maxTrail, tr.time);
+
+        float delay = Mathf.Max(fadeOutSeconds, maxLife, maxTrail) + destroyBuffer;
+        Destroy(vfx, delay);
+    }
+
+
 }
