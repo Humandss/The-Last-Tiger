@@ -104,3 +104,6 @@ Assets/StreamingAssets/Whisper/Model/
 Assets/StreamingAssets/Whisper/*.bin
 Assets/StreamingAssets/Whisper/*.exe
 Assets/StreamingAssets/Whisper/*.dll
+
+*.tif
+Assets/TerrainDemoScene_URP/Terrain/Textures/
