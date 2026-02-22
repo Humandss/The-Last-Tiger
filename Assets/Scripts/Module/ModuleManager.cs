@@ -88,7 +88,7 @@ public class ModuleManager : MonoBehaviour
 
         if (bad.Count == 0)
         {
-            sb.AppendLine("(none)");
+            sb.AppendLine("Non-Penetration");
             return sb.ToString();
         }
 

@@ -59,7 +59,6 @@ public class GunnerController : MonoBehaviour, ITankGunner
     [SerializeField] private float velSmoothing = 12f;   // 속도 스무딩(8~16)
     [SerializeField] private int leadIterations = 4;     // 예측 반복(3~5)
     [SerializeField] private float maxLeadTime = 6f;     // 예측 최대 시간 제한
-
     private Vector3 _prevTargetPos;
     private bool _hasPrevTarget;
     private Vector3 _targetVelSmoothed;
@@ -67,9 +66,22 @@ public class GunnerController : MonoBehaviour, ITankGunner
     [SerializeField] private bool gunDestroyed;
     [SerializeField] private bool breechDestroyed;
     [SerializeField] private bool gunnerDead;
+
+    [Header("Dispersion")]
+    [SerializeField] private bool useDispersion = true;
+
+    // 거리별 분산(도) 선형 보간
+    [SerializeField] private float dispersionAt100mDeg = 0.01f;
+    [SerializeField] private float dispersionAt1000mDeg = 0.1f;
+
+    [Header("Dispersion Penalty")]
+    [SerializeField] private float maxGunnerDispersionPenalty = 1.8f; // 거너 상태 나쁠 때 최대
+    [SerializeField] private float maxGunDispersionPenalty = 2.2f;    // 포신 상태 나쁠 때 최대
+
+    [SerializeField, Range(0f, 1f)] private float gunHpRatio = 1f;    // 브릿지에서 넣어줄 값
+
     public void SetGunDestroyed(bool v) => gunDestroyed = v;
     public void SetBreechDestroyed(bool v) => breechDestroyed = v;
-
     public void SetGunnerDead(bool dead) => gunnerDead = dead;
     private bool CanFire => !gunDestroyed && !breechDestroyed && !gunnerDead;
 
@@ -103,7 +115,9 @@ public class GunnerController : MonoBehaviour, ITankGunner
                 if ((trackableMask.value & hitLayerBit) != 0)
                 {
                     designatedTarget = hit.collider.transform;
-                    Debug.Log($"[Designator] TRACK target={designatedTarget.name}, point={hit.point}");
+
+                    float dist = Vector3.Distance(ray.origin, hit.point); // 카메라 기준
+                    Debug.Log($"[Designator] TRACK target={designatedTarget.name}, point={hit.point}, dist={dist:0.0}m");
                 }
                 else
                 {
@@ -348,8 +362,10 @@ public class GunnerController : MonoBehaviour, ITankGunner
             return;
         }
 
-        Debug.Log("[Gunner] 발사!");
-        fireController.FireProjectile();
+        Vector3 shotDir = GetDispersionShotDirection();
+
+        Debug.Log($"[Gunner] 발사! range={rangeMeters:0}m dir={shotDir}");
+        fireController.FireProjectile(shotDir);
 
         loaderFunc.IsShot();
         loaderFunc.LoadDefault();
@@ -660,5 +676,40 @@ public class GunnerController : MonoBehaviour, ITankGunner
         gunnerDead = dead;
         gunnerMul = Mathf.Lerp(0.45f, 1f, Mathf.Clamp01(hpRatio)); // 최소 45%까지
     }
+    public void SetGunHpRatio(float hpRatio)
+    {
+        gunHpRatio = Mathf.Clamp01(hpRatio);
+    }
 
+    private Vector3 GetDispersionShotDirection()
+    {
+        Vector3 baseDir = gunPitch.forward; //
+
+        if (!useDispersion) return baseDir.normalized;
+
+        // 1) 거리 기반 기본 분산
+        float t = Mathf.InverseLerp(100f, 1000f, rangeMeters);
+        float baseDispDeg = Mathf.Lerp(dispersionAt100mDeg, dispersionAt1000mDeg, t);
+
+        // 2) 거너 체력 페널티 (HP 낮을수록 분산 증가)
+        // gunnerMul은 0.45~1.0이라 직접 쓰기보다 hpRatio 기반이 더 직관적
+        float gunnerHp01 = Mathf.InverseLerp(0.45f, 1f, gunnerMul); // 임시(정확도는 떨어짐)
+        float gunnerPenalty = Mathf.Lerp(maxGunnerDispersionPenalty, 1f, gunnerHp01);
+  
+        // 3) 포신 체력 페널티
+        float gunPenalty = Mathf.Lerp(maxGunDispersionPenalty, 1f, gunHpRatio);
+
+        float finalDispDeg = baseDispDeg * gunnerPenalty * gunPenalty;
+
+        // 4) 원형 분산
+        Vector2 rnd = Random.insideUnitCircle * finalDispDeg;
+        float yawOffset = rnd.x;
+        float pitchOffset = rnd.y;
+
+        Quaternion spreadRot =
+            Quaternion.AngleAxis(yawOffset, gunPitch.up) *
+            Quaternion.AngleAxis(pitchOffset, gunPitch.right);
+
+        return (spreadRot * baseDir).normalized;
+    }
 }

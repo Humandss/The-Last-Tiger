@@ -30,6 +30,7 @@ public class GunDisableBridge : MonoBehaviour
         {
             gunner.SetGunDestroyed(gun && gun.State == ModuleState.Destroyed);
             gunner.SetBreechDestroyed(breech && breech.State == ModuleState.Destroyed);
+            gunner.SetGunHpRatio(gun.Hp01);
             gunner.SetGunnerState(gunnerDead, g);
         }
 
