@@ -3285,7 +3285,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 1762431796}
+  m_Father: {fileID: 729043130}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &330585547
 MonoBehaviour:
@@ -5728,6 +5728,37 @@ MonoBehaviour:
   ricochetBonusDeg: 0
   drawGizmo: 1
   gizmoColor: {r: 0, g: 1, b: 1, a: 0.25}
+--- !u!1 &630393307
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 630393308}
+  m_Layer: 10
+  m_Name: Fire Smoke
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &630393308
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 630393307}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: -1.15, z: -0.94}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1644377949}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &630977114
 GameObject:
   m_ObjectHideFlags: 0
@@ -5832,7 +5863,7 @@ Transform:
   m_GameObject: {fileID: 635153561}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.561, y: 1.335, z: -0.484}
+  m_LocalPosition: {x: -0.561, y: 1.457, z: -0.471}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -5859,7 +5890,7 @@ MonoBehaviour:
   pitchLimits: {x: -5, y: 60}
   freeLookHoldKey: 308
   enableToggleKey: 1
-  freeLookToggleKey: 118
+  freeLookToggleKey: 98
   requireRightMouse: 0
   mode: 0
 --- !u!1 &637857711
@@ -6860,6 +6891,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 711577501}
+  - component: {fileID: 711577502}
   m_Layer: 7
   m_Name: Turret
   m_TagString: Untagged
@@ -6883,6 +6915,28 @@ Transform:
   - {fileID: 3974867960145884146}
   m_Father: {fileID: 152308380}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &711577502
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 711577500}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 32b4dbbbc2cae3b47899a75ed0a244f7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxKickEuler: {x: 1.2, y: 0.8, z: 0.25}
+  randomizeYawRoll: 1
+  kickInSpeed: 28
+  returnSpeed: 10
+  damping: 16
+  noiseFreq: 22
+  noiseAmount: 0.2
+  affectPitch: 1
+  affectYaw: 1
+  affectRoll: 1
 --- !u!1 &720003212
 GameObject:
   m_ObjectHideFlags: 0
@@ -7102,6 +7156,61 @@ Transform:
   - {fileID: 703401348}
   m_Father: {fileID: 1778085943}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &729043129
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 729043130}
+  - component: {fileID: 729043131}
+  m_Layer: 7
+  m_Name: CommanderShakePivot
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &729043130
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 729043129}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 330585546}
+  m_Father: {fileID: 1762431796}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &729043131
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 729043129}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 32b4dbbbc2cae3b47899a75ed0a244f7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxKickEuler: {x: 3, y: 3, z: 3}
+  randomizeYawRoll: 1
+  kickInSpeed: 40
+  returnSpeed: 20
+  damping: 16
+  noiseFreq: 22
+  noiseAmount: 0.2
+  affectPitch: 1
+  affectYaw: 1
+  affectRoll: 1
 --- !u!1 &736254522
 GameObject:
   m_ObjectHideFlags: 0
@@ -7606,6 +7715,37 @@ Transform:
   - {fileID: 1915155886}
   m_Father: {fileID: 1644851860}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &800276849
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 800276850}
+  m_Layer: 7
+  m_Name: MuzzleFxSocket
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &800276850
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 800276849}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0.7071068, y: 0, z: 0, w: 0.7071068}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1544385120109349211}
+  m_LocalEulerAnglesHint: {x: 90, y: 0, z: 0}
 --- !u!1 &803386620
 GameObject:
   m_ObjectHideFlags: 0
@@ -15746,6 +15886,7 @@ Transform:
   - {fileID: 1763614345}
   - {fileID: 1324072338}
   - {fileID: 1141647345}
+  - {fileID: 630393308}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1644377950
@@ -15781,12 +15922,27 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   muzzle: {fileID: 1544385120109349211}
+  muzzleFxSocket: {fileID: 800276850}
+  dustSpot: {fileID: 630393308}
   projectile: {fileID: 7643823996785504197, guid: 253c318ce14ccf84dabc7e96fbe85195,
     type: 3}
+  cameraShotShake: {fileID: 729043131}
+  turretShotShake: {fileID: 711577502}
+  cameraShakeIntensity: 1
+  turretShakeIntensity: 0.45
+  recoilPart: {fileID: 7551439643435861976}
+  recoilLocalAxis: {x: 0, y: 0, z: -1}
+  recoilDistance: 0.22
+  recoilKickSpeed: 15
+  recoilReturnSpeed: 7
+  recoilHoldTime: 0.03
   muzzleFlashPrefab: {fileID: 1164749952747979384, guid: b00f407fae7fc4b4b92c15b95e101cc3,
     type: 3}
-  muzzleFlashLife: 0.15
+  dustSmokePrefab: {fileID: 1355631944197212, guid: 10c010e679890e243beafa574f44a31a,
+    type: 3}
+  muzzleFlashLife: 1.5
   muzzleFlashLocalOffset: {x: 0, y: 0, z: 0}
+  dustSmokeLocalOffset: {x: 0, y: 0, z: 0}
   muzzleFlashFollowMuzzle: 1
 --- !u!114 &1644377952
 MonoBehaviour:
@@ -17217,7 +17373,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 330585546}
+  - {fileID: 729043130}
   m_Father: {fileID: 635153562}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1763614344
@@ -21698,7 +21854,8 @@ Transform:
   m_LocalPosition: {x: -0.000001611188, y: -0.00000047683716, z: 2.8764884}
   m_LocalScale: {x: 1, y: 1, z: 1.0000001}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 800276850}
   m_Father: {fileID: 7551439643435861976}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &1564308489350167607
