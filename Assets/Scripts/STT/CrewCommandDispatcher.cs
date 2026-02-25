@@ -49,7 +49,13 @@ public class CrewCommandDispatcher : MonoBehaviour
         }
 
     }
+    public void EnqueueParsed(CrewRole role, ParsedCmd cmd)
+    {
+        var q = GetQueue(role);
+        q.Enqueue(cmd);
 
+        Debug.Log($"[EnqueueParsed] {role} => {cmd}");
+    }
     void Update()
     {
         DriverDesired d = default;

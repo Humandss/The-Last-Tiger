@@ -55,7 +55,7 @@ public class LoaderController : MonoBehaviour, ITankLoader
         if (loaderDead && isLoading)
             CeaseAction();
 
-        if (Input.GetKeyDown(KeyCode.Alpha3)) Load(LastSelectedAmmo);
+        if (Input.GetKeyDown(KeyCode.R)) Load(LastSelectedAmmo);
     }
     public void LoadDefault()
     {

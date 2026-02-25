@@ -23,25 +23,60 @@ public class CommanderController : MonoBehaviour
     [SerializeField] private Vector2 pitchLimits = new Vector2(-20f, 60f);
 
     [Header("Input")]
-    [SerializeField] private KeyCode freeLookHoldKey = KeyCode.LeftAlt; // 누르는 동안 자유시점
     [SerializeField] private bool enableToggleKey = true;
     [SerializeField] private KeyCode freeLookToggleKey = KeyCode.V;     // 고정 토글
     [SerializeField] private bool requireRightMouse = false;            // 우클릭 동안만 회전할지
 
-    [Header("State")]
-    [SerializeField] private ViewMode mode = ViewMode.TurretLinked;
+    [Header("Input")]
+    [SerializeField] private KeyCode zoomHoldKey = KeyCode.Mouse1; // 우클릭 홀드
+    [SerializeField] private bool wheelOnlyWhileZooming = true;
 
-    private bool toggleFreeLookLocked = false; // V로 고정된 자유시점 여부
+    [Header("Zoom Levels (WW2 commander binocular style)")]
+    [SerializeField] private float[] zoomMagnifications = new float[] { 4f, 6f, 8f };
+
+    [Header("FOV")]
+    [SerializeField] private float baseFov = 60f;
+    [SerializeField] private float zoomFovSmooth = 16f;   // 클수록 빨리 붙음
+    [SerializeField] private float minFovClamp = 5f;
+    [SerializeField] private float maxFovClamp = 90f;
+    [SerializeField] private bool scaleSensitivityByFov = true;
+    [SerializeField] private float zoomSensMinMul = 0.12f;   // 너무 느려지지 않게
+    [SerializeField] private float zoomSensExponent = 0.85f; // 1=정비례, 0.75~1 추천
+
+    [Header("State")]
+    [SerializeField] private bool isZooming;
+    [SerializeField] private int zoomIndex = 1; 
+    [SerializeField] private ViewMode mode = ViewMode.TurretLinked;
 
     // 모드별 yaw 저장 (전환 시 튐 방지)
     private float yawLocal;   // 포탑 기준 로컬 yaw
     private float yawWorld;   // 월드 기준 yaw
     private float pitch;
 
+    private float targetFov;
+
+    [Header("Debug")]
+    [SerializeField] private bool debugLog;
+
     private void Awake()
     {
         if (!yawPivot) yawPivot = transform;
         if (!pitchPivot) pitchPivot = transform;
+
+        if (!commanderCam) commanderCam = GetComponentInChildren<Camera>();
+
+        if (commanderCam != null)
+        {
+            baseFov = commanderCam.fieldOfView;
+            targetFov = baseFov;
+        }
+
+        if (zoomMagnifications == null || zoomMagnifications.Length == 0)
+        {
+            zoomMagnifications = new float[] { 4f, 6f, 8f };
+        }
+
+        zoomIndex = Mathf.Clamp(zoomIndex, 0, zoomMagnifications.Length - 1);
 
         yawLocal = NormalizeAngle(yawPivot.localEulerAngles.y);
         yawWorld = yawPivot.eulerAngles.y;
@@ -61,6 +96,10 @@ public class CommanderController : MonoBehaviour
         float mx = Input.GetAxisRaw("Mouse X");
         float my = Input.GetAxisRaw("Mouse Y");
 
+        float sensMul = GetLookSensitivityMultiplier();
+        mx *= sensMul;
+        my *= sensMul;
+
         // Yaw 입력 누적 (모드별로 저장 위치 다름)
         if (mode == ViewMode.TurretLinked)
             yawLocal += mx * sensitivity * dt;
@@ -73,43 +112,33 @@ public class CommanderController : MonoBehaviour
         pitch = Mathf.Clamp(pitch, pitchLimits.x, pitchLimits.y);
 
         ApplyRotation();
+        HandleZoomInput();
+        UpdateZoomFov(Time.deltaTime);
 
-        // (선택) 정면 복귀
-        if (Input.GetKeyDown(KeyCode.R))
-        {
-            yawLocal = 0f;
-            yawWorld = yawPivot.eulerAngles.y;
-            pitch = 0f;
-            ApplyRotation();
-        }
+    
     }
 
     private void HandleViewModeInput()
     {
-        // V 토글 고정
         if (enableToggleKey && Input.GetKeyDown(freeLookToggleKey))
         {
-            toggleFreeLookLocked = !toggleFreeLookLocked;
+            bool nextFreeLook = (mode != ViewMode.FreeLook);
+
+            if (nextFreeLook)
+            {
+                // 자유시점 진입: 현재 시선 기준으로 월드 yaw 동기화 (튐 방지)
+                yawWorld = yawPivot.eulerAngles.y;
+                mode = ViewMode.FreeLook;
+            }
+            else
+            {
+                // 포탑연동 복귀: 현재 시선 기준으로 로컬 yaw 동기화 (튐 방지)
+                yawLocal = NormalizeAngle(yawPivot.localEulerAngles.y);
+                mode = ViewMode.TurretLinked;
+            }
+
+            if (debugLog) Debug.Log($"[CommanderView] Mode -> {mode}");
         }
-
-        // Alt 홀드 우선 + 토글 고정 병행
-        bool holdFree = Input.GetKey(freeLookHoldKey);
-        bool wantFree = holdFree || toggleFreeLookLocked;
-
-        ViewMode targetMode = wantFree ? ViewMode.FreeLook : ViewMode.TurretLinked;
-        if (targetMode == mode) return;
-
-        // 모드 전환 순간 현재 시선 기준으로 동기화 (튐 방지)
-        if (targetMode == ViewMode.FreeLook)
-        {
-            yawWorld = yawPivot.eulerAngles.y;
-        }
-        else // TurretLinked 복귀
-        {
-            yawLocal = NormalizeAngle(yawPivot.localEulerAngles.y);
-        }
-
-        mode = targetMode;
     }
 
     private void ApplyRotation()
@@ -137,5 +166,67 @@ public class CommanderController : MonoBehaviour
         a %= 360f;
         if (a > 180f) a -= 360f;
         return a;
+    }
+    private void HandleZoomInput()
+    {
+        if (Input.GetKeyDown(zoomHoldKey))
+        {
+            isZooming = !isZooming;
+        }
+
+        // 휠로 배율 단계 변경
+        bool canWheel = !wheelOnlyWhileZooming || isZooming;
+        if (canWheel)
+        {
+            float wheel = Input.mouseScrollDelta.y;
+
+            if (wheel > 0.01f)
+            {
+                // 확대 (배율 증가)
+                zoomIndex = Mathf.Clamp(zoomIndex + 1, 0, zoomMagnifications.Length - 1);
+                if (debugLog) Debug.Log($"[CommanderZoom] Zoom Step Up -> {GetCurrentZoomMag():0.#}x");
+            }
+            else if (wheel < -0.01f)
+            {
+                // 축소 (배율 감소)
+                zoomIndex = Mathf.Clamp(zoomIndex - 1, 0, zoomMagnifications.Length - 1);
+                if (debugLog) Debug.Log($"[CommanderZoom] Zoom Step Down -> {GetCurrentZoomMag():0.#}x");
+            }
+        }
+
+        // 목표 FOV 계산
+        if (isZooming)
+        {
+            float mag = GetCurrentZoomMag();
+            targetFov = Mathf.Clamp(baseFov / Mathf.Max(1f, mag), minFovClamp, maxFovClamp);
+        }
+        else
+        {
+            targetFov = Mathf.Clamp(baseFov, minFovClamp, maxFovClamp);
+        }
+    }
+
+    private void UpdateZoomFov(float dt)
+    {
+        float a = 1f - Mathf.Exp(-Mathf.Max(0.01f, zoomFovSmooth) * dt);
+        commanderCam.fieldOfView = Mathf.Lerp(commanderCam.fieldOfView, targetFov, a);
+    }
+
+    private float GetCurrentZoomMag()
+    {
+        if (zoomMagnifications == null || zoomMagnifications.Length == 0) return 1f;
+        int idx = Mathf.Clamp(zoomIndex, 0, zoomMagnifications.Length - 1);
+        return Mathf.Max(1f, zoomMagnifications[idx]);
+    }
+    private float GetLookSensitivityMultiplier()
+    {
+        if (!scaleSensitivityByFov || commanderCam == null)
+            return 1f;
+
+        float ratio = commanderCam.fieldOfView / Mathf.Max(1f, baseFov);
+        ratio = Mathf.Clamp01(ratio);
+
+        float scaled = Mathf.Pow(Mathf.Max(0.0001f, ratio), Mathf.Max(0.01f, zoomSensExponent));
+        return Mathf.Clamp(scaled, zoomSensMinMul, 1f);
     }
 }

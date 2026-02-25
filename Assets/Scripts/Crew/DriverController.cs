@@ -23,7 +23,6 @@ public class DriverController : MonoBehaviour
     [Header("Mobility (from tracks)")]
     [SerializeField] private bool leftTrackDestroyed;
     [SerializeField] private bool rightTrackDestroyed;
-    private bool PivotAllowed => (leftTrackDestroyed ^ rightTrackDestroyed);      // 한쪽만 파괴
     private bool ImmobilizedByTracks => (leftTrackDestroyed && rightTrackDestroyed); // 둘다 파괴
 
     [Header("Mobility (from engine or transmission)")]
@@ -205,19 +204,19 @@ public class DriverController : MonoBehaviour
         if (Input.GetKey(KeyCode.W)) t += 1f;
         if (Input.GetKey(KeyCode.S)) t -= 1f;
 
-        float p = 0f;
-        if (Input.GetKey(KeyCode.Q)) p -= 1f;
-        if (Input.GetKey(KeyCode.E)) p += 1f;
+        //float p = 0f;
+        //if (Input.GetKey(KeyCode.Q)) p -= 1f;
+       // if (Input.GetKey(KeyCode.E)) p += 1f;
 
         float s = 0f;
         if (Input.GetKey(KeyCode.A)) s -= 1f;
         if (Input.GetKey(KeyCode.D)) s += 1f;
 
-        if (Mathf.Abs(p) > 0.001f) s = 0f;
+       // if (Mathf.Abs(p) > 0.001f) s = 0f;
 
         targetThrottle = Mathf.Clamp(t, -1f, 1f);
         targetSteer = Mathf.Clamp(s, -1f, 1f);
-        targetPivot = Mathf.Clamp(p, -1f, 1f);
+        //targetPivot = Mathf.Clamp(p, -1f, 1f);
     }
 
     private Intensity CurrentIntensity()

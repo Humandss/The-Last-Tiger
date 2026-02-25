@@ -104,7 +104,7 @@ public class GunnerController : MonoBehaviour, ITankGunner
 
     private void Update()
     {
-        if (Input.GetMouseButtonDown(0))
+        if (Input.GetMouseButtonDown(2))
         {
             var ray = commanderCam.ScreenPointToRay(Input.mousePosition);
             if (Physics.Raycast(ray, out var hit, maxAimDistance, aimMask, QueryTriggerInteraction.Ignore))
@@ -163,10 +163,10 @@ public class GunnerController : MonoBehaviour, ITankGunner
     private void HandleRangeHotkeys()
     {
 
-        if (Input.GetKeyDown(KeyCode.Alpha1)) Aim();
+        if (Input.GetKeyDown(KeyCode.F)) Aim();
 
 
-        if (Input.GetKeyDown(KeyCode.Alpha2)) Fire();
+        if (Input.GetKeyDown(KeyCode.Mouse0)) Fire();
 
 
         if (Input.GetKeyDown(KeyCode.T))
@@ -174,8 +174,13 @@ public class GunnerController : MonoBehaviour, ITankGunner
             CeaseAction();
         }
 
+        if (Input.GetKeyDown(KeyCode.Y))
+        {
+            AlignHull();
+        }
+
         // 1) 첫 입력(탭) 처리
-        if (Input.GetKeyDown(KeyCode.UpArrow))
+        if (Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.E))
         {
             SetRange(rangeMeters + rangeStep);
             _rangeRepeatDir = +1;
@@ -183,7 +188,7 @@ public class GunnerController : MonoBehaviour, ITankGunner
             Debug.Log($"[Gunner] 사거리 -> {targetPoint}");
             return;
         }
-        if (Input.GetKeyDown(KeyCode.DownArrow))
+        if (Input.GetKeyDown(KeyCode.DownArrow) || Input.GetKeyDown(KeyCode.Q))
         {
             SetRange(rangeMeters - rangeStep);
             _rangeRepeatDir = -1;
@@ -193,8 +198,8 @@ public class GunnerController : MonoBehaviour, ITankGunner
         }
 
         // 2) 키를 뗐으면 반복 중지
-        bool holdingUp = Input.GetKey(KeyCode.UpArrow);
-        bool holdingDown = Input.GetKey(KeyCode.DownArrow);
+        bool holdingUp = Input.GetKey(KeyCode.UpArrow)  || Input.GetKey(KeyCode.E);
+        bool holdingDown = Input.GetKey(KeyCode.DownArrow) || Input.GetKey(KeyCode.Q);
 
         if (!holdingUp && !holdingDown)
         {
@@ -368,7 +373,7 @@ public class GunnerController : MonoBehaviour, ITankGunner
         fireController.FireProjectile(shotDir);
 
         loaderFunc.IsShot();
-        loaderFunc.LoadDefault();
+        //loaderFunc.LoadDefault();
     }
 
     public void StartTracking()
