@@ -20142,8 +20142,8 @@ MonoBehaviour:
   turnSpeedDeg: 7
   pivotSpeedDeg: 7
   axisSharpness: 10
-  speedAccel: 1
-  brakeAccel: 3
+  speedAccel: 0.35
+  brakeAccel: 2
   intensitySharpness: 8
   leftTrackDestroyed: 0
   rightTrackDestroyed: 0
@@ -21787,7 +21787,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1752999800}
-  - component: {fileID: 1752999799}
+  - component: {fileID: 1752999803}
+  - component: {fileID: 1752999802}
   - component: {fileID: 1752999801}
   m_Layer: 0
   m_Name: STT
@@ -21795,24 +21796,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
---- !u!114 &1752999799
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1752999798}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 05cb2f4dd41d2e74ca8fbfb534054bb9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  dispatcher: {fileID: 1752999801}
-  pushToTalkKey: 118
-  maxRecordSeconds: 6
-  recordSampleRate: 44100
-  threads: 8
+  m_IsActive: 1
 --- !u!4 &1752999800
 Transform:
   m_ObjectHideFlags: 0
@@ -21845,6 +21829,39 @@ MonoBehaviour:
   driver: {fileID: 1644377952}
   maxDriverCmdsPerFrame: 16
   driverConsumeAllEachFrame: 1
+--- !u!114 &1752999802
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1752999798}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b0fcf820748c66b4b837f76a626cceca, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  dispatcher: {fileID: 1752999801}
+  minConfidence: 0.45
+  fallbackToSttParser: 1
+--- !u!114 &1752999803
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1752999798}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 29f4c3df812e34e41bfa6c3f20a27de6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  url: ws://localhost:8787/unity
+  bridge: {fileID: 1752999802}
+  pttKey: 118
+  sampleRate: 48000
+  frameMs: 100
+  logDebug: 1
 --- !u!1 &1753043216
 GameObject:
   m_ObjectHideFlags: 0
