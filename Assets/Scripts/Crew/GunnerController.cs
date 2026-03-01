@@ -373,7 +373,7 @@ public class GunnerController : MonoBehaviour, ITankGunner
         fireController.FireProjectile(shotDir);
 
         loaderFunc.IsShot();
-        //loaderFunc.LoadDefault();
+        loaderFunc.LoadDefault();
     }
 
     public void StartTracking()

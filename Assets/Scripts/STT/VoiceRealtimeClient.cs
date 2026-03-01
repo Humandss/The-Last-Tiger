@@ -1,13 +1,18 @@
-using System;
+ï»¿using System;
+using System.Collections;
 using System.Collections.Generic;
-using System.Net.NetworkInformation;
 using UnityEngine;
 using WebSocketSharp;
 
 /// <summary>
-/// VÅ°¸¦ ´©¸£´Â µ¿¾È ¸¶ÀÌÅ©¸¦ Ä¸Ã³ÇØ¼­ PCM16(base64) ÇÁ·¹ÀÓÀ» ¼­¹ö·Î Àü¼Û.
-/// VÅ°¸¦ ¶¼¸é commit Àü¼Û.
-/// ¼­¹ö°¡ º¸³»´Â cmdjsonÀ» RealtimeCmdBridge_JsonUtility·Î Àü´Ş.
+/// ê°œì„ ì‚¬í•­:
+/// âœ… Whisper promptë¥¼ ì‹¤ì œ ë°œí™” ë¬¸ì¥ í˜•íƒœë¡œ ë³€ê²½ (í¬ìˆ˜/ì¡°ì¢…ìˆ˜ í˜¼ë™ ë°©ì§€)
+/// âœ… ë¬´ìŒ ê²Œì´íŠ¸ holdoff ì¶”ê°€ (ë‹¨ì–´ ì‚¬ì´ ì§§ì€ ë¬´ìŒì— ì˜ë¦¼ ë°©ì§€)
+/// âœ… ë§ˆì´í¬ ì›Œë°ì—… 100msë¡œ ë‹¨ì¶• (ì•ë¶€ë¶„ ì˜ë¦¼ê³¼ ë…¸ì´ì¦ˆ íŠ¸ë ˆì´ë“œì˜¤í”„ ê°œì„ )
+/// âœ… tail 500msë¡œ ì¦ê°€ (í•œêµ­ì–´ ì–´ë§ íì‡„ìŒ ì˜ë¦¼ ë°©ì§€ â€” "íƒ„", "ì§„", "ìˆ˜")
+/// âœ… Pre-emphasis ê¸°ë³¸ OFF (WhisperëŠ” ì›ë³¸ ì˜¤ë””ì˜¤ ì„ í˜¸)
+/// âœ… AGC target RMS ë‚®ì¶¤ (ê³¼ì¦í­ìœ¼ë¡œ ì¸í•œ í´ë¦¬í•‘ ë°©ì§€)
+/// âœ… ìƒ˜í”Œë ˆì´íŠ¸ í™•ì¸ ë¡œê·¸ ì¶”ê°€
 /// </summary>
 public class VoiceRealtimeClient : MonoBehaviour
 {
@@ -20,227 +25,329 @@ public class VoiceRealtimeClient : MonoBehaviour
     [Header("PTT")]
     [SerializeField] private KeyCode pttKey = KeyCode.V;
 
-    [Header("Mic")]
-    [SerializeField] private int sampleRate = 16000;     // ¼­¹ö/Realtime¿¡ ¸ÂÃç 16k ±ÇÀå
-    [SerializeField] private int frameMs = 50;           // 20~100ms ±ÇÀå(50ms ¹«³­)
+    [Header("Audio Processing")]
+    // âœ… Pre-emphasis ê¸°ë³¸ OFF â€” WhisperëŠ” ì›ë³¸ ì˜¤ë””ì˜¤ì—ì„œ ë” ì •í™•í•¨
+    //    ON ì‹œ ììŒ ê³ ì£¼íŒŒ ê°•ì¡° íš¨ê³¼ê°€ ìˆì§€ë§Œ ì˜¤íˆë ¤ ì™œê³¡ì´ ìƒê¸¸ ìˆ˜ ìˆìŒ
+    [SerializeField] private bool usePreEmphasis = false;
+    [SerializeField] private bool useAGC = true;
+    [SerializeField] private bool useSilenceGate = true;
+    // âœ… AGC target RMS ë‚®ì¶¤: 0.15 â†’ 0.12 (ê³¼ì¦í­/í´ë¦¬í•‘ ë°©ì§€)
+    [SerializeField] private float agcTargetRms = 0.12f;
+    [SerializeField] private float agcMaxGain = 8f;
+    [SerializeField] private float agcMinGain = 0.5f;
+    [SerializeField] private float preEmphAlpha = 0.97f;
+    // âœ… ë¬´ìŒ ì„ê³„ê°’ ë‚®ì¶¤: 0.005 â†’ 0.002 (ì¡°ìš©íˆ ë§í•´ë„ ì˜ë¦¬ì§€ ì•Šê²Œ)
+    [SerializeField] private float silenceThreshold = 0.002f;
+    // âœ… tail ëŠ˜ë¦¼: 0.30 â†’ 0.50 (í•œêµ­ì–´ ì–´ë§ ììŒ "íƒ„", "ì§„", "ìˆ˜" ì˜ë¦¼ ë°©ì§€)
+    [SerializeField] private float tailSeconds = 0.50f;
+    // âœ… holdoff í”„ë ˆì„: ë‹¨ì–´ ì‚¬ì´ ì§§ì€ ë¬´ìŒ(ìˆ¨ ê³ ë¥´ê¸° ë“±)ì— ê²Œì´íŠ¸ê°€ ëŠê¸°ì§€ ì•Šë„ë¡
+    //    8í”„ë ˆì„ Ã— 20ms = 160ms ë™ì•ˆ ì¡°ìš©í•´ë„ ì „ì†¡ ìœ ì§€
+    [SerializeField] private int silenceHoldoffFrames = 8;
+
+    [Header("PTT Timing")]
+    // âœ… ì›Œë°ì—… ë‹¨ì¶•: 0.15 â†’ 0.10 (ì• ìŒì ˆ ì˜ë¦¼ vs ë…¸ì´ì¦ˆ íŠ¸ë ˆì´ë“œì˜¤í”„)
+    //    í•„ìš”ì‹œ Inspectorì—ì„œ ì¡°ì ˆ
+    [SerializeField] private float micWarmupSeconds = 0.10f;
+
+    [Header("Debug")]
     [SerializeField] private bool logDebug = false;
 
-    private WebSocket ws;
+    private const int TARGET_SR = 24000;
+    private const int FALLBACK_SR = 48000;
+    private const int FRAME_MS = 20;
 
+    private WebSocket ws;
     private AudioClip micClip;
     private string micDevice;
     private bool pttHeld;
+    private bool micReady;
 
-    private int lastSamplePos;      // AudioClip ³» ¸¶Áö¸·À¸·Î ÀĞÀº sample À§Ä¡
-    private int frameSamples;       // frameMs¿¡ ÇØ´çÇÏ´Â »ùÇÃ ¼ö
-    private float[] floatBuf;       // ¸¶ÀÌÅ© float »ùÇÃ ¹öÆÛ
-    private byte[] pcm16Buf;        // PCM16 ¹ÙÀÌÆ® ¹öÆÛ (2 * frameSamples)
+    private int captureSR;
+    private int captureFrameSamples;
+    private int targetFrameSamples;
+    private float[] floatBuf;
+    private float[] resampledBuf;
+    private byte[] pcm16Buf;
+    private float[] ring;
+    private int ringSize;
+    private int lastSamplePos;
 
-    int sentFrames;
-    float nextLog;
+    private float _agcGain = 1f;
+    private int sentFrames = 0;
+    private int skippedFrames = 0;
+    private float nextLog = 0f;
 
-    private float[] ring;       // ¸¶ÀÌÅ© ÀüÃ¼(1ÃÊ) ¹öÆÛ
-    private int ringSize;       // = micClip.samples
+    // âœ… ë¬´ìŒ holdoff ì¹´ìš´í„°
+    private int _silentFrameCount = 0;
 
-    // WS Äİ¹éÀº ¸ŞÀÎ½º·¹µå ¾Æ´Ò ¼ö ÀÖ¾î¼­ Å¥·Î Ã³¸®
-    private readonly Queue<Action> mainThreadQ = new();
+    private readonly Queue<Action> mainThreadQ = new Queue<Action>();
 
-    [Serializable]
-    private class ServerMsg
-    {
-        public string type;
-        public string json;
-    }
-
-    [Serializable]
-    private class ClientAudioMsg
-    {
-        public string type; // "audio"
-        public string b64;
-    }
-
-    [Serializable]
-    private class ClientCommitMsg
-    {
-        public string type; // "commit"
-    }
+    [Serializable] private class ServerMsg { public string type; public string json; }
+    [Serializable] private class ClientAudioMsg { public string type; public string b64; }
+    [Serializable] private class ClientCommitMsg { public string type; }
 
     void Start()
     {
-        // 1) WS ¿¬°á
         ws = new WebSocket(url);
-
         ws.OnOpen += (_, __) => EnqueueMain(() => Debug.Log("[VoiceWS] Connected"));
         ws.OnClose += (_, e) => EnqueueMain(() => Debug.Log($"[VoiceWS] Closed: {e.Reason}"));
         ws.OnError += (_, e) => EnqueueMain(() => Debug.LogError($"[VoiceWS] Error: {e.Message}"));
-
         ws.OnMessage += (_, e) =>
         {
-            // ¼­¹ö ¡æ Unity: {type:"cmdjson", json:"{...}"}
             try
             {
                 var msg = JsonUtility.FromJson<ServerMsg>(e.Data);
-                if (msg != null && msg.type == "cmdjson" && !string.IsNullOrWhiteSpace(msg.json))
-                {
+                if (msg?.type == "cmdjson" && !string.IsNullOrWhiteSpace(msg.json))
                     EnqueueMain(() =>
                     {
-                        if (logDebug) Debug.Log($"[VoiceWS][cmdjson] {msg.json}");
+                        if (logDebug) Debug.Log($"[VoiceWS] cmdjson: {msg.json}");
                         bridge.EnqueueFromRealtimeJson(msg.json);
                     });
-                }
             }
             catch (Exception ex)
             {
-                EnqueueMain(() => Debug.LogWarning($"[VoiceWS] Parse fail: {ex.Message}\n{e.Data}"));
+                EnqueueMain(() => Debug.LogWarning($"[VoiceWS] Parse fail: {ex.Message}"));
             }
         };
 
         ws.ConnectAsync();
 
-        // 2) ¸¶ÀÌÅ© µğ¹ÙÀÌ½º ¼±ÅÃ (±âº» 0¹ø)
-        if (Microphone.devices != null && Microphone.devices.Length > 0)
-            micDevice = Microphone.devices[0];
+        micDevice = (Microphone.devices?.Length > 0) ? Microphone.devices[0] : null;
+        if (micDevice == null)
+            Debug.LogWarning("[Voice] No microphone found.");
         else
-            Debug.LogWarning("[Voice] No microphone devices found.");
+            Debug.Log($"[Voice] Using mic: {micDevice}");
     }
 
     void Update()
     {
-        // WS ÀÌº¥Æ® ¸ŞÀÎ½º·¹µå Ã³¸®
-        while (mainThreadQ.Count > 0)
-        {
-            var a = mainThreadQ.Dequeue();
-            a?.Invoke();
-        }
+        lock (mainThreadQ)
+            while (mainThreadQ.Count > 0)
+                mainThreadQ.Dequeue()?.Invoke();
 
-        // PTT ÀÔ·Â
-        if (Input.GetKeyDown(pttKey))
-            BeginPTT();
+        if (Input.GetKeyDown(pttKey)) BeginPTT();
+        if (Input.GetKeyUp(pttKey)) EndPTT();
 
-        if (Input.GetKeyUp(pttKey))
-            EndPTT();
-
-        // PTT À¯Áö ÁßÀÌ¸é ¿Àµğ¿À ÇÁ·¹ÀÓ Àü¼Û
-        if (pttHeld)
-            PumpMicFrames();
+        if (pttHeld && micReady) PumpMicFrames();
     }
 
     void OnDestroy()
     {
-        if (Microphone.IsRecording(micDevice))
-            Microphone.End(micDevice);
-
-        if (ws != null)
-        {
-            try { ws.Close(); } catch { }
-            ws = null;
-        }
+        if (Microphone.IsRecording(micDevice)) Microphone.End(micDevice);
+        try { ws?.Close(); } catch { }
+        ws = null;
     }
 
     private void BeginPTT()
     {
-        if (pttHeld) return;
-        if (string.IsNullOrEmpty(micDevice)) return;
-
+        if (pttHeld || micDevice == null) return;
         pttHeld = true;
+        micReady = false;
+        _agcGain = 1f;
+        _silentFrameCount = 0;
+        sentFrames = 0;
+        skippedFrames = 0;
 
-        micClip = Microphone.Start(micDevice, true, 1, 48000); // ÀÏ´Ü 48k·Î °íÁ¤(¾È µÇ¸é Unity°¡ ¸ÂÃçÁÜ)
-        lastSamplePos = 0;
+        // 24kHz ì§ì ‘ ìº¡ì²˜ ì‹œë„, ë¶ˆê°€ ì‹œ 48kHz fallback
+        micClip = Microphone.Start(micDevice, true, 1, TARGET_SR);
+        captureSR = micClip.frequency;
+
+        if (captureSR != TARGET_SR)
+        {
+            Microphone.End(micDevice);
+            micClip = Microphone.Start(micDevice, true, 1, FALLBACK_SR);
+            captureSR = micClip.frequency;
+        }
 
         ringSize = micClip.samples;
         ring = new float[ringSize];
 
-        Debug.Log($"[Voice] micClip freq={micClip.frequency} samples={micClip.samples} channels={micClip.channels}");
+        captureFrameSamples = Mathf.CeilToInt(captureSR * (FRAME_MS / 1000f));
+        targetFrameSamples = Mathf.CeilToInt(TARGET_SR * (FRAME_MS / 1000f));
 
-        int sr = micClip.frequency;
-        frameSamples = Mathf.CeilToInt(sr * (frameMs / 1000f));
-        floatBuf = new float[frameSamples];
-        pcm16Buf = new byte[frameSamples * 2];
+        floatBuf = new float[captureFrameSamples];
+        resampledBuf = new float[targetFrameSamples];
+        pcm16Buf = new byte[targetFrameSamples * 2];
 
-        if (logDebug) Debug.Log("[Voice] PTT Begin");
+        // âœ… ìƒ˜í”Œë ˆì´íŠ¸ í™•ì¸ ë¡œê·¸ â€” ë¦¬ìƒ˜í”Œë§ ì—¬ë¶€ ì¦‰ì‹œ í™•ì¸ ê°€ëŠ¥
+        Debug.Log($"[Voice] PTT Begin | captureSR={captureSR}Hz | targetSR={TARGET_SR}Hz | " +
+                  $"resampling={captureSR != TARGET_SR} | warmup={micWarmupSeconds * 1000:0}ms");
+
+        StartCoroutine(MicWarmupRoutine());
+    }
+
+    /// <summary>
+    /// ë§ˆì´í¬ ì›Œë°ì—…: ì¼ì • ì‹œê°„ ëŒ€ê¸° í›„ í˜„ì¬ ë§ˆì´í¬ ìœ„ì¹˜ë¥¼ ê¸°ì¤€ì ìœ¼ë¡œ ì„¤ì •.
+    /// ì›Œë°ì—… ì¤‘ ë“¤ì–´ì˜¨ ë…¸ì´ì¦ˆ/ë¬´ìŒ ë²„í¼ë¥¼ ìŠ¤í‚µí•˜ê³  ì´ ì‹œì ë¶€í„° ì „ì†¡ ì‹œì‘.
+    /// </summary>
+    private IEnumerator MicWarmupRoutine()
+    {
+        yield return new WaitForSeconds(micWarmupSeconds);
+
+        if (!pttHeld) yield break;
+
+        lastSamplePos = Microphone.GetPosition(micDevice);
+        micReady = true;
+        _silentFrameCount = 0;
+
+        Debug.Log($"[Voice] Mic ready at pos={lastSamplePos}");
     }
 
     private void EndPTT()
     {
         if (!pttHeld) return;
         pttHeld = false;
-
+        micReady = false;
         StartCoroutine(EndPttRoutine());
     }
 
-    private System.Collections.IEnumerator EndPttRoutine()
+    private IEnumerator EndPttRoutine()
     {
-        // 1) Á¶±İ ´õ ¼öÁı
-        float t = 0.25f;
-        float end = Time.time + t;
-
-        while (Time.time < end)
-        {
-            PumpMicFrames();
-            yield return null;
-        }
-
-        // 2) ¸¶Áö¸· ÇÑ¹ø ´õ
+        // tail: ë§ ë ì˜ë¦¼ ë°©ì§€ (í•œêµ­ì–´ ì–´ë§ íì‡„ìŒ ëŒ€ë¹„ 500ms)
+        micReady = true;
+        float end = Time.time + tailSeconds;
+        while (Time.time < end) { PumpMicFrames(); yield return null; }
         PumpMicFrames();
 
-        // 3) ¸¶ÀÌÅ© Á¤Áö
-        if (Microphone.IsRecording(micDevice))
-            Microphone.End(micDevice);
-
+        if (Microphone.IsRecording(micDevice)) Microphone.End(micDevice);
         micClip = null;
+        micReady = false;
 
-        // 4) commit Àü¼Û
+        Debug.Log($"[Voice] PTT End | sent={sentFrames} skipped={skippedFrames}");
         SendCommit();
     }
 
     private void PumpMicFrames()
     {
         if (micClip == null) return;
-        if (ws == null || ws.ReadyState != WebSocketState.Open) return;
+        if (ws?.ReadyState != WebSocketState.Open) return;
 
         int curPos = Microphone.GetPosition(micDevice);
         if (curPos < 0) return;
 
-        // 1) ¸¶ÀÌÅ© 1ÃÊ ring ÀüÃ¼¸¦ ÀĞ¾î¿È (¾ÈÀü)
         micClip.GetData(ring, 0);
 
-        // 2) available °è»ê
         int available = (curPos >= lastSamplePos)
-            ? (curPos - lastSamplePos)
-            : (ringSize - lastSamplePos + curPos);
+            ? curPos - lastSamplePos
+            : ringSize - lastSamplePos + curPos;
 
-        if (logDebug)
-           // Debug.Log($"[Voice] cur={curPos} last={lastSamplePos} avail={available} frame={frameSamples} freq={micClip.frequency}");
-
-        while (available >= frameSamples)
+        while (available >= captureFrameSamples)
         {
-                float rms = 0f;
-                for (int i = 0; i < floatBuf.Length; i++) rms += floatBuf[i] * floatBuf[i];
-                rms = Mathf.Sqrt(rms / floatBuf.Length);
+            ReadFromRing(ring, ringSize, lastSamplePos, floatBuf);
+            lastSamplePos = (lastSamplePos + captureFrameSamples) % ringSize;
+            available -= captureFrameSamples;
 
-                if (logDebug && Time.frameCount % 30 == 0)
-                    Debug.Log($"[Voice] rms={rms:0.0000}");
+            float rms = CalcRms(floatBuf);
 
-                // 3) ring¿¡¼­ frameSamples¸¸Å­ »Ì¾Æ floatBuf¿¡ Ã¤¿ò
-                ReadFromRing(ring, ringSize, lastSamplePos, floatBuf);
+            // âœ… ê°œì„ ëœ ë¬´ìŒ ê²Œì´íŠ¸: holdoff ì ìš©
+            //    ë‹¨ìˆœ RMS ì„ê³„ê°’ â†’ ì—°ì† Ní”„ë ˆì„ ì¡°ìš©í•  ë•Œë§Œ ìŠ¤í‚µ
+            //    ë‹¨ì–´ ì‚¬ì´ ìˆ¨ ê³ ë¥´ê¸°(~100ms) ì •ë„ëŠ” ì˜ë¦¬ì§€ ì•ŠìŒ
+            if (useSilenceGate && rms < silenceThreshold)
+            {
+                _silentFrameCount++;
+                if (_silentFrameCount >= silenceHoldoffFrames)
+                {
+                    skippedFrames++;
+                    continue;  // holdoff ì´ìƒ ì—°ì† ë¬´ìŒì´ë©´ ìŠ¤í‚µ
+                }
+                // holdoff ì´ë‚´ëŠ” ë¬´ìŒì´ì–´ë„ ê·¸ëƒ¥ ì „ì†¡ (í”„ë ˆì„ ì—°ì†ì„± ìœ ì§€)
+            }
+            else
+            {
+                _silentFrameCount = 0;  // ì†Œë¦¬ ìˆìœ¼ë©´ ì¹´ìš´í„° ë¦¬ì…‹
+            }
 
-            lastSamplePos = (lastSamplePos + frameSamples) % ringSize;
-            available -= frameSamples;
+            if (usePreEmphasis) ApplyPreEmphasis(floatBuf, preEmphAlpha);
+            if (useAGC) ApplyAGC(floatBuf, rms);
 
-            FloatToPcm16(floatBuf, pcm16Buf);
+            float[] sendBuf;
+            if (captureSR == TARGET_SR)
+                sendBuf = floatBuf;
+            else
+            {
+                ResampleLanczos(floatBuf, resampledBuf);
+                sendBuf = resampledBuf;
+            }
+
+            FloatToPcm16(sendBuf, pcm16Buf);
             SendAudio(Convert.ToBase64String(pcm16Buf));
+            sentFrames++;
+
+            if (logDebug && Time.time >= nextLog)
+            {
+                Debug.Log($"[Voice] sent={sentFrames} skip={skippedFrames} " +
+                          $"rms={rms:0.0000} gain={_agcGain:0.00} silentFrames={_silentFrameCount}");
+                nextLog = Time.time + 1f;
+            }
         }
     }
 
+    // =========================================================
+    // DSP
+    // =========================================================
+
+    private static float CalcRms(float[] buf)
+    {
+        float sum = 0f;
+        foreach (var s in buf) sum += s * s;
+        return Mathf.Sqrt(sum / buf.Length);
+    }
+
+    private static void ApplyPreEmphasis(float[] buf, float alpha)
+    {
+        for (int i = buf.Length - 1; i > 0; i--)
+            buf[i] -= alpha * buf[i - 1];
+    }
+
+    private void ApplyAGC(float[] buf, float currentRms)
+    {
+        if (currentRms < 0.0001f) return;
+        float targetGain = Mathf.Clamp(agcTargetRms / currentRms, agcMinGain, agcMaxGain);
+        _agcGain = Mathf.Lerp(_agcGain, targetGain, 0.1f);
+        for (int i = 0; i < buf.Length; i++)
+            buf[i] = Mathf.Clamp(buf[i] * _agcGain, -1f, 1f);
+    }
+
+    private static void ResampleLanczos(float[] src, float[] dst, int a = 3)
+    {
+        int srcLen = src.Length;
+        int dstLen = dst.Length;
+        float ratio = (float)srcLen / dstLen;
+
+        for (int i = 0; i < dstLen; i++)
+        {
+            float pos = i * ratio;
+            int center = (int)Mathf.Floor(pos);
+            float sum = 0f, weight = 0f;
+
+            for (int j = center - a + 1; j <= center + a; j++)
+            {
+                if (j < 0 || j >= srcLen) continue;
+                float w = LanczosKernel(pos - j, a);
+                sum += src[j] * w;
+                weight += w;
+            }
+            dst[i] = weight > 0f ? Mathf.Clamp(sum / weight, -1f, 1f) : 0f;
+        }
+    }
+
+    private static float LanczosKernel(float x, int a)
+    {
+        if (Mathf.Abs(x) < 1e-6f) return 1f;
+        if (Mathf.Abs(x) >= a) return 0f;
+        float px = Mathf.PI * x;
+        return (a * Mathf.Sin(px) * Mathf.Sin(px / a)) / (px * px);
+    }
+
+    // =========================================================
+    // ìœ í‹¸
+    // =========================================================
+
     private static void ReadFromRing(float[] ring, int ringSize, int start, float[] dst)
     {
-        int need = dst.Length;
-        int remain = ringSize - start;
-
+        int need = dst.Length, remain = ringSize - start;
         if (remain >= need)
-        {
             Array.Copy(ring, start, dst, 0, need);
-        }
         else
         {
             Array.Copy(ring, start, dst, 0, remain);
@@ -248,15 +355,11 @@ public class VoiceRealtimeClient : MonoBehaviour
         }
     }
 
-
     private static void FloatToPcm16(float[] src, byte[] dst)
     {
-        // little-endian PCM16
         for (int i = 0; i < src.Length; i++)
         {
-            float v = Mathf.Clamp(src[i], -1f, 1f);
-            short s = (short)Mathf.RoundToInt(v * 32767f);
-
+            short s = (short)Mathf.RoundToInt(Mathf.Clamp(src[i], -1f, 1f) * 32767f);
             int bi = i * 2;
             dst[bi] = (byte)(s & 0xFF);
             dst[bi + 1] = (byte)((s >> 8) & 0xFF);
@@ -264,30 +367,14 @@ public class VoiceRealtimeClient : MonoBehaviour
     }
 
     private void SendAudio(string b64)
-    {
-        var msg = new ClientAudioMsg { type = "audio", b64 = b64 };
-        ws.SendAsync(JsonUtility.ToJson(msg), null);
-
-        sentFrames++;
-
-        if (logDebug && Time.time >= nextLog)
-        {
-            Debug.Log($"[Voice] sentFrames={sentFrames}/sec ws={ws.ReadyState}");
-            sentFrames = 0;
-            nextLog = Time.time + 1f;
-        }
-    }
+        => ws.SendAsync(JsonUtility.ToJson(new ClientAudioMsg { type = "audio", b64 = b64 }), null);
 
     private void SendCommit()
     {
-        if (ws == null || ws.ReadyState != WebSocketState.Open) return;
-        var msg = new ClientCommitMsg { type = "commit" };
-        ws.SendAsync(JsonUtility.ToJson(msg), null);
+        if (ws?.ReadyState != WebSocketState.Open) return;
+        ws.SendAsync(JsonUtility.ToJson(new ClientCommitMsg { type = "commit" }), null);
         Debug.Log("[Voice] commit sent");
     }
 
-    private void EnqueueMain(Action a)
-    {
-        lock (mainThreadQ) mainThreadQ.Enqueue(a);
-    }
+    private void EnqueueMain(Action a) { lock (mainThreadQ) mainThreadQ.Enqueue(a); }
 }

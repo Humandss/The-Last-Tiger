@@ -21859,8 +21859,17 @@ MonoBehaviour:
   url: ws://localhost:8787/unity
   bridge: {fileID: 1752999802}
   pttKey: 118
-  sampleRate: 48000
-  frameMs: 100
+  usePreEmphasis: 1
+  useAGC: 1
+  useSilenceGate: 1
+  agcTargetRms: 0.15
+  agcMaxGain: 10
+  agcMinGain: 0.5
+  preEmphAlpha: 0.97
+  silenceThreshold: 0.005
+  tailSeconds: 0.3
+  silenceHoldoffFrames: 8
+  micWarmupSeconds: 0.15
   logDebug: 1
 --- !u!1 &1753043216
 GameObject:

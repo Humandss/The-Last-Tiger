@@ -87,7 +87,7 @@ public class DriverController : MonoBehaviour
         float ma = 1f - Mathf.Exp(-mobilitySmooth * dt);
         mobilityMulSmoothed = Mathf.Lerp(mobilityMulSmoothed, mobilityMul, ma);
         //운전수 체력 배율 스무딩
-        float da = 1f - Mathf.Exp(-mobilitySmooth * dt); 
+        float da = 1f - Mathf.Exp(-mobilitySmooth * dt);
         driverMulSmoothed = Mathf.Lerp(driverMulSmoothed, driverMul, da);
 
         // (디버깅용) 키 입력 -> target 갱신
@@ -206,13 +206,13 @@ public class DriverController : MonoBehaviour
 
         //float p = 0f;
         //if (Input.GetKey(KeyCode.Q)) p -= 1f;
-       // if (Input.GetKey(KeyCode.E)) p += 1f;
+        // if (Input.GetKey(KeyCode.E)) p += 1f;
 
         float s = 0f;
         if (Input.GetKey(KeyCode.A)) s -= 1f;
         if (Input.GetKey(KeyCode.D)) s += 1f;
 
-       // if (Mathf.Abs(p) > 0.001f) s = 0f;
+        // if (Mathf.Abs(p) > 0.001f) s = 0f;
 
         targetThrottle = Mathf.Clamp(t, -1f, 1f);
         targetSteer = Mathf.Clamp(s, -1f, 1f);
@@ -264,11 +264,11 @@ public class DriverController : MonoBehaviour
         {
             _dbgTimer = debugLogInterval;
 
-           /* Debug.Log(
-                $"[DriverDBG] thr={throttle:0.00} steer={steer:0.00} pivot={pivot:0.00} " +
-                $"mul={_mulSmoothed:0.00} targetSpd={(_curSpeed):0.00}m/s measSpd={_lastSpeed:0.00}m/s " +
-                $"yawRate={_lastYawRate:0.0}deg/s pos={curPos:F1}"
-            );*/
+            /* Debug.Log(
+                 $"[DriverDBG] thr={throttle:0.00} steer={steer:0.00} pivot={pivot:0.00} " +
+                 $"mul={_mulSmoothed:0.00} targetSpd={(_curSpeed):0.00}m/s measSpd={_lastSpeed:0.00}m/s " +
+                 $"yawRate={_lastYawRate:0.0}deg/s pos={curPos:F1}"
+             );*/
         }
     }
 
