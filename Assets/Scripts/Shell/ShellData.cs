@@ -7,6 +7,7 @@ public class ShellData : ScriptableObject
 {
     [Header("Ballistics")]
     public string shellName ="PzGr 39";
+    public AmmoType type = AmmoType.None;
     [Range(0.0f, 200.0f)] public float caliber = 88.00f; // 구경 
     [Range(1.0f, 100.0f)] public float projectileMass = 0.004f;       // kg
     [Range(100.0f, 1500.0f)] public float muzzleVelocity = 920.0f; // 속도 m/s
@@ -23,6 +24,7 @@ public class ShellData : ScriptableObject
     [SerializeField] public float tntMass = 0.0f;
 
     [Header("Ricochet")]
+    public bool canRicochet = true;
     [Range(0.0f, 100.0f)] public float baseRicochetAngleDeg = 24.0f;
     [Range(0.0f, 1.0f)] public float afterRicochetEnergyPercent = 0.62f;
     [Range(0.0f, 5.0f)] public float randomRicochetAngle = 0.28f;

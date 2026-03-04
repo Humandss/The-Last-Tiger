@@ -368,9 +368,9 @@ public class GunnerController : MonoBehaviour, ITankGunner
         }
 
         Vector3 shotDir = GetDispersionShotDirection();
-
+        AmmoType shell = loaderFunc.GetLoadedAmmoType();
         Debug.Log($"[Gunner] 발사! range={rangeMeters:0}m dir={shotDir}");
-        fireController.FireProjectile(shotDir);
+        fireController.FireProjectile(shotDir, shell);
 
         loaderFunc.IsShot();
         loaderFunc.LoadDefault();

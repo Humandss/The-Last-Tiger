@@ -9,7 +9,8 @@ public class CannonFireController : MonoBehaviour
     [SerializeField] private Transform muzzle;
     [SerializeField] private Transform muzzleFxSocket;
     [SerializeField] private Transform dustSpot;
-    [SerializeField] private BallisticManager projectile;
+    [SerializeField] private BallisticManager APShell;
+    [SerializeField] private BallisticManager HEShell;
     [SerializeField] private ShotRecoilShake cameraShotShake;
     [SerializeField] private ShotRecoilShake turretShotShake;
 
@@ -71,7 +72,7 @@ public class CannonFireController : MonoBehaviour
         ApplyRecoilVisual();
     }
 
-    public void FireProjectile(Vector3 dir)
+    public void FireProjectile(Vector3 dir, AmmoType type)
     {
         if (muzzle == null)
         {
@@ -79,22 +80,31 @@ public class CannonFireController : MonoBehaviour
             return;
         }
 
-        if (projectile == null)
+        if (APShell == null || HEShell == null)
         {
             Debug.LogWarning("[CannonFireController] projectile is NULL");
+            return;
+        }
+        BallisticManager projectile = type switch
+        {
+            AmmoType.AP => APShell,
+            AmmoType.HE => HEShell,
+            _ => null
+        };
+
+        if (projectile == null)
+        {
+            Debug.LogWarning($"[CannonFireController] Unknown AmmoType: {type}");
             return;
         }
 
         Vector3 shotDir = dir.sqrMagnitude > 1e-8f ? dir.normalized : muzzle.forward.normalized;
         Vector3 spawnPos = muzzle.position + shotDir * 0.05f;
 
-        GameObject shellObj = Instantiate(projectile.gameObject, spawnPos, Quaternion.LookRotation(shotDir));
-        var shell = shellObj.GetComponent<BallisticManager>();
-
+        var shell = Instantiate(projectile, spawnPos, Quaternion.LookRotation(shotDir));
         if (shell == null)
         {
             Debug.LogWarning("[CannonFireController] BallisticManager component missing on projectile prefab");
-            Destroy(shellObj);
             return;
         }
 

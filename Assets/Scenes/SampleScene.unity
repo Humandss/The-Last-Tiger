@@ -9523,7 +9523,7 @@ MonoBehaviour:
   loaderMulSmooth: 10
   defaultAmmo: 1
   apShell: {fileID: 11400000, guid: d2ccdf09c3c88a549873825eae6c04fe, type: 2}
-  heShell: {fileID: 0}
+  heShell: {fileID: 11400000, guid: d42750391416b0b43bca72f7ef161679, type: 2}
 --- !u!114 &1644377951
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9539,8 +9539,8 @@ MonoBehaviour:
   muzzle: {fileID: 1544385120109349211}
   muzzleFxSocket: {fileID: 800276850}
   dustSpot: {fileID: 630393308}
-  projectile: {fileID: 7643823996785504197, guid: 253c318ce14ccf84dabc7e96fbe85195,
-    type: 3}
+  APShell: {fileID: 7643823996785504197, guid: 253c318ce14ccf84dabc7e96fbe85195, type: 3}
+  HEShell: {fileID: 7643823996785504197, guid: e63123388ff681643a6a08d7508a3dc9, type: 3}
   cameraShotShake: {fileID: 729043131}
   turretShotShake: {fileID: 711577502}
   cameraShakeIntensity: 1
@@ -11126,7 +11126,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!65 &1843072875
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -11206,13 +11206,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1843072874}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.4692553, y: -0, z: -0, w: 0.88306254}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -5.115, y: 0.555, z: 217.68}
   m_LocalScale: {x: 5.4884, y: 1.8382312, z: 0.13264506}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 55.972, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1846348468
 GameObject:
   m_ObjectHideFlags: 0

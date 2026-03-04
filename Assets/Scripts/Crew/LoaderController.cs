@@ -13,6 +13,8 @@ public interface ITankLoader
     bool GetIsLoaded();
     void IsShot();
     ShellData GetLoadedShell();
+
+    AmmoType GetLoadedAmmoType();
 }
 public class LoaderController : MonoBehaviour, ITankLoader
 {
@@ -56,6 +58,9 @@ public class LoaderController : MonoBehaviour, ITankLoader
             CeaseAction();
 
         if (Input.GetKeyDown(KeyCode.R)) Load(LastSelectedAmmo);
+        if (Input.GetKeyDown(KeyCode.Alpha1)) Load(AmmoType.AP);
+        if (Input.GetKeyDown(KeyCode.Alpha2)) Load(AmmoType.HE);
+
     }
     public void LoadDefault()
     {
@@ -142,6 +147,10 @@ public class LoaderController : MonoBehaviour, ITankLoader
     public ShellData GetLoadedShell()
     {
         return loadedShell;
+    }
+    public AmmoType GetLoadedAmmoType()
+    {
+        return shellType;
     }
     public bool GetIsLoading()
     {

@@ -70,7 +70,7 @@ public class BallisticManager : MonoBehaviour
     private bool hasFuzeOrigin;
     private Vector3 fuzeOrigin;
     [SerializeField] private float fuzeOriginNudge = 0.1f;
-
+    private bool isInitialized = false;
 #if true// 탄 트레일 남기는 로직
     [SerializeField] private TrailRenderer trail;
     [SerializeField] private Light tracerLight;
@@ -127,10 +127,13 @@ public class BallisticManager : MonoBehaviour
         refArea = Mathf.PI * r * r * shell.refAreaScale; // 단면적(m)
 
         k = 0.5f * airDensity * shell.dragCoeff * refArea * invMass;
+        isInitialized = true;
     }
 
     private void FixedUpdate()
     {
+        if (!isInitialized) return;
+
         float dt = Time.fixedDeltaTime;
         flightTime += dt;
         if (flightTime > shell.lifeTime) { Destroy(gameObject); return; }
@@ -224,7 +227,7 @@ public class BallisticManager : MonoBehaviour
     {
         //도탄
         float ricTh = zone.GetRicochetThresholdDeg(shell.baseRicochetAngleDeg);
-        if (angleToNormal >= ricTh)
+        if (shell.canRicochet && angleToNormal >= ricTh)
         {
             HandleRicochet(hit, segDir);
             return;
@@ -260,7 +263,8 @@ public class BallisticManager : MonoBehaviour
         else
         {
             Debug.Log($"[NO PEN] zone={zone.zoneName}, original pen ={pen:0}, effective pen={penMm:0} eff={effectiveMm:0} angleN={angleToNormal:0}");
-            Destroy(gameObject);
+            if (shell.type == AmmoType.HE) ExplodeNow();
+            else Destroy(gameObject);
             return;
         }
    
@@ -326,7 +330,8 @@ public class BallisticManager : MonoBehaviour
         pen = penLeft;
         if (pen <= 0f)
         {
-            Destroy(gameObject);
+            if (shell.type == AmmoType.HE) ExplodeNow();
+            else Destroy(gameObject);
             return;
         }
 
@@ -348,7 +353,8 @@ public class BallisticManager : MonoBehaviour
         // 너무 느려졌으면 제거
         if (speed < minSpeedAfterPen)
         {
-            Destroy(gameObject);
+            if (shell.type == AmmoType.HE) ExplodeNow();
+            else Destroy(gameObject);
             return;
         }
     }
@@ -386,7 +392,8 @@ public class BallisticManager : MonoBehaviour
         if (pen <= 0f)
         {
             Debug.Log($"[ObjPen] stop thickness={thicknessM:F3} cost={cost:F1} pen<=0");
-            Destroy(gameObject);
+            if (shell.type == AmmoType.HE) ExplodeNow();
+            else Destroy(gameObject);
             return;
         }
 
@@ -397,7 +404,8 @@ public class BallisticManager : MonoBehaviour
 
         if (speed < minSpeedAfterPen)
         {
-            Destroy(gameObject);
+            if (shell.type == AmmoType.HE) ExplodeNow();
+            else Destroy(gameObject);
             return;
         }
 
@@ -488,20 +496,21 @@ public class BallisticManager : MonoBehaviour
         int candidates = Physics.OverlapSphere(origin, radius, fragmentHitMask, QueryTriggerInteraction.Collide).Length;
         bool insideOcc = Physics.CheckSphere(origin, 0.01f, occluderMask, QueryTriggerInteraction.Collide);
 
-        Debug.Log($"[EXPDBG] candidates={candidates} insideOcc={insideOcc} nudge={fuzeOriginNudge}");
+       // Debug.Log($"[EXPDBG] candidates={candidates} insideOcc={insideOcc} nudge={fuzeOriginNudge}");
 
         Destroy(gameObject);
     }
 
     private void HandleGroundHit(RaycastHit hit, Vector3 dirN, float angleToNormal)
     {
-        if (angleToNormal >= shell.baseRicochetAngleDeg && ricochetChance < 2)
+        if (shell.canRicochet && angleToNormal >= shell.baseRicochetAngleDeg && ricochetChance < 2)
         {
             HandleRicochet(hit, dirN);
             return;
         }
+        if (shell.type == AmmoType.HE) ExplodeNow();
+        else Destroy(gameObject);
 
-        Destroy(gameObject);
     }
 
     private void SpawnExplosion(RaycastHit hit)
@@ -511,7 +520,6 @@ public class BallisticManager : MonoBehaviour
         var go = Instantiate(explosionPrefab, hit.point + hit.normal * enter,
                        Quaternion.LookRotation(hit.normal));
 
-        // 안전: 파티클이 끝나면 자동 제거
         var ps = go.GetComponentInChildren<ParticleSystem>();
         if (ps) Destroy(go, ps.main.duration + ps.main.startLifetime.constantMax + 0.5f);
         else Destroy(go, 1.3f);
