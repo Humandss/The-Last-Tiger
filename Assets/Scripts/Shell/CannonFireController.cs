@@ -3,7 +3,12 @@ using System.Collections.Generic;
 using UnityEditor.EditorTools;
 using UnityEngine;
 
-public class CannonFireController : MonoBehaviour
+public interface ICannonFire
+{
+    void FireProjectile(Vector3 dir, AmmoType type);
+}
+
+public class CannonFireController : MonoBehaviour, ICannonFire
 {
     [Header("Refs")]
     [SerializeField] private Transform muzzle;

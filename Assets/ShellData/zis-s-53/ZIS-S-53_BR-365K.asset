@@ -21,7 +21,7 @@ MonoBehaviour:
   minPenScale: 0.25
   dragCoeff: 0.3
   refAreaScale: 1
-  penetrationPower: 148
+  penetrationPower: 146
   canExplode: 1
   fuzeDelay: 0.001
   fuzeSensitivity: 14
@@ -30,4 +30,4 @@ MonoBehaviour:
   baseRicochetAngleDeg: 24
   afterRicochetEnergyPercent: 0.62
   randomRicochetAngle: 0.28
-  lifeTime: 0
+  lifeTime: 10

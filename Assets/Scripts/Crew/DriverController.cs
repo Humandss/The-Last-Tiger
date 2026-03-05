@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class DriverController : MonoBehaviour
 {
+    [SerializeField] private bool isAI = false;
+
     [Header("Refs")]
     [SerializeField] private Transform hull; // 차체(없으면 transform)
     [SerializeField] private Rigidbody rb;
@@ -91,7 +93,7 @@ public class DriverController : MonoBehaviour
         driverMulSmoothed = Mathf.Lerp(driverMulSmoothed, driverMul, da);
 
         // (디버깅용) 키 입력 -> target 갱신
-        DriverHotKeys();
+        if(!isAI)DriverHotKeys();
 
         if (driverDead)
         {
@@ -170,14 +172,6 @@ public class DriverController : MonoBehaviour
         UpdateDebugFixed(dt, hull.position, hull.rotation);
     }
 
-    // ====== 외부(디스패처/보이스)에서 쓰는 API ======
-    public void SetDesired(float thr, float st, float pv)
-    {
-        targetThrottle = Mathf.Clamp(thr, -1f, 1f);
-        targetSteer = Mathf.Clamp(st, -1f, 1f);
-        targetPivot = Mathf.Clamp(pv, -1f, 1f);
-    }
-
     public void StopAll()
     {
         targetThrottle = 0f;
@@ -191,7 +185,6 @@ public class DriverController : MonoBehaviour
         _curSpeed = 0f;
     }
 
-    // ====== 디버깅용 키입력 ======
     public void DriverHotKeys()
     {
         if (Input.GetKeyDown(KeyCode.Space))
@@ -287,5 +280,12 @@ public class DriverController : MonoBehaviour
     {
         driverDead = dead;
         driverMul = Mathf.Lerp(0.6f, 1.0f, hpRatio);
+    }
+
+    public void SetInput(float throttle, float steer, float pivot)
+    {
+        targetThrottle = Mathf.Clamp(throttle, -1f, 1f);
+        targetSteer = Mathf.Clamp(steer, -1f, 1f);
+        targetPivot = Mathf.Clamp(pivot, -1f, 1f);
     }
 }

@@ -18,6 +18,9 @@ public interface ITankLoader
 }
 public class LoaderController : MonoBehaviour, ITankLoader
 {
+
+    [SerializeField] private bool isAI = false;
+
     [Header("Loader")]
     [SerializeField] private float reloadTime = 10.0f;
     [SerializeField] private bool loaderDead;
@@ -49,13 +52,12 @@ public class LoaderController : MonoBehaviour, ITankLoader
 
     private void Update()
     {
-        // 로더 배율 스무딩
         float a = 1f - Mathf.Exp(-loaderMulSmooth * Time.deltaTime);
         reloadTimeMulSmoothed = Mathf.Lerp(reloadTimeMulSmoothed, reloadTimeMul, a);
 
-        // 장전 중인데 로더 죽으면 즉시 중단
-        if (loaderDead && isLoading)
-            CeaseAction();
+        if (loaderDead && isLoading) CeaseAction();
+
+        if (isAI) return; // AI면 키 입력 스킵
 
         if (Input.GetKeyDown(KeyCode.R)) Load(LastSelectedAmmo);
         if (Input.GetKeyDown(KeyCode.Alpha1)) Load(AmmoType.AP);

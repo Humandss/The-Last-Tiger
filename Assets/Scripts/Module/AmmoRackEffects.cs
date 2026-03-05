@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 using static UnityEngine.CullingGroup;
 
 public class AmmoRackEffects : MonoBehaviour
@@ -30,7 +31,11 @@ public class AmmoRackEffects : MonoBehaviour
     [SerializeField] private float stopAfterSeconds = 15f;
     [SerializeField] private float fadeOutSeconds = 2.5f;
     [SerializeField] private float destroyBuffer = 0.5f;
- 
+
+    [Header("Death")]
+    [SerializeField] private UnityEvent onTankDestroyed; 
+    [SerializeField] private float deathDelay = 0.3f;
+
     private readonly List<ModuleDamageController> modules = new();
     private float t;
     private float life;
@@ -103,6 +108,8 @@ public class AmmoRackEffects : MonoBehaviour
         {
             SpawnFire();
         }
+
+        Invoke(nameof(TriggerDeath), deathDelay);
     }
     private void TriggerAmmoExplosion()
     {
@@ -135,7 +142,11 @@ public class AmmoRackEffects : MonoBehaviour
         Invoke(nameof(SpawnSmoke), 0.5f);
         Debug.LogWarning("[AMMO] Explosion!");
     }
-
+    private void TriggerDeath()
+    {
+        Debug.LogWarning($"[AMMO] {gameObject.name} 전차 사망!");
+        onTankDestroyed?.Invoke();
+    }
     private void SpawnFire()
     {
         if (!ammoFirePrefab)

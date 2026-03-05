@@ -491,13 +491,14 @@ public class BallisticManager : MonoBehaviour
             includeTriggers: true,
             debug: false
         );
-
+       // Debug.Log($"[EXPDBG] origin={origin} hasFuzeOrigin={hasFuzeOrigin}");
         float radius = ShellExplosion.ComputeRadiusFromTntGrams(shell.tntMass, radiusAt1Kg);
         int candidates = Physics.OverlapSphere(origin, radius, fragmentHitMask, QueryTriggerInteraction.Collide).Length;
         bool insideOcc = Physics.CheckSphere(origin, 0.01f, occluderMask, QueryTriggerInteraction.Collide);
 
-       // Debug.Log($"[EXPDBG] candidates={candidates} insideOcc={insideOcc} nudge={fuzeOriginNudge}");
-
+         //Debug.Log($"[EXPDBG] candidates={candidates} insideOcc={insideOcc} nudge={fuzeOriginNudge}");
+        //Debug.DrawRay(origin, Vector3.up * 3f, Color.magenta, 5f);
+        //Debug.DrawRay(origin, Vector3.right * 3f, Color.magenta, 5f);
         Destroy(gameObject);
     }
 
