@@ -2455,7 +2455,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!195 &336159478
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -2527,7 +2527,9 @@ MonoBehaviour:
   muzzleFxSocket: {fileID: 1661064101}
   dustSpot: {fileID: 653594133}
   muzzleFlashLife: 1.75
-  muzzleOffset: 0.05
+  muzzleFlashLocalOffset: {x: 0, y: 0, z: 0}
+  dustSmokeLocalOffset: {x: 0, y: 0, z: 0}
+  muzzleFlashFollowMuzzle: 1
 --- !u!114 &336159481
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2559,14 +2561,22 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   turretYaw: {fileID: 1708117049}
   gunPitch: {fileID: 839329293}
-  fireControllerObj: {fileID: 336159480}
-  loader: {fileID: 336159487}
   yawSpeedDeg: 120
   pitchSpeedDeg: 100
   pitchLimits: {x: -5, y: 20}
   fcsSolveMaxTime: 8
   fcsDt: 0.01
   fcsIterations: 18
+  gunDestroyed: 0
+  breechDestroyed: 0
+  gunnerDead: 0
+  useDispersion: 1
+  dispersionAt100mDeg: 0.01
+  dispersionAt2000mDeg: 0.1
+  maxGunnerDispersionPenalty: 1.8
+  maxGunDispersionPenalty: 2.2
+  gunHpRatio: 1
+  gunnerMul: 1
 --- !u!114 &336159483
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2622,7 +2632,6 @@ MonoBehaviour:
   turret: {fileID: 5550181093402094720}
   profile: {fileID: 11400000, guid: 577f0c081abba764f8712d1707183f6b, type: 2}
   player: {fileID: 1644377949}
-  hull: {fileID: 0}
   waypoints: []
   patrolWaitTime: 2
   loopWaypoints: 0
@@ -2716,7 +2725,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d623a6fdbc878064eb53603de61621f9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  player: 0
   gunnerM: {fileID: 1013217665}
   gun: {fileID: 311916238}
   breech: {fileID: 183570843}
@@ -2881,7 +2889,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &414415416
 Transform:
   m_ObjectHideFlags: 0
@@ -2891,7 +2899,7 @@ Transform:
   m_GameObject: {fileID: 414415415}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 1, z: -0, w: 0}
-  m_LocalPosition: {x: -8.11, y: 0.02, z: 195.42}
+  m_LocalPosition: {x: 88, y: 0.02, z: 631}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -2951,7 +2959,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d623a6fdbc878064eb53603de61621f9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  player: 0
   gunnerM: {fileID: 942040705}
   gun: {fileID: 1976455538}
   breech: {fileID: 1565365261}
@@ -2987,7 +2994,6 @@ MonoBehaviour:
   turret: {fileID: 6353955503651830246}
   profile: {fileID: 11400000, guid: 577f0c081abba764f8712d1707183f6b, type: 2}
   player: {fileID: 1644377949}
-  hull: {fileID: 0}
   waypoints: []
   patrolWaitTime: 0.1
   loopWaypoints: 0
@@ -3122,7 +3128,9 @@ MonoBehaviour:
   muzzleFxSocket: {fileID: 1689576569}
   dustSpot: {fileID: 2048573146}
   muzzleFlashLife: 1.75
-  muzzleOffset: 0.05
+  muzzleFlashLocalOffset: {x: 0, y: 0, z: 0}
+  dustSmokeLocalOffset: {x: 0, y: 0, z: 0}
+  muzzleFlashFollowMuzzle: 0
 --- !u!114 &414415428
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3158,14 +3166,22 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   turretYaw: {fileID: 6353955503651830246}
   gunPitch: {fileID: 2867479797575926228}
-  fireControllerObj: {fileID: 414415427}
-  loader: {fileID: 414415428}
   yawSpeedDeg: 120
   pitchSpeedDeg: 90
   pitchLimits: {x: -5, y: 20}
   fcsSolveMaxTime: 8
   fcsDt: 0.01
   fcsIterations: 18
+  gunDestroyed: 0
+  breechDestroyed: 0
+  gunnerDead: 0
+  useDispersion: 1
+  dispersionAt100mDeg: 0.01
+  dispersionAt2000mDeg: 0.3
+  maxGunnerDispersionPenalty: 1.8
+  maxGunDispersionPenalty: 2.2
+  gunHpRatio: 1
+  gunnerMul: 1
 --- !u!1 &423595798
 GameObject:
   m_ObjectHideFlags: 0
@@ -4291,28 +4307,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   yawPivot: {fileID: 635153562}
   pitchPivot: {fileID: 1762431796}
-  commanderCam: {fileID: 330585545}
+  cameraController: {fileID: 729043131}
   sensitivity: 170
   invertY: 0
   pitchLimits: {x: -20, y: 60}
   enableToggleKey: 1
   freeLookToggleKey: 98
   requireRightMouse: 0
-  zoomHoldKey: 324
-  wheelOnlyWhileZooming: 1
-  zoomMagnifications:
-  - 4
-  - 6
-  - 8
-  baseFov: 60
-  zoomFovSmooth: 16
-  minFovClamp: 5
-  maxFovClamp: 90
-  scaleSensitivityByFov: 1
-  zoomSensMinMul: 0.12
-  zoomSensExponent: 0.85
-  isZooming: 0
-  zoomIndex: 1
   mode: 0
   debugLog: 0
 --- !u!1 &637857711
@@ -4840,7 +4841,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 711577501}
-  - component: {fileID: 711577502}
   m_Layer: 7
   m_Name: Turret
   m_TagString: Untagged
@@ -4864,28 +4864,6 @@ Transform:
   - {fileID: 3974867960145884146}
   m_Father: {fileID: 152308380}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &711577502
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 711577500}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 32b4dbbbc2cae3b47899a75ed0a244f7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  maxKickEuler: {x: 1.2, y: 0.8, z: 0.25}
-  randomizeYawRoll: 1
-  kickInSpeed: 28
-  returnSpeed: 10
-  damping: 16
-  noiseFreq: 22
-  noiseAmount: 0.2
-  affectPitch: 1
-  affectYaw: 1
-  affectRoll: 1
 --- !u!1 &729043129
 GameObject:
   m_ObjectHideFlags: 0
@@ -4931,16 +4909,33 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 32b4dbbbc2cae3b47899a75ed0a244f7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxKickEuler: {x: 3, y: 3, z: 3}
+  commanderCam: {fileID: 330585545}
+  zoomHoldKey: 324
+  wheelOnlyWhileZooming: 1
+  zoomMagnifications:
+  - 4
+  - 6
+  - 8
+  baseFov: 60
+  zoomFovSmooth: 16
+  minFovClamp: 5
+  maxFovClamp: 90
+  scaleSensitivityByFov: 1
+  zoomSensMinMul: 0.12
+  zoomSensExponent: 0.85
+  maxKickEuler: {x: 2.5, y: 0.3, z: 0.2}
   randomizeYawRoll: 1
-  kickInSpeed: 40
-  returnSpeed: 20
-  damping: 16
-  noiseFreq: 22
+  kickInSpeed: 15
+  returnSpeed: 5
+  damping: 5
+  noiseFreq: 7
   noiseAmount: 0.2
   affectPitch: 1
   affectYaw: 1
   affectRoll: 1
+  maxHitKickEuler: {x: 10, y: 6, z: 4}
+  hitKickInSpeed: 25
+  hitReturnSpeed: 10
 --- !u!1 &731017100
 GameObject:
   m_ObjectHideFlags: 0
@@ -10165,6 +10160,9 @@ GameObject:
   - component: {fileID: 1644377956}
   - component: {fileID: 1644377957}
   - component: {fileID: 1644377958}
+  - component: {fileID: 1644377960}
+  - component: {fileID: 1644377961}
+  - component: {fileID: 1644377959}
   m_Layer: 10
   m_Name: Panzer_VI_E
   m_TagString: Player
@@ -10184,21 +10182,30 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 08fec141faefbcb4d8d5296e425e1ef2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  commanderCam: {fileID: 330585545}
-  hull: {fileID: 5941749916303751010}
   turretYaw: {fileID: 3974867960145884146}
   gunPitch: {fileID: 792932911802802576}
-  trackableMask:
-    serializedVersion: 2
-    m_Bits: 1216
-  fcsSolveMaxTime: 8
-  fcsDt: 0.01
-  fcsIterations: 18
-  fcsHighArc: 0
-  rangeMeters: 200
   yawSpeedDeg: 3
   pitchSpeedDeg: 2
   pitchLimits: {x: -8, y: 20}
+  fcsSolveMaxTime: 8
+  fcsDt: 0.01
+  fcsIterations: 18
+  gunDestroyed: 0
+  breechDestroyed: 0
+  gunnerDead: 0
+  useDispersion: 1
+  dispersionAt100mDeg: 0.01
+  dispersionAt2000mDeg: 0.1
+  maxGunnerDispersionPenalty: 1.8
+  maxGunDispersionPenalty: 2
+  gunHpRatio: 1
+  gunnerMul: 1
+  commanderCam: {fileID: 330585545}
+  hull: {fileID: 5941749916303751010}
+  trackableMask:
+    serializedVersion: 2
+    m_Bits: 1216
+  fcsHighArc: 0
   rangeStep: 5
   repeatDelay: 0.35
   repeatRate: 0.08
@@ -10207,16 +10214,6 @@ MonoBehaviour:
   velSmoothing: 12
   leadIterations: 4
   maxLeadTime: 6
-  gunDestroyed: 0
-  breechDestroyed: 0
-  gunnerDead: 0
-  useDispersion: 1
-  dispersionAt100mDeg: 0.01
-  dispersionAt1000mDeg: 0.1
-  maxGunnerDispersionPenalty: 1.8
-  maxGunDispersionPenalty: 2
-  gunHpRatio: 1
-  gunnerMul: 1
 --- !u!4 &1644377949
 Transform:
   m_ObjectHideFlags: 0
@@ -10272,12 +10269,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   muzzle: {fileID: 1544385120109349211}
-  muzzleFxSocket: {fileID: 800276850}
-  dustSpot: {fileID: 630393308}
   APShell: {fileID: 7643823996785504197, guid: 253c318ce14ccf84dabc7e96fbe85195, type: 3}
   HEShell: {fileID: 7643823996785504197, guid: e63123388ff681643a6a08d7508a3dc9, type: 3}
+  muzzleFlashPrefab: {fileID: 1164749952747979384, guid: b00f407fae7fc4b4b92c15b95e101cc3,
+    type: 3}
+  dustSmokePrefab: {fileID: 1355631944197212, guid: 10c010e679890e243beafa574f44a31a,
+    type: 3}
+  muzzleFxSocket: {fileID: 800276850}
+  dustSpot: {fileID: 630393308}
+  muzzleFlashLife: 1.75
+  muzzleFlashLocalOffset: {x: 0, y: 0, z: 0}
+  dustSmokeLocalOffset: {x: 0, y: 0, z: 0}
+  muzzleFlashFollowMuzzle: 0
   cameraShotShake: {fileID: 729043131}
-  turretShotShake: {fileID: 711577502}
+  playerTankSoundController: {fileID: 0}
   cameraShakeIntensity: 1
   turretShakeIntensity: 0.45
   recoilPart: {fileID: 7551439643435861976}
@@ -10286,14 +10291,6 @@ MonoBehaviour:
   recoilKickSpeed: 15
   recoilReturnSpeed: 7
   recoilHoldTime: 0.03
-  muzzleFlashPrefab: {fileID: 1164749952747979384, guid: b00f407fae7fc4b4b92c15b95e101cc3,
-    type: 3}
-  dustSmokePrefab: {fileID: 1355631944197212, guid: 10c010e679890e243beafa574f44a31a,
-    type: 3}
-  muzzleFlashLife: 1.75
-  muzzleFlashLocalOffset: {x: 0, y: 0, z: 0}
-  dustSmokeLocalOffset: {x: 0, y: 0, z: 0}
-  muzzleFlashFollowMuzzle: 1
 --- !u!114 &1644377952
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10407,7 +10404,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d623a6fdbc878064eb53603de61621f9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  player: 1
   gunnerM: {fileID: 1410555971}
   gun: {fileID: 1612269351}
   breech: {fileID: 536826219}
@@ -10425,6 +10421,243 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   player: 1
   loaderM: {fileID: 637857713}
+--- !u!114 &1644377959
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1644377947}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f8c8220b107e23d4e8aa3ead5dc9da66, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  radioSource: {fileID: 1644377960}
+  normalSource: {fileID: 1644377961}
+  radioMixer: {fileID: 24100000, guid: 35f6fe69b65b2b348a3c8c1d9cbfe9e6, type: 2}
+  normalSnapshot: {fileID: 24500006, guid: 35f6fe69b65b2b348a3c8c1d9cbfe9e6, type: 2}
+  radioSnapshot: {fileID: 24500006, guid: 35f6fe69b65b2b348a3c8c1d9cbfe9e6, type: 2}
+  transitionTime: 0.05
+  fireClip: {fileID: 0}
+  reloadClip: {fileID: 0}
+  targetDownClip: {fileID: 0}
+  commanderReadyClip: {fileID: 8300000, guid: 9693ef7e4b08fb840a9dbe7cac571f97, type: 3}
+  driverReadyClip: {fileID: 8300000, guid: 3443320aae745964faf856e15f4fad9a, type: 3}
+  gunnerReadyClip: {fileID: 8300000, guid: 688c6aa036dc3104387a98a4e8976d2a, type: 3}
+  loaderReadyClip: {fileID: 8300000, guid: 03c939f0ad988544d93e4cc2b67b2b68, type: 3}
+  clipGap: 0.5
+  gunFireClip:
+  - {fileID: 8300000, guid: b3f475d1e2cb49244af69668e98184ba, type: 3}
+  - {fileID: 8300000, guid: 01bc04afa17adc64983f83a072bf6200, type: 3}
+  - {fileID: 8300000, guid: 29eb8e97fd1e29145bc222cde680125e, type: 3}
+  - {fileID: 8300000, guid: e8580937c9e860a4b932d387fb3f1193, type: 3}
+  gunFireVolume: 3
+  flyByRadius: 13
+  shellMask:
+    serializedVersion: 2
+    m_Bits: 4096
+  flyByClips:
+  - {fileID: 8300000, guid: d798abcaba4caf24d87ff07923dcc754, type: 3}
+  - {fileID: 8300000, guid: c8ae749c93b1f2e458f893f2abf7d60e, type: 3}
+  - {fileID: 8300000, guid: 94ed480eebbf2594f961472cb7d03687, type: 3}
+  - {fileID: 8300000, guid: ccf80d56ed13cbd40b53f3941c95d13f, type: 3}
+  flyByVolume: 1
+  flyByCooldown: 0.3
+--- !u!82 &1644377960
+AudioSource:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1644377947}
+  m_Enabled: 1
+  serializedVersion: 4
+  OutputAudioMixerGroup: {fileID: 7974974135481465427, guid: 35f6fe69b65b2b348a3c8c1d9cbfe9e6,
+    type: 2}
+  m_audioClip: {fileID: 0}
+  m_PlayOnAwake: 1
+  m_Volume: 1
+  m_Pitch: 1
+  Loop: 0
+  Mute: 0
+  Spatialize: 0
+  SpatializePostEffects: 0
+  Priority: 128
+  DopplerLevel: 1
+  MinDistance: 1
+  MaxDistance: 500
+  Pan2D: 0
+  rolloffMode: 0
+  BypassEffects: 0
+  BypassListenerEffects: 0
+  BypassReverbZones: 0
+  rolloffCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  panLevelCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  spreadCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  reverbZoneMixCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+--- !u!82 &1644377961
+AudioSource:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1644377947}
+  m_Enabled: 1
+  serializedVersion: 4
+  OutputAudioMixerGroup: {fileID: 24300002, guid: 35f6fe69b65b2b348a3c8c1d9cbfe9e6,
+    type: 2}
+  m_audioClip: {fileID: 0}
+  m_PlayOnAwake: 1
+  m_Volume: 1
+  m_Pitch: 1
+  Loop: 0
+  Mute: 0
+  Spatialize: 0
+  SpatializePostEffects: 0
+  Priority: 128
+  DopplerLevel: 1
+  MinDistance: 1
+  MaxDistance: 500
+  Pan2D: 0
+  rolloffMode: 0
+  BypassEffects: 0
+  BypassListenerEffects: 0
+  BypassReverbZones: 0
+  rolloffCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  panLevelCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  spreadCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  reverbZoneMixCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
 --- !u!1 &1644851859
 GameObject:
   m_ObjectHideFlags: 0
@@ -11924,7 +12157,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!65 &1843072875
 BoxCollider:
   m_ObjectHideFlags: 0

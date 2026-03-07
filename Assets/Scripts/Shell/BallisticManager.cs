@@ -8,6 +8,7 @@ public class BallisticManager : MonoBehaviour
 {
 
     [Header("Refs")]
+    private ShellSoundController shellSoundController;
     [SerializeField] private ShellData shell;
     [SerializeField] private GameObject explosionPrefab;
 
@@ -41,8 +42,6 @@ public class BallisticManager : MonoBehaviour
     private const float exit = 0.04f;
     private const float enter = 0.02f;
 
-
-
     [Header("Penetration")]
     [SerializeField] private float penetrationSpeedLoss = 0.25f; // 관통 시 추가 속도 손실
     [SerializeField] private float minSpeedAfterPen = 30f;        // 너무 느려지면 소멸
@@ -64,13 +63,17 @@ public class BallisticManager : MonoBehaviour
     [SerializeField] private float radiusAt1Kg = 6.0f;
     [SerializeField] private int raysAt1Kg = 120;
     [SerializeField] private float baseFragDamage = 100.0f;
-
+    public bool isPlayerShell = false;
     private float fuzeTimer = 0.0f;
     private bool fuzeArmed;
     private bool hasFuzeOrigin;
     private Vector3 fuzeOrigin;
     [SerializeField] private float fuzeOriginNudge = 0.1f;
     private bool isInitialized = false;
+
+
+
+
 #if true// 탄 트레일 남기는 로직
     [SerializeField] private TrailRenderer trail;
     [SerializeField] private Light tracerLight;
@@ -79,6 +82,7 @@ public class BallisticManager : MonoBehaviour
 
     void Awake()
     {
+        shellSoundController = GetComponent<ShellSoundController>();
         if (trail) trail.emitting = false;
         if (tracerLight) tracerLight.enabled = false;
         fuzeArmed = false;
@@ -176,7 +180,7 @@ public class BallisticManager : MonoBehaviour
         int layerBit = 1 << hit.collider.gameObject.layer;
 
         SpawnExplosion(hit);
-
+        shellSoundController.PlayHit(hit.point);
         // Ground면: 도탄/파괴
         if ((groundMask.value & layerBit) != 0)
         {
@@ -225,6 +229,17 @@ public class BallisticManager : MonoBehaviour
 
     private void HandleArmorHit(RaycastHit hit, Vector3 segDir, float cosToNormal, float angleToNormal, ArmorManager zone)
     {
+
+        var cam = hit.collider.transform.root.GetComponentInChildren<CameraController>();
+        if (cam != null)
+        {
+            // 속도 비율 * 탄 중량(kg) 기반 intensity
+            float speedRatio = Mathf.Clamp01(speed / shell.muzzleVelocity);
+            float massRatio = Mathf.Clamp01(shell.projectileMass); 
+            float intensity = speedRatio * massRatio;
+            cam.TriggerHitShake(segDir, intensity);
+        }
+     
         //도탄
         float ricTh = zone.GetRicochetThresholdDeg(shell.baseRicochetAngleDeg);
         if (shell.canRicochet && angleToNormal >= ricTh)
@@ -287,6 +302,7 @@ public class BallisticManager : MonoBehaviour
     }
     private void HandleRicochet(RaycastHit hit, Vector3 dirN)
     {
+        shellSoundController.PlayRicochet(hit.point);
 
         Vector3 recochetAngle = Vector3.Reflect(dirN, hit.normal).normalized;
         //도탄후 랜덤으로 도탄될 각 기준 정하기
@@ -525,4 +541,5 @@ public class BallisticManager : MonoBehaviour
         if (ps) Destroy(go, ps.main.duration + ps.main.startLifetime.constantMax + 0.5f);
         else Destroy(go, 1.3f);
     }
+  
 }

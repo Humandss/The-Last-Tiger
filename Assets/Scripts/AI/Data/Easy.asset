@@ -15,7 +15,6 @@ MonoBehaviour:
   detectionRange: 650
   fieldOfView: 120
   preferredCombatRange: 25
-  aimAccuracy: 15
   useLeadTarget: 0
   reactionTime: 1
   flankingChance: 0.1

@@ -14,35 +14,23 @@ public interface ITankGunner
     void Fire();
 }
 
-public class GunnerController : MonoBehaviour, ITankGunner
+public class GunnerController : TankGunner, ITankGunner
 {
     [Header("Refs")]
     [SerializeField] private Camera commanderCam;
     [SerializeField] private Transform hull;
-    [SerializeField] private Transform turretYaw;
-    [SerializeField] private Transform gunPitch;
     [SerializeField] private LayerMask trackableMask;
-    private LoaderController loader;
     private CannonFireController fireController;
-    private ShellData shell;
-    private ITankLoader loaderFunc;
+
 
     [Header("Aim")]
-    [SerializeField] private float fcsSolveMaxTime = 8.0f;   // 시뮬 최대 시간
-    [SerializeField] private float fcsDt = 0.01f;            // 시뮬 스텝
-    [SerializeField] private int fcsIterations = 18;         // 이분탐색 반복
     [SerializeField] private bool fcsHighArc = false;        // 고각/저각 선택
     private Vector3? targetPoint;
     private LayerMask aimMask = ~0;
     private float maxAimDistance = 5000f;
-    [SerializeField] private float rangeMeters = 800f;
     private bool isAiming;
     private Vector3 aimPoint;
     private bool isAligning;
-
-    [SerializeField] private float yawSpeedDeg = 120f;
-    [SerializeField] private float pitchSpeedDeg = 90f;
-    [SerializeField] private Vector2 pitchLimits = new Vector2(-10f, 20f);
 
     [Header("Range Input")]
     [SerializeField] private float rangeStep = 5f;          // 한 번에 5m
@@ -50,9 +38,8 @@ public class GunnerController : MonoBehaviour, ITankGunner
     [SerializeField] private float repeatRate = 0.08f;       // 반복 간격(초)
     private float _rangeRepeatTimer = 0f;
     private int _rangeRepeatDir = 0; // +1 up, -1 down, 0 none
-    private float _pitchTargetLocalX = 0f;
 
-    [Header("Tracking (No Rigidbody)")]
+    [Header("Tracking")]
     [SerializeField] private bool tracking = false;
     [SerializeField] private Transform trackingTarget;
     private Transform designatedTarget;
@@ -63,38 +50,11 @@ public class GunnerController : MonoBehaviour, ITankGunner
     private bool _hasPrevTarget;
     private Vector3 _targetVelSmoothed;
 
-    [SerializeField] private bool gunDestroyed;
-    [SerializeField] private bool breechDestroyed;
-    [SerializeField] private bool gunnerDead;
-
-    [Header("Dispersion")]
-    [SerializeField] private bool useDispersion = true;
-
-    // 거리별 분산(도) 선형 보간
-    [SerializeField] private float dispersionAt100mDeg = 0.01f;
-    [SerializeField] private float dispersionAt1000mDeg = 0.1f;
-
-    [Header("Dispersion Penalty")]
-    [SerializeField] private float maxGunnerDispersionPenalty = 1.8f; // 거너 상태 나쁠 때 최대
-    [SerializeField] private float maxGunDispersionPenalty = 2.2f;    // 포신 상태 나쁠 때 최대
-
-    [SerializeField, Range(0f, 1f)] private float gunHpRatio = 1f;    // 브릿지에서 넣어줄 값
-
-    public void SetGunDestroyed(bool v) => gunDestroyed = v;
-    public void SetBreechDestroyed(bool v) => breechDestroyed = v;
-    public void SetGunnerDead(bool dead) => gunnerDead = dead;
-    private bool CanFire => !gunDestroyed && !breechDestroyed && !gunnerDead;
-
-    [SerializeField, Range(0f, 1f)] private float gunnerMul = 1f; // 회전/조절 속도 배율
-
-
-    private void Awake()
+   
+    protected override void Awake()
     {
-        loader = GetComponent<LoaderController>();
+        base.Awake();
         fireController = GetComponent<CannonFireController>();
-
-
-        loaderFunc = loader as ITankLoader;
     }
 
     private void Start()
@@ -133,7 +93,7 @@ public class GunnerController : MonoBehaviour, ITankGunner
             }
         }
 
-        if (gunnerDead)
+        if (IsGunnerDead())
         {
             Debug.Log("[Gunner] 사망! 포탑 조종 불가");
             isAiming = false;
@@ -179,7 +139,7 @@ public class GunnerController : MonoBehaviour, ITankGunner
             AlignHull();
         }
 
-        // 1) 첫 입력(탭) 처리
+        // 첫 입력 처리
         if (Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.E))
         {
             SetRange(rangeMeters + rangeStep);
@@ -197,7 +157,7 @@ public class GunnerController : MonoBehaviour, ITankGunner
             return;
         }
 
-        // 2) 키를 뗐으면 반복 중지
+        //키를 뗐으면 반복 중지
         bool holdingUp = Input.GetKey(KeyCode.UpArrow)  || Input.GetKey(KeyCode.E);
         bool holdingDown = Input.GetKey(KeyCode.DownArrow) || Input.GetKey(KeyCode.Q);
 
@@ -269,27 +229,21 @@ public class GunnerController : MonoBehaviour, ITankGunner
     }
     private bool AlignHullStep()
     {
-        if (gunnerDead) isAligning = false;
-        //차체 yaw
-        float targetYaw = hull.eulerAngles.y;
+        if (IsGunnerDead()) { isAligning = false; return true; }
 
-        // 현재 turret yaw를 목표로 조금씩 이동
+        float targetYaw = hull.eulerAngles.y;
         var y = turretYaw.eulerAngles;
         y.y = Mathf.MoveTowardsAngle(y.y, targetYaw, yawSpeedDeg * gunnerMul * Time.deltaTime);
         turretYaw.eulerAngles = y;
 
-        // pitch는 0도로 조금씩 이동 (local)
         float curPitch = NormalizeAngle(gunPitch.localEulerAngles.x);
         float nextPitch = Mathf.MoveTowardsAngle(curPitch, 0f, pitchSpeedDeg * gunnerMul * Time.deltaTime);
         var p = gunPitch.localEulerAngles;
         p.x = nextPitch;
         gunPitch.localEulerAngles = p;
 
-        // 완료 판정(각도 차이 거의 없으면 종료)
-        bool yawDone = Mathf.Abs(Mathf.DeltaAngle(y.y, targetYaw)) < 0.5f;
-        bool pitchDone = Mathf.Abs(Mathf.DeltaAngle(nextPitch, 0f)) < 0.5f;
-
-        return yawDone && pitchDone;
+        return Mathf.Abs(Mathf.DeltaAngle(y.y, targetYaw)) < 0.5f &&
+               Mathf.Abs(Mathf.DeltaAngle(nextPitch, 0f)) < 0.5f;
     }
     public void CeaseAction()
     {
@@ -333,27 +287,13 @@ public class GunnerController : MonoBehaviour, ITankGunner
         float targetLocalX = -pitchDeg; // 반대면 +pitchDeg
         targetLocalX = Mathf.Clamp(targetLocalX, pitchLimits.x, pitchLimits.y);
 
-        _pitchTargetLocalX = targetLocalX;     //  여기로 통일
+        pitchTargetLocalX = targetLocalX;     //  여기로 통일
         isAligning = false;     
 
-        Debug.Log($"[Gunner] 고각 목표 -> {pitchDeg:0.00}deg (localX={_pitchTargetLocalX:0.00})");
+        Debug.Log($"[Gunner] 고각 목표 -> {pitchDeg:0.00}deg (localX={pitchTargetLocalX:0.00})");
     
      }
-
-    private void AimAtWorldPoint(Vector3 worldPoint)
-    {
-        // Yaw는 그대로 (방향 정렬)
-        Vector3 to = worldPoint - turretYaw.position;
-        Vector3 flat = Vector3.ProjectOnPlane(to, Vector3.up);
-        if (flat.sqrMagnitude > 0.0001f)
-        {
-            Quaternion targetYaw = Quaternion.LookRotation(flat, Vector3.up);
-            float yawStep = yawSpeedDeg * gunnerMul * Time.deltaTime;
-            turretYaw.rotation = Quaternion.RotateTowards(turretYaw.rotation, targetYaw, yawStep);
-        }
-
-    }
-    public void Fire()
+    public override void Fire()
     {
         if (!CanFire)
         {
@@ -402,25 +342,18 @@ public class GunnerController : MonoBehaviour, ITankGunner
         Debug.Log("[Gunner] Tracking stop");
     }
 
-    private static float NormalizeAngle(float a)
-    {
-        a %= 360f;
-        if (a > 180f) a -= 360f;
-        return a;
-    }
-
     private void UpdateTracking(float dt)
     {
-        // 1) 목표 속도 추정(위치 미분 + 스무딩)
+        //목표 속도 추정(위치 미분 + 스무딩)
         Vector3 vel = EstimateTargetVelocity(dt);
 
-        // 2) 예측 지점 계산(리드)
+        // 예측 지점 계산(리드)
         Vector3 predicted = PredictFutureAimPointIterative(trackingTarget.position, vel);
 
-        // 3) 포탑 yaw는 예측 지점으로
+        // 포탑 yaw는 예측 지점으로
         AimAtWorldPoint(predicted);
 
-        // 4) FCS(사거리+높이차)도 예측 지점 기준으로 갱신해서 포신 pitch 목표각 업데이트
+        // FCS(사거리+높이차)도 예측 지점 기준으로 갱신해서 포신 pitch 목표각 업데이트
         ApplyFcsToWorldPoint();
     }
 
@@ -520,7 +453,7 @@ public class GunnerController : MonoBehaviour, ITankGunner
 
         return maxLeadTime;
     }
-    private void ApplyFcsToWorldPoint()
+    public override void ApplyFcsToWorldPoint()
     {
         var loaded = loaderFunc.GetLoadedShell();
         if (loaded == null) return;
@@ -531,23 +464,9 @@ public class GunnerController : MonoBehaviour, ITankGunner
 
         float targetLocalX = -pitchDeg;
         targetLocalX = Mathf.Clamp(targetLocalX, pitchLimits.x, pitchLimits.y);
-        _pitchTargetLocalX = targetLocalX;
+        pitchTargetLocalX = targetLocalX;
     }
 
-    private void DriveGunPitchToTarget()
-    {
-        if (gunnerDead) return;
-
-        float cur = NormalizeAngle(gunPitch.localEulerAngles.x);
-        float step = pitchSpeedDeg * gunnerMul * Time.deltaTime;
-        float next = Mathf.MoveTowardsAngle(cur, _pitchTargetLocalX, step);
-
-        var e = gunPitch.localEulerAngles;
-        e.x = next;
-        gunPitch.localEulerAngles = e;
-
-       // Debug.Log($"cur={NormalizeAngle(gunPitch.localEulerAngles.x):0.00} target={_pitchTargetLocalX:0.00}");
-    }
     private float GetTargetHeightDelta()
     {
         // aiming이면 클릭한 aimPoint(또는 targetPoint)를 쓰고
@@ -559,66 +478,7 @@ public class GunnerController : MonoBehaviour, ITankGunner
         return targetPos.y - gunPitch.position.y; // 목표 - 포신 높이
     }
 
-    private float SimulateRangeForPitch(float pitchDeg, Vector3 yawForward, float targetHeightDelta = 0f)
-    {
-        Vector3 startPos = gunPitch.position;
-
-        // yawForward는 반드시 수평으로!
-        Vector3 flatYaw = Vector3.ProjectOnPlane(yawForward, Vector3.up);
-        if (flatYaw.sqrMagnitude < 1e-6f) return -9999f;
-        flatYaw.Normalize();
-
-        //  yaw 기준 right 축으로 pitch 적용
-        Quaternion yawRot = Quaternion.LookRotation(flatYaw, Vector3.up);
-        Vector3 pitchAxis = yawRot * Vector3.right;
-
-        Quaternion rot = Quaternion.AngleAxis(-pitchDeg, pitchAxis) * yawRot; // 부호 반대면 +pitchDeg
-        Vector3 dir = (rot * Vector3.forward).normalized;
-
-        Vector3 velocity = dir * shell.muzzleVelocity;
-        Vector3 pos = startPos;
-
-        // k 계산 (너 BallisticManager랑 동일)
-        float airDensity = 1.225f;
-        Vector3 windWorld = Vector3.zero;
-        float invMass = 1.0f / Mathf.Max(1e-6f, shell.projectileMass);
-        float r = Mathf.Max(1e-6f, (shell.caliber * 0.001f)) * 0.5f;
-        float refArea = Mathf.PI * r * r * shell.refAreaScale;
-        float k = 0.5f * airDensity * shell.dragCoeff * refArea * invMass;
-
-        float t = 0f;
-
-        while (t < fcsSolveMaxTime)
-        {
-            Vector3 vRel = velocity - windWorld;
-            float spd = vRel.magnitude + 1e-6f;
-            Vector3 accel = Physics.gravity + (-k * vRel * spd);
-
-            velocity += accel * fcsDt;
-            Vector3 prev = pos;
-            pos += velocity * fcsDt;
-
-            //  수평 거리 magnitude로 체크
-            float traveled = Vector3.ProjectOnPlane(pos - startPos, Vector3.up).magnitude;
-
-            if (traveled >= rangeMeters)
-            {
-                float prevTraveled = Vector3.ProjectOnPlane(prev - startPos, Vector3.up).magnitude;
-                float u = Mathf.InverseLerp(prevTraveled, traveled, rangeMeters);
-                float yAtRange = Mathf.Lerp(prev.y, pos.y, u);
-
-                float desiredY = startPos.y + targetHeightDelta;
-                return yAtRange - desiredY;
-            }
-
-            if (pos.y < startPos.y - 200f) break;
-            t += fcsDt;
-        }
-
-        return -9999f;
-    }
-
-    private bool TrySolvePitchForRange(out float solvedPitchDeg)
+    public override bool TrySolvePitchForRange(out float solvedPitchDeg)
     {
         solvedPitchDeg = 0f;
 
@@ -673,48 +533,9 @@ public class GunnerController : MonoBehaviour, ITankGunner
         }
 
         solvedPitchDeg = 0.5f * (lo + hi);
-
+       
         return true;
     }
-    public void SetGunnerState(bool dead, float hpRatio)
-    {
-        gunnerDead = dead;
-        gunnerMul = Mathf.Lerp(0.45f, 1f, Mathf.Clamp01(hpRatio)); // 최소 45%까지
-    }
-    public void SetGunHpRatio(float hpRatio)
-    {
-        gunHpRatio = Mathf.Clamp01(hpRatio);
-    }
 
-    private Vector3 GetDispersionShotDirection()
-    {
-        Vector3 baseDir = gunPitch.forward; //
-
-        if (!useDispersion) return baseDir.normalized;
-
-        // 1) 거리 기반 기본 분산
-        float t = Mathf.InverseLerp(100f, 1000f, rangeMeters);
-        float baseDispDeg = Mathf.Lerp(dispersionAt100mDeg, dispersionAt1000mDeg, t);
-
-        // 2) 거너 체력 페널티 (HP 낮을수록 분산 증가)
-        // gunnerMul은 0.45~1.0이라 직접 쓰기보다 hpRatio 기반이 더 직관적
-        float gunnerHp01 = Mathf.InverseLerp(0.45f, 1f, gunnerMul); // 임시(정확도는 떨어짐)
-        float gunnerPenalty = Mathf.Lerp(maxGunnerDispersionPenalty, 1f, gunnerHp01);
-  
-        // 3) 포신 체력 페널티
-        float gunPenalty = Mathf.Lerp(maxGunDispersionPenalty, 1f, gunHpRatio);
-
-        float finalDispDeg = baseDispDeg * gunnerPenalty * gunPenalty;
-
-        // 4) 원형 분산
-        Vector2 rnd = Random.insideUnitCircle * finalDispDeg;
-        float yawOffset = rnd.x;
-        float pitchOffset = rnd.y;
-
-        Quaternion spreadRot =
-            Quaternion.AngleAxis(yawOffset, gunPitch.up) *
-            Quaternion.AngleAxis(pitchOffset, gunPitch.right);
-
-        return (spreadRot * baseDir).normalized;
-    }
+   
 }

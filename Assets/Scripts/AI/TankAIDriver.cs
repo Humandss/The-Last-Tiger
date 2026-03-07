@@ -22,7 +22,6 @@ public class TankAIDriver : MonoBehaviour
 
     private void Update()
     {
-        if(driverDead) return;
 
         if (!hasDestination) return;
         if (!agent.hasPath) return;

@@ -22,6 +22,6 @@ public class ReloadDisableBridge : MonoBehaviour
         bool loaderDead = loaderM && loaderM.State == ModuleState.Destroyed;
         float l = loaderM ? loaderM.Hp01 : 1f;
 
-        if(player) loader.SetLoaderState(loaderDead, l);
+        loader.SetLoaderState(loaderDead, l);
     }
 }

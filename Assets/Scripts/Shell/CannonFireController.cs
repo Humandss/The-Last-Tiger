@@ -3,21 +3,12 @@ using System.Collections.Generic;
 using UnityEditor.EditorTools;
 using UnityEngine;
 
-public interface ICannonFire
-{
-    void FireProjectile(Vector3 dir, AmmoType type);
-}
 
-public class CannonFireController : MonoBehaviour, ICannonFire
+public class CannonFireController : FireController
 {
     [Header("Refs")]
-    [SerializeField] private Transform muzzle;
-    [SerializeField] private Transform muzzleFxSocket;
-    [SerializeField] private Transform dustSpot;
-    [SerializeField] private BallisticManager APShell;
-    [SerializeField] private BallisticManager HEShell;
-    [SerializeField] private ShotRecoilShake cameraShotShake;
-    [SerializeField] private ShotRecoilShake turretShotShake;
+    [SerializeField] private CameraController cameraShotShake;
+    [SerializeField] private PlayerTankSoundController playerTankSoundController;
 
     [SerializeField, Range(0f, 2f)] private float cameraShakeIntensity = 1.0f;
     [SerializeField, Range(0f, 2f)] private float turretShakeIntensity = 0.35f;
@@ -35,16 +26,12 @@ public class CannonFireController : MonoBehaviour, ICannonFire
     private float recoilTarget;   // 목표 후퇴량
     private float recoilHoldTimer;
 
-    [SerializeField] private GameObject muzzleFlashPrefab;
-    [SerializeField] private GameObject dustSmokePrefab;
-    [SerializeField] private float muzzleFlashLife = 0.15f;
-    [SerializeField] private Vector3 muzzleFlashLocalOffset = Vector3.zero;
-    [SerializeField] private Vector3 dustSmokeLocalOffset = Vector3.zero;
-    [SerializeField] private bool muzzleFlashFollowMuzzle = true;
     private void Awake()
     {
         if (recoilPart != null)
             recoilBaseLocalPos = recoilPart.localPosition;
+
+        playerTankSoundController = GetComponent<PlayerTankSoundController>();
     }
     private void Update()
     {
@@ -77,86 +64,10 @@ public class CannonFireController : MonoBehaviour, ICannonFire
         ApplyRecoilVisual();
     }
 
-    public void FireProjectile(Vector3 dir, AmmoType type)
-    {
-        if (muzzle == null)
-        {
-            Debug.LogWarning("[CannonFireController] muzzle is NULL");
-            return;
-        }
-
-        if (APShell == null || HEShell == null)
-        {
-            Debug.LogWarning("[CannonFireController] projectile is NULL");
-            return;
-        }
-        BallisticManager projectile = type switch
-        {
-            AmmoType.AP => APShell,
-            AmmoType.HE => HEShell,
-            _ => null
-        };
-
-        if (projectile == null)
-        {
-            Debug.LogWarning($"[CannonFireController] Unknown AmmoType: {type}");
-            return;
-        }
-
-        Vector3 shotDir = dir.sqrMagnitude > 1e-8f ? dir.normalized : muzzle.forward.normalized;
-        Vector3 spawnPos = muzzle.position + shotDir * 0.05f;
-
-        var shell = Instantiate(projectile, spawnPos, Quaternion.LookRotation(shotDir));
-        if (shell == null)
-        {
-            Debug.LogWarning("[CannonFireController] BallisticManager component missing on projectile prefab");
-            return;
-        }
-
-        shell.Initialize(spawnPos, shotDir);
-
-
-        TriggerShotShake();
-        SpawnMuzzleFlash();
-        SpawnFireDust();
-        TriggerGunRecoil();
-       
-    }
-
-    private void SpawnMuzzleFlash()
-    {
-        if (!muzzleFlashPrefab) return;
-
-        Transform fxT = muzzleFxSocket ? muzzleFxSocket : muzzle;
-        if (!fxT) return;
-
-        GameObject fx = Instantiate(muzzleFlashPrefab, fxT.position, fxT.rotation);
-
-        if (muzzleFlashFollowMuzzle)
-            fx.transform.SetParent(fxT, worldPositionStays: true);
-
-        Destroy(fx, muzzleFlashLife);
-
-    }
-
-    private void SpawnFireDust()
-    {
-        if (!dustSmokePrefab || !dustSpot) return;
-
-        // muzzle 기준 위치/회전
-        Vector3 pos = dustSpot.TransformPoint(dustSmokeLocalOffset);
-        Quaternion rot = dustSpot.rotation;
-
-        GameObject fx = Instantiate(dustSmokePrefab, pos, rot);
-
-        Destroy(fx, 1.5f);
-
-    }
     private void TriggerGunRecoil()
     {
         if (recoilPart == null) return;
 
-        // 연사 중에도 반응 좋게: 현재값보다 더 큰 목표로
         recoilTarget = Mathf.Max(recoilTarget, recoilDistance);
 
     }
@@ -168,7 +79,15 @@ public class CannonFireController : MonoBehaviour, ICannonFire
 
     private void TriggerShotShake()
     {
-        if (cameraShotShake) cameraShotShake.TriggerKick(cameraShakeIntensity);
-        if (turretShotShake) turretShotShake.TriggerKick(turretShakeIntensity);
+        if (cameraShotShake) cameraShotShake.TriggerShake(cameraShakeIntensity);
+  
+    }
+
+    public sealed override void FireProjectile(Vector3 dir, AmmoType type)
+    {
+        base.FireProjectile(dir, type);
+        playerTankSoundController.PlayGunFireClips();
+        TriggerShotShake();
+        TriggerGunRecoil();     
     }
 }

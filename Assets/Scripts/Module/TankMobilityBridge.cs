@@ -18,7 +18,7 @@ public class TankMobilityBridge : MonoBehaviour
 
     private void Awake()
     {
-        if(player) driver = GetComponent<DriverController>();
+        driver = GetComponent<DriverController>();
       
     }
     private void Update()
@@ -40,12 +40,10 @@ public class TankMobilityBridge : MonoBehaviour
         // ===== 운전수 =====
         bool dead = driverM && driverM.State == ModuleState.Destroyed;
 
-        if (player)
-        {
-            driver.SetTrackState(l, r);
-            driver.SetMobilityModuleState(canMove: !imm, maxSpeedMul01: imm ? 0f : mul);
-            driver.SetDriverState(dead, driverM.Hp01);
-        }
+        driver.SetTrackState(l, r);
+        driver.SetMobilityModuleState(canMove: !imm, maxSpeedMul01: imm ? 0f : mul);
+        driver.SetDriverState(dead, driverM.Hp01);
+        
        
     }
 }

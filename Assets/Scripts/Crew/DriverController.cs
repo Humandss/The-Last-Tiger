@@ -7,7 +7,7 @@ public class DriverController : MonoBehaviour
     [SerializeField] private bool isAI = false;
 
     [Header("Refs")]
-    [SerializeField] private Transform hull; // 차체(없으면 transform)
+    [SerializeField] private Transform hull; // 차체
     [SerializeField] private Rigidbody rb;
 
     [Header("Speeds")]
@@ -92,7 +92,7 @@ public class DriverController : MonoBehaviour
         float da = 1f - Mathf.Exp(-mobilitySmooth * dt);
         driverMulSmoothed = Mathf.Lerp(driverMulSmoothed, driverMul, da);
 
-        // (디버깅용) 키 입력 -> target 갱신
+        // (디버깅용) 키 입력
         if(!isAI)DriverHotKeys();
 
         if (driverDead)
@@ -120,7 +120,7 @@ public class DriverController : MonoBehaviour
                 return;
             }
 
-            // 한쪽만 파괴: 피벗 외 이동은 막음
+            // 한쪽만 파괴
             targetThrottle = 0f;
 
         }
@@ -197,19 +197,14 @@ public class DriverController : MonoBehaviour
         if (Input.GetKey(KeyCode.W)) t += 1f;
         if (Input.GetKey(KeyCode.S)) t -= 1f;
 
-        //float p = 0f;
-        //if (Input.GetKey(KeyCode.Q)) p -= 1f;
-        // if (Input.GetKey(KeyCode.E)) p += 1f;
 
         float s = 0f;
         if (Input.GetKey(KeyCode.A)) s -= 1f;
         if (Input.GetKey(KeyCode.D)) s += 1f;
 
-        // if (Mathf.Abs(p) > 0.001f) s = 0f;
-
         targetThrottle = Mathf.Clamp(t, -1f, 1f);
         targetSteer = Mathf.Clamp(s, -1f, 1f);
-        //targetPivot = Mathf.Clamp(p, -1f, 1f);
+  
     }
 
     private Intensity CurrentIntensity()

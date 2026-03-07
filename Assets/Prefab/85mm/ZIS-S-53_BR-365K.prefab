@@ -9,7 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2561663121278912629}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: 88mm shell
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -42,7 +42,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8562821305304488710}
   - component: {fileID: 3976662971348895557}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: collider
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -98,7 +98,7 @@ GameObject:
   - component: {fileID: 8385348980154070655}
   - component: {fileID: 3144260709293762471}
   - component: {fileID: 4828119336195132773}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: default
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -183,7 +183,9 @@ GameObject:
   - component: {fileID: 878920183239464695}
   - component: {fileID: 7709520345625933040}
   - component: {fileID: 3235874320463190831}
-  m_Layer: 0
+  - component: {fileID: -9007584002302433738}
+  - component: {fileID: -7828325526104484910}
+  m_Layer: 12
   m_Name: ZIS-S-53_BR-365K
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -242,7 +244,7 @@ MonoBehaviour:
     m_Bits: 65
   penetrationSpeedLoss: 0.25
   minSpeedAfterPen: 30
-  maxPenetrations: 5
+  maxPenetrations: 3
   zoneSearchRadius: 0.35
   minCosForArmor: 0.05
   maxDist: 20
@@ -253,6 +255,7 @@ MonoBehaviour:
   radiusAt1Kg: 6
   raysAt1Kg: 120
   baseFragDamage: 120
+  isPlayerShell: 0
   fuzeOriginNudge: 0.15
   trail: {fileID: 878920183239464695}
   tracerLight: {fileID: 7709520345625933040}
@@ -465,3 +468,129 @@ MonoBehaviour:
   m_LightCookieSize: {x: 1, y: 1}
   m_LightCookieOffset: {x: 0, y: 0}
   m_SoftShadowQuality: 0
+--- !u!82 &-9007584002302433738
+AudioSource:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7442296778298702657}
+  m_Enabled: 1
+  serializedVersion: 4
+  OutputAudioMixerGroup: {fileID: 24300002, guid: 35f6fe69b65b2b348a3c8c1d9cbfe9e6,
+    type: 2}
+  m_audioClip: {fileID: 0}
+  m_PlayOnAwake: 1
+  m_Volume: 1
+  m_Pitch: 1
+  Loop: 0
+  Mute: 0
+  Spatialize: 0
+  SpatializePostEffects: 0
+  Priority: 128
+  DopplerLevel: 1
+  MinDistance: 1
+  MaxDistance: 500
+  Pan2D: 0
+  rolloffMode: 0
+  BypassEffects: 0
+  BypassListenerEffects: 0
+  BypassReverbZones: 0
+  rolloffCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  panLevelCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0.5
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  spreadCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  reverbZoneMixCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+--- !u!114 &-7828325526104484910
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7442296778298702657}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3a681c835bd939645a8152854a18823f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  audioSource: {fileID: -9007584002302433738}
+  hitClips:
+  - {fileID: 8300000, guid: f6bcc195d97760947ad50bcefae13a6b, type: 3}
+  - {fileID: 8300000, guid: ff86aad0096cc6445a359aa8ab57550b, type: 3}
+  - {fileID: 8300000, guid: 0abb225a399a8104a860fe61a866fcda, type: 3}
+  ricochetClips:
+  - {fileID: 8300000, guid: 80f0995c6eb8fa64aa2dc52a0efc3b99, type: 3}
+  - {fileID: 8300000, guid: 57c7c200e3d13fe4294b51be406904b0, type: 3}
+  - {fileID: 8300000, guid: 423cd9a8934af5d4f85bbacbcc9c7894, type: 3}
+  - {fileID: 8300000, guid: 7c3354e2fd6c0d241b1b53b560ce2bbb, type: 3}
+  - {fileID: 8300000, guid: fa82092a1253a0b48b6c043beafc1324, type: 3}
+  - {fileID: 8300000, guid: 70f0ad3149f4fb24d9837a1b53649892, type: 3}
+  - {fileID: 8300000, guid: cade1a7553a5ed84a9a7d832207da821, type: 3}
+  explosionClips: []
+  hitVolume: 7
+  ricochetVolume: 2
+  explosionVolume: 1

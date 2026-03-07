@@ -13,7 +13,6 @@ public class TankAIController : MonoBehaviour
     [SerializeField] private Transform turret;
     [SerializeField] private AIProfile profile;
     [SerializeField] private Transform player;
-    [SerializeField] private Transform hull;
 
     [Header("Patrol")]
     [SerializeField] private Transform[] waypoints;    // 인스펙터에서 웨이포인트 할당

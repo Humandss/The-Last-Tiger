@@ -9,7 +9,6 @@ public class AIProfile : ScriptableObject
 
     [Header("Combat")]
     public float preferredCombatRange = 25f; // 유지하려는 교전 거리
-    public float aimAccuracy = 5f;           // 조준 오차각
     public bool useLeadTarget = false;       // 선행 조준 여부
     public float reactionTime = 1.0f;        // 감지 후 반응 딜레이
 
