@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 
-public enum CrewRole { Driver, Gunner, Loader }
+public enum CrewRole { Driver, Gunner, Loader, None }
 public enum Cmd { 
     MoveForward, MoveBackward, Stop, TurnLeft, TurnRight, PivotLeft, PivotRight,
     Fire, CeaseAction, AimAt, AlignHull, SetRange, TrackTarget,

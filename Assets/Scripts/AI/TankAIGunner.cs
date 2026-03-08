@@ -56,7 +56,7 @@ public class TankAIGunner : TankGunner
     {
         if (!CanFire)
         {
-            Debug.Log("[Gunner] 포신 고장! 사격 불가");
+            Debug.Log("[AIGunner]사격 불가");
             return;
         }
 

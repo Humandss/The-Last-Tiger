@@ -185,7 +185,7 @@ public class AmmoRackEffects : MonoBehaviour
         if (followParent)
             smokeInstance.transform.SetParent(t, worldPositionStays: true);
 
-        Debug.Log($"[FIRE] AmmoRack Finish -> smoke spawned on {gameObject.name}");
+        //Debug.Log($"[FIRE] AmmoRack Finish -> smoke spawned on {gameObject.name}");
     }
     private void StopFire()
     {
@@ -221,11 +221,11 @@ public class AmmoRackEffects : MonoBehaviour
             var main = ps.main;
             maxLife = Mathf.Max(maxLife, main.startLifetime.constantMax);
 
-            // 새로 방출 멈추고 남은 파티클만 자연 소멸
+            // 남은 파티클만 자연 소멸
             ps.Stop(withChildren: true, stopBehavior: ParticleSystemStopBehavior.StopEmitting);
         }
 
-        // 트레일 잔상까지 고려(있으면)
+        // 트레일 잔상
         float maxTrail = 0f;
         var trails = vfx.GetComponentsInChildren<TrailRenderer>(true);
         foreach (var tr in trails) maxTrail = Mathf.Max(maxTrail, tr.time);

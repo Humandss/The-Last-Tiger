@@ -3,11 +3,10 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Audio;
 
-public class PlayerTankSoundController : MonoBehaviour
+public class PlayerTankSoundController : SoundController
 {
     [Header("Audio")]
     [SerializeField] private AudioSource radioSource;   // 무전음용 
-    [SerializeField] private AudioSource normalSource;  // 효과음용 
 
     [Header("Radio Effect")]
     [SerializeField] private AudioMixer radioMixer;
@@ -40,14 +39,20 @@ public class PlayerTankSoundController : MonoBehaviour
     [SerializeField] private float flyByCooldown = 0.3f; // 연속 재생 방지
     private float cooldownTimer = 0f;
 
-    public void PlayGunFireClips() => PlayGunFire();
-    public void PlayReload() => Play(reloadClip);
-    public void PlayTargetDown() => Play(targetDownClip);
+    public void PlayGunFireClips() => PlayEffectSounds(gunFireClip, gunFireVolume);
+    public void PlayReload() => PlayCrewVoice(reloadClip);
+    public void PlayTargetDown() => PlayCrewVoice(targetDownClip);
+
+    protected override void Awake()
+    {
+        base.Awake(); 
+    }
+
     private void Start()
     {
         StartCoroutine(PlayStartupSequence());
     }
-    private void Update()
+    protected override void Update()
     {
         cooldownTimer -= Time.deltaTime;
         if (cooldownTimer > 0f) return;
@@ -59,10 +64,13 @@ public class PlayerTankSoundController : MonoBehaviour
             var shell = col.GetComponent<BallisticManager>();
             if (shell != null && shell.isPlayerShell) continue; // 플레이어 탄 무시
 
-            PlayFlyBy();
+            PlayEffectSounds(flyByClips, flyByVolume);
             cooldownTimer = flyByCooldown;
             break;
         }
+
+        base.Update();
+
     }
     private IEnumerator PlayStartupSequence()
     {
@@ -74,7 +82,7 @@ public class PlayerTankSoundController : MonoBehaviour
 
     private IEnumerator PlayAndWait(AudioClip clip)
     {
-        if (clip == null) yield break;
+        if (clip == null || radioSource == null) yield break;
 
         radioSnapshot.TransitionTo(transitionTime);
         radioSource.PlayOneShot(clip);
@@ -82,23 +90,18 @@ public class PlayerTankSoundController : MonoBehaviour
         normalSnapshot.TransitionTo(transitionTime);   
     }
 
-    private void Play(AudioClip clip)
+    private void PlayCrewVoice(AudioClip clip)
     {
         if (clip == null || radioSource == null) return;
         radioSource.PlayOneShot(clip);
     }
 
-    private void PlayFlyBy()
+    private void PlayEffectSounds(AudioClip[] clips, float volume)
     {
-        if (flyByClips == null || flyByClips.Length == 0) return;
-        AudioClip clip = flyByClips[Random.Range(0, flyByClips.Length)];
-        normalSource.PlayOneShot(clip, flyByVolume); 
+        if (clips == null || clips.Length == 0) return;
+        AudioClip clip = clips[Random.Range(0, clips.Length)];
+        normalSource.PlayOneShot(clip, volume); 
     }
 
-    private void PlayGunFire()
-    {
-        if (gunFireClip == null || gunFireClip.Length == 0) return;
-        AudioClip clip = gunFireClip[Random.Range(0, gunFireClip.Length)];
-        normalSource.PlayOneShot(clip, gunFireVolume);
-    }
+ 
 }

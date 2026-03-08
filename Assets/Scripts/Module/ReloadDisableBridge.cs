@@ -6,22 +6,37 @@ using UnityEngine;
 public class ReloadDisableBridge : MonoBehaviour
 {
     private LoaderController loader;
-    [SerializeField] private bool player;
-    [SerializeField] private ModuleDamageController loaderM;
+
+    [SerializeField] private ModuleDamageController loaderModule;
 
     private void Awake()
     {
         loader = GetComponent<LoaderController>();
     }
 
-    private void Update()
+    private void Start()
     {
-        if(!loader) return;
+        if (loaderModule != null) loaderModule.OnStateChanged += OnLoaderStateChanged;
+        ApplyInitialState();
+    }
 
-        // ===== 로더 =====
-        bool loaderDead = loaderM && loaderM.State == ModuleState.Destroyed;
-        float l = loaderM ? loaderM.Hp01 : 1f;
+    private void OnDestroy()
+    {
+        if (loaderModule != null) loaderModule.OnStateChanged -= OnLoaderStateChanged;
+    }
 
-        loader.SetLoaderState(loaderDead, l);
+    private void OnLoaderStateChanged(ModuleDamageController who, ModuleState prev, ModuleState next)
+    {
+        if (loader == null) return;
+        bool dead = next == ModuleState.Destroyed;
+        loader.SetLoaderState(dead, who.Hp01);
+        Debug.Log($"[ReloadBridge] 로더 → dead={dead} hp={who.Hp01:0.00}");
+    }
+
+    private void ApplyInitialState()
+    {
+        if (loader == null || loaderModule == null) return;
+        bool dead = loaderModule.State == ModuleState.Destroyed;
+        loader.SetLoaderState(dead, loaderModule.Hp01);
     }
 }

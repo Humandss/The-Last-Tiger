@@ -17,13 +17,15 @@ public class ModuleManager : MonoBehaviour
     [SerializeField] private int maxLines = 20;
 
 
+    public ModuleDamageController GetCrew(ModuleType type) => GetCrewModule(type);
+
     private void Awake()
     {
         if (autoCollectOnAwake) CollectModules();
     }
 
     [ContextMenu("CollectModules")]
-    public void CollectModules()
+    private void CollectModules()
     {
         modules.Clear();
         if (includeInactive) GetComponentsInChildren(true, modules);
@@ -108,5 +110,15 @@ public class ModuleManager : MonoBehaviour
         }
 
         return sb.ToString();
+    }
+
+    private ModuleDamageController GetCrewModule(ModuleType type)
+    {
+        for (int i = 0; i < modules.Count; i++)
+        {
+            if (modules[i] && modules[i].Type == type)
+                return modules[i];
+        }
+        return null;
     }
 }

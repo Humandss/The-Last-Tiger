@@ -22,7 +22,6 @@ public class GunnerController : TankGunner, ITankGunner
     [SerializeField] private LayerMask trackableMask;
     private CannonFireController fireController;
 
-
     [Header("Aim")]
     [SerializeField] private bool fcsHighArc = false;        // 고각/저각 선택
     private Vector3? targetPoint;
@@ -50,7 +49,6 @@ public class GunnerController : TankGunner, ITankGunner
     private bool _hasPrevTarget;
     private Vector3 _targetVelSmoothed;
 
-   
     protected override void Awake()
     {
         base.Awake();
@@ -64,6 +62,7 @@ public class GunnerController : TankGunner, ITankGunner
 
     private void Update()
     {
+
         if (Input.GetMouseButtonDown(2))
         {
             var ray = commanderCam.ScreenPointToRay(Input.mousePosition);
@@ -106,7 +105,13 @@ public class GunnerController : TankGunner, ITankGunner
         // ===== 실행(조준 추적) =====
         if (isAligning)
         {
-            if (AlignHullStep()) isAligning = false;
+            if (AlignHullStep())
+            {
+                isAligning = false;
+                isAiming = false;
+                tracking = false;
+                trackingTarget = null;
+            }
         }
         else if (tracking && trackingTarget != null)
         {
@@ -117,9 +122,11 @@ public class GunnerController : TankGunner, ITankGunner
             AimAtWorldPoint(aimPoint);
             ApplyFcsToWorldPoint();
         }
-
         DriveGunPitchToTarget();
+
+        UpdateTurretSound();
     }
+
     private void HandleRangeHotkeys()
     {
 
@@ -203,7 +210,7 @@ public class GunnerController : TankGunner, ITankGunner
             return;
         }
 
-        // 1) 트래킹 가능한 타겟이 찍혀있으면 트래킹
+        //트래킹 가능한 타겟이 찍혀있으면 트래킹
         if (designatedTarget != null)
         {
             trackingTarget = designatedTarget;
@@ -408,6 +415,7 @@ public class GunnerController : TankGunner, ITankGunner
 
         return predicted;
     }
+
 
     private float EstimateTimeToHorizontalRange(float pitchDeg, Vector3 yawForward)
     {

@@ -7,6 +7,7 @@ public abstract class TankGunner : MonoBehaviour
     [SerializeField] protected Transform turretYaw;
     [SerializeField] protected Transform gunPitch;
     protected LoaderController loader;
+    protected SoundController soundController;
     protected ITankLoader loaderFunc;
 
     [Header("Aim Settings")]
@@ -38,6 +39,10 @@ public abstract class TankGunner : MonoBehaviour
 
     [SerializeField, Range(0f, 1f)] protected float gunHpRatio = 1f;    // 브릿지에서 넣어줄 값
 
+
+    protected float prevTurretYaw;
+    protected float prevGunPitch;
+
     public void SetGunDestroyed() => gunDestroyed = true;
     public void SetBreechDestroyed() => breechDestroyed = true;
     public void SetGunnerDead() => gunnerDead = true;
@@ -50,6 +55,7 @@ public abstract class TankGunner : MonoBehaviour
     protected virtual void Awake()
     {
         loader = GetComponent<LoaderController>();
+        soundController = GetComponent<SoundController>();
         loaderFunc = loader as ITankLoader;
     }
 
@@ -172,6 +178,25 @@ public abstract class TankGunner : MonoBehaviour
     public void SetGunHpRatio(float hpRatio)
     {
         gunHpRatio = Mathf.Clamp01(hpRatio);
+    }
+
+    protected void UpdateTurretSound()
+    {
+        if (soundController == null) return;
+
+        // 포탑 Yaw 회전량 체크
+        float yawDelta = Mathf.Abs(Mathf.DeltaAngle(
+        prevTurretYaw, turretYaw.localEulerAngles.y)); 
+
+        // 포신 Pitch 회전량 체크
+        float pitchDelta = Mathf.Abs(Mathf.DeltaAngle(
+            prevGunPitch, gunPitch.localEulerAngles.x));
+
+        bool isMoving = (yawDelta + pitchDelta) > 0.01f;
+        soundController.IsTurretMoving(isMoving);
+
+        prevTurretYaw = turretYaw.localEulerAngles.y; 
+        prevGunPitch = gunPitch.localEulerAngles.x;
     }
     /// <summary>
     /// 추상 함수

@@ -5,31 +5,58 @@ using UnityEngine;
 
 public class GunDisableBridge : MonoBehaviour
 {
-
     private TankGunner gunner;
-    [SerializeField] private ModuleDamageController gunnerM;
-    [SerializeField] private ModuleDamageController gun;        // 포신 모듈
-    [SerializeField] private ModuleDamageController breech;     // 약실/폐쇄기 모듈
+
+    [SerializeField] private ModuleDamageController gunModule;
+    [SerializeField] private ModuleDamageController breechModule;
 
     private void Awake()
     {
         gunner = GetComponent<TankGunner>();
     }
 
-    void Update()
+    private void Start()
     {
-        if (!gunner) return;
+        if (gunModule != null) gunModule.OnStateChanged += OnGunStateChanged;
+        if (breechModule != null) breechModule.OnStateChanged += OnBreechStateChanged;
 
-        // ===== 거너 =====
-        float g = gunnerM ? gunnerM.Hp01 : 1f;
-        bool gunnerDead = gunnerM && gunnerM.State == ModuleState.Destroyed;
+        ApplyInitialStates();
+    }
 
-     
-        if(gun && gun.State == ModuleState.Destroyed) gunner.SetGunDestroyed();
-        if(breech && breech.State == ModuleState.Destroyed) gunner.SetBreechDestroyed();
-        gunner.SetGunHpRatio(gun.Hp01);
-        gunner.SetGunnerState(gunnerDead, g);
-        
+    private void OnDestroy()
+    {
+        if (gunModule != null) gunModule.OnStateChanged -= OnGunStateChanged;
+        if (breechModule != null) breechModule.OnStateChanged -= OnBreechStateChanged;
+    }
 
+    private void OnGunStateChanged(ModuleDamageController who, ModuleState prev, ModuleState next)
+    {
+        if (gunner == null) return;
+        if (next == ModuleState.Destroyed) gunner.SetGunDestroyed();
+        gunner.SetGunHpRatio(who.Hp01);
+        Debug.Log($"[GunBridge] 포신 → state={next} hp={who.Hp01:0.00}");
+    }
+
+    private void OnBreechStateChanged(ModuleDamageController who, ModuleState prev, ModuleState next)
+    {
+        if (gunner == null) return;
+        if (next == ModuleState.Destroyed) gunner.SetBreechDestroyed();
+        Debug.Log($"[GunBridge] 브리치 → state={next}");
+    }
+
+    private void ApplyInitialStates()
+    {
+        if (gunner == null) return;
+
+        if (gunModule != null)
+        {
+            if (gunModule.State == ModuleState.Destroyed) gunner.SetGunDestroyed();
+            gunner.SetGunHpRatio(gunModule.Hp01);
+        }
+
+        if (breechModule != null)
+        {
+            if (breechModule.State == ModuleState.Destroyed) gunner.SetBreechDestroyed();
+        }
     }
 }

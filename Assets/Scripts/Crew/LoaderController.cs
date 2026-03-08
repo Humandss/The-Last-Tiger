@@ -73,13 +73,6 @@ public class LoaderController : MonoBehaviour, ITankLoader
     {
         if (type == AmmoType.None) return;
 
-        if (loaderDead)
-        {
-            Debug.Log("[Loader] 로더 사망 -> 장전 불가");
-            return;
-        }
-
-
         LastSelectedAmmo = type;
 
         if (isLoaded)
@@ -118,18 +111,17 @@ public class LoaderController : MonoBehaviour, ITankLoader
 
         float t = 0.0f;
         float dur = reloadTime * reloadTimeMulSmoothed;
+        bool wasLoaderAlive = !loaderDead;
 
         Debug.Log($"[Loader] {type} 장전 시작 ({dur:0.0}s)");
 
         while (t < dur)
         {
-            if (loaderDead)
+            if (wasLoaderAlive && loaderDead)
             {
-                Debug.Log("[Loader] 장전 중 로더 사망 -> 장전 중단");
-                isLoading = false;
-                loading01 = 0.0f;
-                co = null;
-                yield break;
+                wasLoaderAlive = false;
+                t = 0f; // 장전 진행도 리셋
+                Debug.Log("[Loader] 장전 중 로더 사망 → 포수 겸업, 처음부터 장전");
             }
 
             t += Time.deltaTime;
@@ -183,7 +175,8 @@ public class LoaderController : MonoBehaviour, ITankLoader
     {
         loaderDead = dead;
 
-        hpRatio = Mathf.Clamp01(hpRatio);
-        reloadTimeMul = Mathf.Lerp(2f, 1f, hpRatio);
+        if (dead) reloadTimeMul = 2f;
+        else reloadTimeMul = Mathf.Lerp(2f, 1f, hpRatio);
+
     }
 }
