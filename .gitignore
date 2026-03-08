@@ -107,3 +107,7 @@ Assets/StreamingAssets/Whisper/*.dll
 
 *.tif
 Assets/TerrainDemoScene_URP/Terrain/Textures/
+
+# due to copyright, sounds are excluded
+Assets/Sound/PS/
+Assets/Sound/PS.meta
