@@ -16,6 +16,9 @@ public class AIProfile : ScriptableObject
     public float flankingChance = 0f;        // 측면 우회 확률 
     public float retreatHpThreshold = 0.2f;  // 후퇴 시작 체력 비율
 
+    [Header("Crew Swap")]
+    public float crewSwapDelay = 5f;
+
     [Header("Fire")]
     public AmmoType preferredAmmo = AmmoType.AP;
 }

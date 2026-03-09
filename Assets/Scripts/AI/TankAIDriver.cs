@@ -19,6 +19,8 @@ public class TankAIDriver : MonoBehaviour
     private Vector3 destination;
     private bool hasDestination = false;
     private bool driverDead = false;
+    private bool isReversing = false;
+    private Vector3 reverseDir;
 
     private void Update()
     {
@@ -76,6 +78,15 @@ public class TankAIDriver : MonoBehaviour
         agent.nextPosition = transform.position;
     }
 
+    public void SetReverseDestination(Vector3 awayFrom)
+    {
+        isReversing = true;
+        hasDestination = false;
+
+        Vector3 dir = transform.position - awayFrom;
+        dir.y = 0f;
+        reverseDir = dir.sqrMagnitude > 1e-4f ? dir.normalized : -transform.forward;
+    }
     public void SetDestination(Vector3 dest)
     {
         destination = dest;
