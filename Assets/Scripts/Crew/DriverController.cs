@@ -63,6 +63,11 @@ public class DriverController : MonoBehaviour
     // ===== speed state =====
     float _curSpeed = 0f; // m/s
 
+    public float CurrentSpeed => _curSpeed;
+    public float CurrentThrottle => throttle;
+    public float TargetThrottle => targetThrottle;
+    public float TargetPivot => targetPivot;
+    public float TargetSteer => targetSteer;
 
     [Header("Debug")]
     [SerializeField] private bool debugLog = true;
