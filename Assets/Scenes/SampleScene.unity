@@ -1155,18 +1155,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   module: {fileID: 202421993}
-  fireSpawnPoint: {fileID: 202421991}
   moduleMgr: {fileID: 1644377955}
   tickInterval: 1.5
-  damagePerTick: 2.5
-  firePrefab: {fileID: 8215615344314890366, guid: 965fcc7cfc108bd4aa222f6e13e435e1,
-    type: 3}
   localOffset: {x: 0, y: 0, z: 0}
   followParent: 1
-  onlyOnce: 1
-  engineFireChance: 0.3
   autoStopAfterTime: 0
   stopAfterSeconds: 15
+  fireSpawnPoint: {fileID: 202421991}
+  firePrefab: {fileID: 8215615344314890366, guid: 965fcc7cfc108bd4aa222f6e13e435e1,
+    type: 3}
+  onlyOnce: 1
+  engineFireChance: 0.3
 --- !u!114 &202421993
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1336,18 +1335,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   module: {fileID: 214311635}
-  fireSpawnPoint: {fileID: 214311634}
   moduleMgr: {fileID: 1644377955}
   tickInterval: 1.5
-  damagePerTick: 2.5
-  firePrefab: {fileID: 8215615344314890366, guid: 965fcc7cfc108bd4aa222f6e13e435e1,
-    type: 3}
   localOffset: {x: 0, y: 0, z: 0}
   followParent: 1
-  onlyOnce: 1
-  engineFireChance: 0.3
   autoStopAfterTime: 0
   stopAfterSeconds: 15
+  fireSpawnPoint: {fileID: 214311634}
+  firePrefab: {fileID: 8215615344314890366, guid: 965fcc7cfc108bd4aa222f6e13e435e1,
+    type: 3}
+  onlyOnce: 1
+  engineFireChance: 0.3
 --- !u!1 &217689841
 GameObject:
   m_ObjectHideFlags: 0
@@ -2455,7 +2453,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!195 &336159478
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -2888,13 +2886,16 @@ GameObject:
   - component: {fileID: 414415428}
   - component: {fileID: 414415427}
   - component: {fileID: 414415430}
+  - component: {fileID: 414415433}
+  - component: {fileID: 414415432}
+  - component: {fileID: 414415431}
   m_Layer: 10
   m_Name: 'T-34-76 '
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &414415416
 Transform:
   m_ObjectHideFlags: 0
@@ -3192,6 +3193,226 @@ MonoBehaviour:
   driverController: {fileID: 414415425}
   loaderController: {fileID: 414415428}
   aiController: {fileID: 414415422}
+--- !u!82 &414415431
+AudioSource:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 414415415}
+  m_Enabled: 1
+  serializedVersion: 4
+  OutputAudioMixerGroup: {fileID: 0}
+  m_audioClip: {fileID: 0}
+  m_PlayOnAwake: 1
+  m_Volume: 1
+  m_Pitch: 1
+  Loop: 1
+  Mute: 0
+  Spatialize: 0
+  SpatializePostEffects: 0
+  Priority: 128
+  DopplerLevel: 1
+  MinDistance: 1
+  MaxDistance: 500
+  Pan2D: 0
+  rolloffMode: 0
+  BypassEffects: 0
+  BypassListenerEffects: 0
+  BypassReverbZones: 0
+  rolloffCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  panLevelCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  spreadCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  reverbZoneMixCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+--- !u!82 &414415432
+AudioSource:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 414415415}
+  m_Enabled: 1
+  serializedVersion: 4
+  OutputAudioMixerGroup: {fileID: 0}
+  m_audioClip: {fileID: 0}
+  m_PlayOnAwake: 1
+  m_Volume: 1
+  m_Pitch: 1
+  Loop: 0
+  Mute: 0
+  Spatialize: 0
+  SpatializePostEffects: 0
+  Priority: 128
+  DopplerLevel: 1
+  MinDistance: 1
+  MaxDistance: 500
+  Pan2D: 0
+  rolloffMode: 0
+  BypassEffects: 0
+  BypassListenerEffects: 0
+  BypassReverbZones: 0
+  rolloffCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  panLevelCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0.5
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  spreadCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  reverbZoneMixCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+--- !u!114 &414415433
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 414415415}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a973af7c74fbb2d4f9b68cd4fe7028d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  normalSource: {fileID: 414415432}
+  loopSource: {fileID: 0}
+  turretAudioSource: {fileID: 414415431}
+  turretMovingClip: {fileID: 8300000, guid: 44800a82773ce804c9be71bea125cc00, type: 3}
+  fadeSpeed: 3
+  targetVolume: 1
+  gunFireClip: []
+  gunFireVolume: 1
+  ammoPop: []
+  ammoPopVolume: 1
+  ammoExplosion:
+  - {fileID: 8300000, guid: d2d90a4a2b8f68244ba199c9efb16199, type: 3}
+  - {fileID: 8300000, guid: 71f700ac520e85a4084ea401512d2f83, type: 3}
+  - {fileID: 8300000, guid: 973ab3b9408df134085d1d5bfababe24, type: 3}
+  - {fileID: 8300000, guid: 972910c9a16cedb4ca49c773f0ff5978, type: 3}
+  ammoExplosionVolume: 1
 --- !u!1 &423595798
 GameObject:
   m_ObjectHideFlags: 0
@@ -4023,9 +4244,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   module: {fileID: 600274564}
+  moduleMgr: {fileID: 414415417}
+  tickInterval: 1.5
+  localOffset: {x: 0, y: 0, z: 0}
+  followParent: 1
+  autoStopAfterTime: 1
+  stopAfterSeconds: 15
   fireSpawnPoint: {fileID: 275501131}
   explosionPoint: {fileID: 1694111154}
-  moduleMgr: {fileID: 414415417}
   blowoff: {fileID: 600274567}
   ammoExplosionPrefab: {fileID: 3036022590825715946, guid: 097376dea5e9b6c48944abcf351ff284,
     type: 3}
@@ -4033,12 +4259,7 @@ MonoBehaviour:
     type: 3}
   ammoSmokePrefab: {fileID: 5062541781294046866, guid: 636d480bc187bae4f99517e6e5c677f3,
     type: 3}
-  localOffset: {x: 0, y: 0, z: 0}
-  followParent: 1
-  tickInterval: 1.5
   ammoExplosionChance: 0.75
-  autoStopAfterTime: 1
-  stopAfterSeconds: 15
   fadeOutSeconds: 2.5
   destroyBuffer: 0.5
   onTankDestroyed:
@@ -4752,18 +4973,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   module: {fileID: 698982851}
-  fireSpawnPoint: {fileID: 313551616}
   moduleMgr: {fileID: 414415417}
   tickInterval: 1.5
-  damagePerTick: 2.5
-  firePrefab: {fileID: 8215615344314890366, guid: 965fcc7cfc108bd4aa222f6e13e435e1,
-    type: 3}
   localOffset: {x: 0, y: 0, z: 0}
   followParent: 1
-  onlyOnce: 1
-  engineFireChance: 0.3
   autoStopAfterTime: 0
   stopAfterSeconds: 15
+  fireSpawnPoint: {fileID: 313551616}
+  firePrefab: {fileID: 8215615344314890366, guid: 965fcc7cfc108bd4aa222f6e13e435e1,
+    type: 3}
+  onlyOnce: 1
+  engineFireChance: 0.3
 --- !u!1 &705650378
 GameObject:
   m_ObjectHideFlags: 0
@@ -6016,9 +6236,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   module: {fileID: 889998168}
+  moduleMgr: {fileID: 336159486}
+  tickInterval: 1.5
+  localOffset: {x: 0, y: 0, z: 0}
+  followParent: 1
+  autoStopAfterTime: 1
+  stopAfterSeconds: 15
   fireSpawnPoint: {fileID: 1846348469}
   explosionPoint: {fileID: 286346778}
-  moduleMgr: {fileID: 336159486}
   blowoff: {fileID: 889998166}
   ammoExplosionPrefab: {fileID: 3036022590825715946, guid: 097376dea5e9b6c48944abcf351ff284,
     type: 3}
@@ -6026,12 +6251,7 @@ MonoBehaviour:
     type: 3}
   ammoSmokePrefab: {fileID: 5062541781294046866, guid: 636d480bc187bae4f99517e6e5c677f3,
     type: 3}
-  localOffset: {x: 0, y: 0, z: 0}
-  followParent: 1
-  tickInterval: 1.5
   ammoExplosionChance: 0.75
-  autoStopAfterTime: 1
-  stopAfterSeconds: 15
   fadeOutSeconds: 2.5
   destroyBuffer: 0.5
   onTankDestroyed:
@@ -6220,18 +6440,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   module: {fileID: 907622771}
-  fireSpawnPoint: {fileID: 245461300}
   moduleMgr: {fileID: 336159486}
   tickInterval: 1.5
-  damagePerTick: 2.5
-  firePrefab: {fileID: 8215615344314890366, guid: 965fcc7cfc108bd4aa222f6e13e435e1,
-    type: 3}
   localOffset: {x: 0, y: 0, z: 0}
   followParent: 1
-  onlyOnce: 1
-  engineFireChance: 0.3
   autoStopAfterTime: 0
   stopAfterSeconds: 15
+  fireSpawnPoint: {fileID: 245461300}
+  firePrefab: {fileID: 8215615344314890366, guid: 965fcc7cfc108bd4aa222f6e13e435e1,
+    type: 3}
+  onlyOnce: 1
+  engineFireChance: 0.3
 --- !u!114 &907622771
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8398,9 +8617,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   module: {fileID: 959147074}
+  moduleMgr: {fileID: 1644377955}
+  tickInterval: 1.5
+  localOffset: {x: 0, y: 0, z: 0}
+  followParent: 1
+  autoStopAfterTime: 0
+  stopAfterSeconds: 15
   fireSpawnPoint: {fileID: 1763614345}
   explosionPoint: {fileID: 1324072338}
-  moduleMgr: {fileID: 1644377955}
   blowoff: {fileID: 959147072}
   ammoExplosionPrefab: {fileID: 3036022590825715946, guid: 097376dea5e9b6c48944abcf351ff284,
     type: 3}
@@ -8408,12 +8632,7 @@ MonoBehaviour:
     type: 3}
   ammoSmokePrefab: {fileID: 1193206252530958, guid: 0fe24a5ceb127f14eb19a30565685075,
     type: 3}
-  localOffset: {x: 0, y: 0, z: 0}
-  followParent: 1
-  tickInterval: 1.5
   ammoExplosionChance: 0.75
-  autoStopAfterTime: 0
-  stopAfterSeconds: 15
   fadeOutSeconds: 2.5
   destroyBuffer: 0.5
   onTankDestroyed:
@@ -9730,18 +9949,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   module: {fileID: 1202924561}
-  fireSpawnPoint: {fileID: 1202924559}
   moduleMgr: {fileID: 1644377955}
   tickInterval: 1.5
-  damagePerTick: 2.5
-  firePrefab: {fileID: 8215615344314890366, guid: 965fcc7cfc108bd4aa222f6e13e435e1,
-    type: 3}
   localOffset: {x: 0, y: 0, z: 0}
   followParent: 1
-  onlyOnce: 1
-  engineFireChance: 0.3
   autoStopAfterTime: 0
   stopAfterSeconds: 15
+  fireSpawnPoint: {fileID: 1202924559}
+  firePrefab: {fileID: 8215615344314890366, guid: 965fcc7cfc108bd4aa222f6e13e435e1,
+    type: 3}
+  onlyOnce: 1
+  engineFireChance: 0.3
 --- !u!114 &1202924561
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10645,9 +10863,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   module: {fileID: 1438332389}
+  moduleMgr: {fileID: 1644377955}
+  tickInterval: 1.5
+  localOffset: {x: 0, y: 0, z: 0}
+  followParent: 1
+  autoStopAfterTime: 0
+  stopAfterSeconds: 15
   fireSpawnPoint: {fileID: 1763614345}
   explosionPoint: {fileID: 1324072338}
-  moduleMgr: {fileID: 1644377955}
   blowoff: {fileID: 1438332392}
   ammoExplosionPrefab: {fileID: 3036022590825715946, guid: 097376dea5e9b6c48944abcf351ff284,
     type: 3}
@@ -10655,12 +10878,7 @@ MonoBehaviour:
     type: 3}
   ammoSmokePrefab: {fileID: 1193206252530958, guid: 0fe24a5ceb127f14eb19a30565685075,
     type: 3}
-  localOffset: {x: 0, y: 0, z: 0}
-  followParent: 1
-  tickInterval: 1.5
   ammoExplosionChance: 0.75
-  autoStopAfterTime: 0
-  stopAfterSeconds: 15
   fadeOutSeconds: 2.5
   destroyBuffer: 0.5
   onTankDestroyed:
@@ -11563,9 +11781,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   module: {fileID: 1567205752}
+  moduleMgr: {fileID: 1644377955}
+  tickInterval: 1.5
+  localOffset: {x: 0, y: 0, z: 0}
+  followParent: 1
+  autoStopAfterTime: 0
+  stopAfterSeconds: 15
   fireSpawnPoint: {fileID: 1763614345}
   explosionPoint: {fileID: 1324072338}
-  moduleMgr: {fileID: 1644377955}
   blowoff: {fileID: 1567205750}
   ammoExplosionPrefab: {fileID: 3036022590825715946, guid: 097376dea5e9b6c48944abcf351ff284,
     type: 3}
@@ -11573,12 +11796,7 @@ MonoBehaviour:
     type: 3}
   ammoSmokePrefab: {fileID: 1193206252530958, guid: 0fe24a5ceb127f14eb19a30565685075,
     type: 3}
-  localOffset: {x: 0, y: 0, z: 0}
-  followParent: 1
-  tickInterval: 1.5
   ammoExplosionChance: 0.75
-  autoStopAfterTime: 0
-  stopAfterSeconds: 15
   fadeOutSeconds: 2.5
   destroyBuffer: 0.5
   onTankDestroyed:
@@ -11873,9 +12091,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   module: {fileID: 1629556569}
+  moduleMgr: {fileID: 1644377955}
+  tickInterval: 1.5
+  localOffset: {x: 0, y: 0, z: 0}
+  followParent: 1
+  autoStopAfterTime: 0
+  stopAfterSeconds: 15
   fireSpawnPoint: {fileID: 1763614345}
   explosionPoint: {fileID: 1324072338}
-  moduleMgr: {fileID: 1644377955}
   blowoff: {fileID: 1629556572}
   ammoExplosionPrefab: {fileID: 3036022590825715946, guid: 097376dea5e9b6c48944abcf351ff284,
     type: 3}
@@ -11883,12 +12106,7 @@ MonoBehaviour:
     type: 3}
   ammoSmokePrefab: {fileID: 1193206252530958, guid: 0fe24a5ceb127f14eb19a30565685075,
     type: 3}
-  localOffset: {x: 0, y: 0, z: 0}
-  followParent: 1
-  tickInterval: 1.5
   ammoExplosionChance: 0.75
-  autoStopAfterTime: 0
-  stopAfterSeconds: 15
   fadeOutSeconds: 2.5
   destroyBuffer: 0.5
   onTankDestroyed:
@@ -12292,6 +12510,16 @@ MonoBehaviour:
   turretMovingClip: {fileID: 8300000, guid: 44800a82773ce804c9be71bea125cc00, type: 3}
   fadeSpeed: 3
   targetVolume: 1
+  gunFireClip:
+  - {fileID: 8300000, guid: b3f475d1e2cb49244af69668e98184ba, type: 3}
+  - {fileID: 8300000, guid: 01bc04afa17adc64983f83a072bf6200, type: 3}
+  - {fileID: 8300000, guid: 29eb8e97fd1e29145bc222cde680125e, type: 3}
+  - {fileID: 8300000, guid: e8580937c9e860a4b932d387fb3f1193, type: 3}
+  gunFireVolume: 3
+  ammoPop: []
+  ammoPopVolume: 1
+  ammoExplosion: []
+  ammoExplosionVolume: 1
   radioSource: {fileID: 1644377960}
   driverController: {fileID: 1644377952}
   engineOneShotSource: {fileID: 1644377964}
@@ -12327,12 +12555,6 @@ MonoBehaviour:
   gunnerReadyClip: {fileID: 8300000, guid: 688c6aa036dc3104387a98a4e8976d2a, type: 3}
   loaderReadyClip: {fileID: 8300000, guid: 03c939f0ad988544d93e4cc2b67b2b68, type: 3}
   clipGap: 0.5
-  gunFireClip:
-  - {fileID: 8300000, guid: b3f475d1e2cb49244af69668e98184ba, type: 3}
-  - {fileID: 8300000, guid: 01bc04afa17adc64983f83a072bf6200, type: 3}
-  - {fileID: 8300000, guid: 29eb8e97fd1e29145bc222cde680125e, type: 3}
-  - {fileID: 8300000, guid: e8580937c9e860a4b932d387fb3f1193, type: 3}
-  gunFireVolume: 3
   flyByRadius: 13
   shellMask:
     serializedVersion: 2
@@ -12954,18 +13176,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   module: {fileID: 1649793339}
-  fireSpawnPoint: {fileID: 313551616}
   moduleMgr: {fileID: 414415417}
   tickInterval: 1.5
-  damagePerTick: 2.5
-  firePrefab: {fileID: 8215615344314890366, guid: 965fcc7cfc108bd4aa222f6e13e435e1,
-    type: 3}
   localOffset: {x: 0, y: 0, z: 0}
   followParent: 1
-  onlyOnce: 1
-  engineFireChance: 0.3
   autoStopAfterTime: 0
   stopAfterSeconds: 15
+  fireSpawnPoint: {fileID: 313551616}
+  firePrefab: {fileID: 8215615344314890366, guid: 965fcc7cfc108bd4aa222f6e13e435e1,
+    type: 3}
+  onlyOnce: 1
+  engineFireChance: 0.3
 --- !u!1 &1652017281
 GameObject:
   m_ObjectHideFlags: 0
@@ -13485,18 +13706,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   module: {fileID: 1742732721}
-  fireSpawnPoint: {fileID: 313551616}
   moduleMgr: {fileID: 414415417}
   tickInterval: 1.5
-  damagePerTick: 2.5
-  firePrefab: {fileID: 8215615344314890366, guid: 965fcc7cfc108bd4aa222f6e13e435e1,
-    type: 3}
   localOffset: {x: 0, y: 0, z: 0}
   followParent: 1
-  onlyOnce: 1
-  engineFireChance: 0.3
   autoStopAfterTime: 0
   stopAfterSeconds: 15
+  fireSpawnPoint: {fileID: 313551616}
+  firePrefab: {fileID: 8215615344314890366, guid: 965fcc7cfc108bd4aa222f6e13e435e1,
+    type: 3}
+  onlyOnce: 1
+  engineFireChance: 0.3
 --- !u!1 &1752999798
 GameObject:
   m_ObjectHideFlags: 0
@@ -13815,18 +14035,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   module: {fileID: 1775719069}
-  fireSpawnPoint: {fileID: 1775719068}
   moduleMgr: {fileID: 1644377955}
   tickInterval: 1.5
-  damagePerTick: 2.5
-  firePrefab: {fileID: 8215615344314890366, guid: 965fcc7cfc108bd4aa222f6e13e435e1,
-    type: 3}
   localOffset: {x: 0, y: 0, z: 0}
   followParent: 1
-  onlyOnce: 1
-  engineFireChance: 0.3
   autoStopAfterTime: 0
   stopAfterSeconds: 15
+  fireSpawnPoint: {fileID: 1775719068}
+  firePrefab: {fileID: 8215615344314890366, guid: 965fcc7cfc108bd4aa222f6e13e435e1,
+    type: 3}
+  onlyOnce: 1
+  engineFireChance: 0.3
 --- !u!1 &1777137276
 GameObject:
   m_ObjectHideFlags: 0
@@ -14714,9 +14933,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   module: {fileID: 1924356237}
+  moduleMgr: {fileID: 336159486}
+  tickInterval: 1.5
+  localOffset: {x: 0, y: 0, z: 0}
+  followParent: 1
+  autoStopAfterTime: 1
+  stopAfterSeconds: 15
   fireSpawnPoint: {fileID: 1846348469}
   explosionPoint: {fileID: 286346778}
-  moduleMgr: {fileID: 336159486}
   blowoff: {fileID: 1924356235}
   ammoExplosionPrefab: {fileID: 3036022590825715946, guid: 097376dea5e9b6c48944abcf351ff284,
     type: 3}
@@ -14724,12 +14948,7 @@ MonoBehaviour:
     type: 3}
   ammoSmokePrefab: {fileID: 5062541781294046866, guid: 636d480bc187bae4f99517e6e5c677f3,
     type: 3}
-  localOffset: {x: 0, y: 0, z: 0}
-  followParent: 1
-  tickInterval: 1.5
   ammoExplosionChance: 0.75
-  autoStopAfterTime: 1
-  stopAfterSeconds: 15
   fadeOutSeconds: 2.5
   destroyBuffer: 0.5
   onTankDestroyed:
@@ -15509,18 +15728,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   module: {fileID: 2070494057}
-  fireSpawnPoint: {fileID: 245461300}
   moduleMgr: {fileID: 336159486}
   tickInterval: 1.5
-  damagePerTick: 2.5
-  firePrefab: {fileID: 8215615344314890366, guid: 965fcc7cfc108bd4aa222f6e13e435e1,
-    type: 3}
   localOffset: {x: 0, y: 0, z: 0}
   followParent: 1
-  onlyOnce: 1
-  engineFireChance: 0.3
   autoStopAfterTime: 0
   stopAfterSeconds: 15
+  fireSpawnPoint: {fileID: 245461300}
+  firePrefab: {fileID: 8215615344314890366, guid: 965fcc7cfc108bd4aa222f6e13e435e1,
+    type: 3}
+  onlyOnce: 1
+  engineFireChance: 0.3
 --- !u!114 &2070494057
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -15613,18 +15831,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   module: {fileID: 2090059588}
-  fireSpawnPoint: {fileID: 245461300}
   moduleMgr: {fileID: 336159486}
   tickInterval: 1.5
-  damagePerTick: 2.5
-  firePrefab: {fileID: 8215615344314890366, guid: 965fcc7cfc108bd4aa222f6e13e435e1,
-    type: 3}
   localOffset: {x: 0, y: 0, z: 0}
   followParent: 1
-  onlyOnce: 1
-  engineFireChance: 0.3
   autoStopAfterTime: 0
   stopAfterSeconds: 15
+  fireSpawnPoint: {fileID: 245461300}
+  firePrefab: {fileID: 8215615344314890366, guid: 965fcc7cfc108bd4aa222f6e13e435e1,
+    type: 3}
+  onlyOnce: 1
+  engineFireChance: 0.3
 --- !u!114 &2090059588
 MonoBehaviour:
   m_ObjectHideFlags: 0

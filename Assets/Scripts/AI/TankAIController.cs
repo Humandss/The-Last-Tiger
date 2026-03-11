@@ -261,13 +261,13 @@ public class TankAIController : MonoBehaviour
     {
         if (crewManager == null) return false;
 
-        // 사격 불가 (거너/로더 크루 or 포신/브리치 파괴)
-        bool cannotFire = !gunner.CanFire;
+        bool gunBroken = !gunner.IsGunEquipmentOk;
+        // 거너 자리 공석 + 교체 불가 → 사격 불가 후퇴
+        bool gunnerLost = !crewManager.IsGunnerAvailable();
+        // 드라이버 없으면 x
+        bool canRetreat = crewManager.IsDriverAvailable();
 
-        // 운용 불가 (커맨더 있는 탱크: 커맨더+거너+드라이버 / 없는 탱크: 거너+드라이버)
-        bool cannotOperate = !crewManager.CanOperate();
-        Debug.Log($"[ShouldRetreat] CanFire={gunner.CanFire} cannotOperate={cannotOperate}");
-        return cannotFire || cannotOperate;
+        return canRetreat && (gunBroken || gunnerLost);
     }
     private void UpdateReversing()
     {

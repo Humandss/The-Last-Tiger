@@ -14,9 +14,22 @@ public abstract class SoundController : MonoBehaviour
     [SerializeField] private float fadeSpeed = 3f;
     [SerializeField] private float targetVolume = 1f;
 
+    [Header("Gun Fire")]
+    [SerializeField] private AudioClip[] gunFireClip;
+    [SerializeField] private float gunFireVolume = 1f;
+
+    [Header("Ammo Rack")]
+    [SerializeField] private AudioClip[] ammoPop;
+    [SerializeField] private float ammoPopVolume = 1.0f;
+    [SerializeField] private AudioClip[] ammoExplosion;
+    [SerializeField] private float ammoExplosionVolume = 1.0f;
+
     private bool isMoving = false;
 
     public void IsTurretMoving(bool isMoving) => SetTurretMoving(isMoving);
+    public void PlayGunFireClips() => PlayEffectSounds(gunFireClip, gunFireVolume);
+    public void PlayAmmoExplosion() => PlayEffectSounds(ammoExplosion, ammoExplosionVolume);
+    public void PlayAmmoPop() => PlayEffectSounds(ammoPop, ammoPopVolume);
 
     protected virtual void Awake()
     {
@@ -112,5 +125,13 @@ public abstract class SoundController : MonoBehaviour
         to.minDistance = from.minDistance;
         to.maxDistance = from.maxDistance;
         to.rolloffMode = from.rolloffMode;
+    }
+
+
+    protected void PlayEffectSounds(AudioClip[] clips, float volume)
+    {
+        if (clips == null || clips.Length == 0 || normalSource == null) return;
+        AudioClip clip = clips[Random.Range(0, clips.Length)];
+        normalSource.PlayOneShot(clip, volume);
     }
 }

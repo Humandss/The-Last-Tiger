@@ -49,6 +49,8 @@ public abstract class TankGunner : MonoBehaviour
     public bool IsGunnerDead() => gunnerDead;
     public bool CanFire => !gunDestroyed && !breechDestroyed && !gunnerDead;
 
+    public bool IsGunEquipmentOk => !gunDestroyed && !breechDestroyed;
+
     [SerializeField, Range(0f, 1f)] protected float gunnerMul = 1f; // 회전/조절 속도 배율
 
 

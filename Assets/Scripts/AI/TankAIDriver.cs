@@ -24,7 +24,13 @@ public class TankAIDriver : MonoBehaviour
 
     private void Update()
     {
+        if (driverDead) return;
 
+        if (isReversing)
+        {
+            UpdateReverseInput();
+            return;
+        }
         if (!hasDestination) return;
         if (!agent.hasPath) return;
 
@@ -77,7 +83,15 @@ public class TankAIDriver : MonoBehaviour
         // NavMeshAgent 위치 동기화 (경로 계산용)
         agent.nextPosition = transform.position;
     }
+    private void UpdateReverseInput()
+    {
+        // 제자리 회전 없이 항상 후진 + 조향
+        Vector3 backward = -transform.forward;
+        float angle = Vector3.SignedAngle(backward, reverseDir, Vector3.up);
+        float steer = Mathf.Clamp(angle / 45f, -1f, 1f);
 
+        driver.SetInput(-1f, steer, 0f);
+    }
     public void SetReverseDestination(Vector3 awayFrom)
     {
         isReversing = true;
@@ -89,6 +103,7 @@ public class TankAIDriver : MonoBehaviour
     }
     public void SetDestination(Vector3 dest)
     {
+        isReversing = false; 
         destination = dest;
         hasDestination = true;
         agent.SetDestination(dest);
@@ -96,6 +111,7 @@ public class TankAIDriver : MonoBehaviour
 
     public void Stop()
     {
+        isReversing = false;
         hasDestination = false;
         driver.SetInput(0f, 0f, 0f);
     }

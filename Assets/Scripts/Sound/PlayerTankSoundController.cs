@@ -56,10 +56,6 @@ public class PlayerTankSoundController : SoundController
     [SerializeField] private AudioClip loaderReadyClip;
     [SerializeField] private float clipGap = 0.5f;
 
-    [Header("Gun Fire")]
-    [SerializeField] private AudioClip[] gunFireClip;
-    [SerializeField] private float gunFireVolume = 1f;
-
     [Header("FlyBy")]
     [SerializeField] private float flyByRadius = 8f;
     [SerializeField] private LayerMask shellMask;
@@ -83,7 +79,6 @@ public class PlayerTankSoundController : SoundController
     private AudioSource inactiveEngineLoop;
     private Coroutine crossfadeRoutine;
 
-    public void PlayGunFireClips() => PlayEffectSounds(gunFireClip, gunFireVolume);
     public void PlayReload() => PlayCrewVoice(reloadClip);
     public void PlayTargetDown() => PlayCrewVoice(targetDownClip);
 
@@ -479,10 +474,4 @@ public class PlayerTankSoundController : SoundController
         radioSource.PlayOneShot(clip);
     }
 
-    private void PlayEffectSounds(AudioClip[] clips, float volume)
-    {
-        if (clips == null || clips.Length == 0 || normalSource == null) return;
-        AudioClip clip = clips[Random.Range(0, clips.Length)];
-        normalSource.PlayOneShot(clip, volume);
-    }
 }
