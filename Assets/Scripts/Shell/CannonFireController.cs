@@ -8,7 +8,6 @@ public class CannonFireController : FireController
 {
     [Header("Refs")]
     [SerializeField] private CameraController cameraShotShake;
-    [SerializeField] private PlayerTankSoundController playerTankSoundController;
 
     [SerializeField, Range(0f, 2f)] private float cameraShakeIntensity = 1.0f;
     [SerializeField, Range(0f, 2f)] private float turretShakeIntensity = 0.35f;
@@ -30,8 +29,6 @@ public class CannonFireController : FireController
     {
         if (recoilPart != null)
             recoilBaseLocalPos = recoilPart.localPosition;
-
-        playerTankSoundController = GetComponent<PlayerTankSoundController>();
     }
     private void Update()
     {
@@ -86,7 +83,6 @@ public class CannonFireController : FireController
     public sealed override void FireProjectile(Vector3 dir, AmmoType type)
     {
         base.FireProjectile(dir, type);
-        playerTankSoundController.PlayGunFireClips();
         TriggerShotShake();
         TriggerGunRecoil();     
     }

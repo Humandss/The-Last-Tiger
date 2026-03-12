@@ -1,4 +1,4 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 
 public class CameraController : MonoBehaviour
 {
@@ -13,6 +13,8 @@ public class CameraController : MonoBehaviour
     [SerializeField] private float zoomFovSmooth = 16f;
     [SerializeField] private float minFovClamp = 5f;
     [SerializeField] private float maxFovClamp = 90f;
+    [SerializeField] private bool lockCursorWhileZooming = true;
+    [SerializeField] private bool hideCursorWhileZooming = true;
     private bool isZooming;
     private int zoomIndex = 1;
     private float targetFov;
@@ -35,9 +37,9 @@ public class CameraController : MonoBehaviour
     [SerializeField] private bool affectRoll = true;
 
     [Header("Hit Shake")]
-    [SerializeField] private Vector3 maxHitKickEuler = new Vector3(8f, 6f, 4f); // ¹ß»çº¸´Ù Å©°Ô
-    [SerializeField] private float hitKickInSpeed = 25f;   // ¹ß»çº¸´Ù ´À¸®°Ô (¹¬Á÷ÇÔ)
-    [SerializeField] private float hitReturnSpeed = 4f;    // ÃµÃµÈ÷ º¹±Í
+    [SerializeField] private Vector3 maxHitKickEuler = new Vector3(8f, 6f, 4f);
+    [SerializeField] private float hitKickInSpeed = 25f;
+    [SerializeField] private float hitReturnSpeed = 4f;
 
     private Quaternion _baseLocalRot;
     private Vector3 _curEuler;
@@ -46,6 +48,10 @@ public class CameraController : MonoBehaviour
     private bool _returning;
     private float _curKickInSpeed;
     private float _curReturnSpeed;
+
+    private CursorLockMode _prevCursorLock;
+    private bool _prevCursorVisible;
+    private bool _cursorStateCaptured;
 
     private void Awake()
     {
@@ -69,10 +75,19 @@ public class CameraController : MonoBehaviour
         _baseLocalRot = transform.localRotation;
     }
 
+    private void OnDisable()
+    {
+        RestoreCursorState();
+    }
+
     private void Update()
     {
         HandleZoomInput();
         UpdateZoomFov(Time.deltaTime);
+
+        // Some systems can unlock cursor; keep it centered while zooming.
+        if (isZooming)
+            ApplyCursorForZoom(true);
     }
 
     private void LateUpdate()
@@ -80,12 +95,13 @@ public class CameraController : MonoBehaviour
         UpdateShake(Time.deltaTime);
     }
 
-    // ===== ÁÜ =====
-
     private void HandleZoomInput()
     {
         if (Input.GetKeyDown(zoomHoldKey))
+        {
             isZooming = !isZooming;
+            ApplyCursorForZoom(isZooming);
+        }
 
         bool canWheel = !wheelOnlyWhileZooming || isZooming;
         if (canWheel)
@@ -102,6 +118,39 @@ public class CameraController : MonoBehaviour
             : Mathf.Clamp(baseFov, minFovClamp, maxFovClamp);
     }
 
+    private void ApplyCursorForZoom(bool zoomOn)
+    {
+        if (!lockCursorWhileZooming && !hideCursorWhileZooming) return;
+
+        if (zoomOn)
+        {
+            if (!_cursorStateCaptured)
+            {
+                _prevCursorLock = Cursor.lockState;
+                _prevCursorVisible = Cursor.visible;
+                _cursorStateCaptured = true;
+            }
+
+            if (lockCursorWhileZooming)
+                Cursor.lockState = CursorLockMode.Locked;
+            if (hideCursorWhileZooming)
+                Cursor.visible = false;
+        }
+        else
+        {
+            RestoreCursorState();
+        }
+    }
+
+    private void RestoreCursorState()
+    {
+        if (!_cursorStateCaptured) return;
+
+        Cursor.lockState = _prevCursorLock;
+        Cursor.visible = _prevCursorVisible;
+        _cursorStateCaptured = false;
+    }
+
     private void UpdateZoomFov(float dt)
     {
         if (commanderCam == null) return;
@@ -115,7 +164,14 @@ public class CameraController : MonoBehaviour
         return Mathf.Max(1f, zoomMagnifications[Mathf.Clamp(zoomIndex, 0, zoomMagnifications.Length - 1)]);
     }
 
-    // ===== °¨µµ =====
+    private float GetMaxZoomMag()
+    {
+        if (zoomMagnifications == null || zoomMagnifications.Length == 0) return 1f;
+        float max = 1f;
+        for (int i = 0; i < zoomMagnifications.Length; i++)
+            max = Mathf.Max(max, zoomMagnifications[i]);
+        return max;
+    }
 
     public float GetSensitivityMultiplier()
     {
@@ -124,8 +180,6 @@ public class CameraController : MonoBehaviour
         float scaled = Mathf.Pow(Mathf.Max(0.0001f, ratio), Mathf.Max(0.01f, zoomSensExponent));
         return Mathf.Clamp(scaled, zoomSensMinMul, 1f);
     }
-
-    // ===== Èçµé¸² =====
 
     public void TriggerShake(float intensity = 1f)
     {
@@ -145,15 +199,16 @@ public class CameraController : MonoBehaviour
         _targetEuler = kick;
         _returning = false;
     }
+
     public void TriggerHitShake(Vector3 hitDirection, float intensity = 1f)
     {
         float yawSign = Random.value < 0.5f ? -1f : 1f;
         float rollSign = Random.value < 0.5f ? -1f : 1f;
 
         Vector3 kick = new Vector3(
-            maxHitKickEuler.x * intensity,                              // Pitch Ç×»ó À§·Î
-            maxHitKickEuler.y * intensity * yawSign * Random.Range(0.5f, 1f),  // Yaw ·£´ý
-            maxHitKickEuler.z * intensity * rollSign * Random.Range(0.3f, 1f)  // Roll ·£´ý
+            maxHitKickEuler.x * intensity,
+            maxHitKickEuler.y * intensity * yawSign * Random.Range(0.5f, 1f),
+            maxHitKickEuler.z * intensity * rollSign * Random.Range(0.3f, 1f)
         );
 
         _curEuler = kick;
@@ -163,6 +218,7 @@ public class CameraController : MonoBehaviour
         _curReturnSpeed = hitReturnSpeed;
         _returning = false;
     }
+
     private void UpdateShake(float dt)
     {
         float speed = _returning ? _curReturnSpeed : _curKickInSpeed;
@@ -203,4 +259,16 @@ public class CameraController : MonoBehaviour
 
     public bool IsZooming => isZooming;
     public Camera Cam => commanderCam;
+
+    // 0: no zoom, 1: strongest zoom stage
+    public float ZoomAmount01
+    {
+        get
+        {
+            if (!isZooming || commanderCam == null) return 0f;
+            float maxMag = GetMaxZoomMag();
+            float curMag = Mathf.Max(1f, baseFov / Mathf.Max(0.001f, commanderCam.fieldOfView));
+            return Mathf.Clamp01(Mathf.InverseLerp(1f, maxMag, curMag));
+        }
+    }
 }

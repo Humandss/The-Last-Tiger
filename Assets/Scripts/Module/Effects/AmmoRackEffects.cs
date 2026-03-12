@@ -20,6 +20,11 @@ public class AmmoRackEffects : TankEffectsManager
     [Header("Ammo Rack Failure")]
     [SerializeField, Range(0f, 1f)] private float ammoExplosionChance = 0.75f;
 
+    [Header("Ammo Pop Loop")]
+    [SerializeField] private float popMinInterval = 0.25f;
+    [SerializeField] private float popMaxInterval = 1.2f;
+    [SerializeField] private float popStartDelay = 0.1f;
+
     [Header("Lifetime")]
     [SerializeField] private float fadeOutSeconds = 2.5f;
     [SerializeField] private float destroyBuffer = 0.5f;
@@ -32,6 +37,7 @@ public class AmmoRackEffects : TankEffectsManager
     private GameObject smokeInstance;
     private GameObject explosionInstance;
 
+    private Coroutine ammoPopRoutine;
     private bool ammoEventTriggered = false;
 
     protected override void Awake()
@@ -103,6 +109,7 @@ public class AmmoRackEffects : TankEffectsManager
         }
 
         Invoke(nameof(SpawnSmoke), 0.5f);
+        soundController.PlayAmmoPop();
         soundController.PlayAmmoExplosion();
         Debug.LogWarning("[AMMO] Explosion!");
     }
@@ -159,6 +166,35 @@ public class AmmoRackEffects : TankEffectsManager
         Destroy(vfx, delay);
     }
 
+    private void StartAmmoPopLoop()
+    {
+        if (ammoPopRoutine != null) return;
+        ammoPopRoutine = StartCoroutine(CoAmmoPopLoop());
+    }
+
+    private void StopAmmoPopLoop()
+    {
+        if (ammoPopRoutine == null) return;
+        StopCoroutine(ammoPopRoutine);
+        ammoPopRoutine = null;
+    }
+
+    private IEnumerator CoAmmoPopLoop()
+    {
+        if (popStartDelay > 0f)
+            yield return new WaitForSeconds(popStartDelay);
+
+        while (onFire)
+        {
+            soundController.PlayAmmoPop();
+
+            float t = Random.Range(popMinInterval, popMaxInterval);
+            yield return new WaitForSeconds(t);
+        }
+
+        ammoPopRoutine = null;
+    }
+
     public override void SpawnFire()
     {
         if (!ammoFirePrefab)
@@ -166,7 +202,9 @@ public class AmmoRackEffects : TankEffectsManager
             Debug.LogWarning("[AmmoRackEffects] firePrefab not set!");
             return;
         }
+   
         onFire = true;
+        StartAmmoPopLoop();
         Transform t = fireSpawnPoint ? fireSpawnPoint : transform;
 
         fireInstance = Instantiate(ammoFirePrefab);
@@ -183,7 +221,7 @@ public class AmmoRackEffects : TankEffectsManager
     public override void StopFire()
     {
         onFire = false;
-
+        StopAmmoPopLoop();
         if (fireInstance)
         {
 

@@ -257,8 +257,7 @@ public class TankCrewManager : MonoBehaviour
 
         // ===== 커맨더 사망 → AI 시야 패널티 =====
         // 커맨더가 다른 역할 대체 중이면 패널티 없음
-        bool commanderEffectivelyDead = commanderModule != null &&
-                (cmdDead || commanderFillingRole != CrewRole.None);
+        bool commanderEffectivelyDead = commanderModule == null || cmdDead || commanderFillingRole != CrewRole.None;
 
         if (isAI && aiController != null)
             aiController.SetCommanderDead(commanderEffectivelyDead);

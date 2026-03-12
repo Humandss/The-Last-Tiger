@@ -44,7 +44,7 @@ public class TankAIGunner : TankGunner
     }
 
     // 조준 완료 여부 
-    public bool IsAimed(float thresholdDeg = 5f)
+    public bool IsAimed(float thresholdDeg = 2f)
     {
         Vector3 toTarget = (aimTargetPos - turretYaw.position);
         toTarget.y = 0f;
@@ -69,6 +69,7 @@ public class TankAIGunner : TankGunner
         Vector3 shotDir = GetDispersionShotDirection();
         AmmoType type = loaderFunc.GetLoadedAmmoType();
         fireController.FireProjectile(shotDir, type);
+        soundController.PlayGunFireClips();
 
         loaderFunc.IsShot();
         loaderFunc.LoadDefault(); // 발사 후 자동 재장전

@@ -12,11 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 90e098aebaf867a47af4568eaff53042, type: 3}
   m_Name: Easy
   m_EditorClassIdentifier: 
-  detectionRange: 650
+  detectionRange: 1000
   fieldOfView: 120
   preferredCombatRange: 25
   useLeadTarget: 0
   reactionTime: 1
   flankingChance: 0.1
   retreatHpThreshold: 0.2
+  crewSwapDelay: 5
   preferredAmmo: 1
