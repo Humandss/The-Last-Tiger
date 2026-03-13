@@ -6,6 +6,7 @@ public class CompassBarAutoSetup : MonoBehaviour
 {
     [Header("Target")]
     [SerializeField] private Transform target;
+    [SerializeField] private bool preferRootBodyTarget = true;
 
     [Header("Build")]
     [SerializeField] private bool buildOnAwake = true;
@@ -21,10 +22,22 @@ public class CompassBarAutoSetup : MonoBehaviour
     [SerializeField] private Color cardinalTextColor = Color.white;
     [SerializeField] private bool createCenterMarker = true;
 
+    [Header("Auto Fade")]
+    [SerializeField] private bool useAutoFade = true;
+    [SerializeField, Min(0f)] private float idleFadeDelay = 1.5f;
+    [SerializeField, Min(0.01f)] private float fadeInSpeed = 8f;
+    [SerializeField, Min(0.01f)] private float fadeOutSpeed = 2.5f;
+    [SerializeField, Min(0f)] private float yawActivityThresholdDeg = 0.12f;
+    [SerializeField, Range(0f, 1f)] private float visibleAlpha = 1f;
+    [SerializeField, Range(0f, 1f)] private float hiddenAlpha = 0f;
+
     private Texture2D generatedTexture;
     private CompassBar runtimeBar;
     private RectTransform runtimeStripA;
     private RectTransform runtimeStripB;
+    private CanvasGroup runtimeCanvasGroup;
+    private float lastObservedYaw = float.NaN;
+    private float lastActivityTime = -999f;
 
     private void Awake()
     {
@@ -44,7 +57,9 @@ public class CompassBarAutoSetup : MonoBehaviour
         if (t == null) return;
 
         runtimeBar.Configure(t, runtimeStripA, runtimeStripB, widthPer360);
-        runtimeBar.SetUseLocalYaw(ShouldUseLocalYaw(t));
+        runtimeBar.SetUseLocalYaw(false);
+
+        UpdateAutoFade(t);
     }
 
     [ContextMenu("Build Compass UI")]
@@ -81,11 +96,18 @@ public class CompassBarAutoSetup : MonoBehaviour
         target = targetTransform;
 
         bar.Configure(targetTransform, stripA, stripB, widthPer360);
-        bar.SetUseLocalYaw(ShouldUseLocalYaw(targetTransform));
+        bar.SetUseLocalYaw(false);
 
         runtimeBar = bar;
         runtimeStripA = stripA;
         runtimeStripB = stripB;
+        runtimeCanvasGroup = root.GetComponent<CanvasGroup>();
+        if (runtimeCanvasGroup == null) runtimeCanvasGroup = root.gameObject.AddComponent<CanvasGroup>();
+        runtimeCanvasGroup.interactable = false;
+        runtimeCanvasGroup.blocksRaycasts = false;
+        runtimeCanvasGroup.alpha = useAutoFade ? hiddenAlpha : visibleAlpha;
+        lastObservedYaw = float.NaN;
+        lastActivityTime = Time.unscaledTime;
     }
 
     private void OnDestroy()
@@ -100,12 +122,57 @@ public class CompassBarAutoSetup : MonoBehaviour
         if (root == null) return;
 
         runtimeBar = root.GetComponent<CompassBar>();
+        runtimeCanvasGroup = root.GetComponent<CanvasGroup>();
 
         Transform viewport = root.Find("Viewport");
         if (viewport == null) return;
 
         runtimeStripA = viewport.Find("StripA") as RectTransform;
         runtimeStripB = viewport.Find("StripB") as RectTransform;
+    }
+
+    private void UpdateAutoFade(Transform t)
+    {
+        if (runtimeCanvasGroup == null) return;
+
+        if (!useAutoFade)
+        {
+            runtimeCanvasGroup.alpha = visibleAlpha;
+            return;
+        }
+
+        float now = Time.unscaledTime;
+        float yaw = GetWorldYaw(t);
+
+        bool active = false;
+        if (float.IsNaN(lastObservedYaw))
+        {
+            active = true;
+        }
+        else
+        {
+            float d = Mathf.Abs(Mathf.DeltaAngle(lastObservedYaw, yaw));
+            active = d >= yawActivityThresholdDeg;
+        }
+
+        if (active)
+            lastActivityTime = now;
+
+        float targetAlpha = (now - lastActivityTime <= idleFadeDelay) ? visibleAlpha : hiddenAlpha;
+        float speed = targetAlpha > runtimeCanvasGroup.alpha ? fadeInSpeed : fadeOutSpeed;
+        runtimeCanvasGroup.alpha = Mathf.MoveTowards(runtimeCanvasGroup.alpha, targetAlpha, speed * Time.unscaledDeltaTime);
+        lastObservedYaw = yaw;
+    }
+
+    private static float GetWorldYaw(Transform t)
+    {
+        if (t == null) return 0f;
+        Vector3 flatForward = Vector3.ProjectOnPlane(t.forward, Vector3.up);
+        if (flatForward.sqrMagnitude < 0.0001f) return t.eulerAngles.y;
+        flatForward.Normalize();
+        float yaw = Mathf.Atan2(flatForward.x, flatForward.z) * Mathf.Rad2Deg;
+        if (yaw < 0f) yaw += 360f;
+        return yaw;
     }
 
     private RectTransform GetOrCreateRect(Transform parent, string name)
@@ -310,10 +377,10 @@ public class CompassBarAutoSetup : MonoBehaviour
 
         CameraController cameraController = FindAnyObjectByType<CameraController>();
         if (cameraController != null && cameraController.Cam != null)
-            return cameraController.Cam.transform;
+            return ResolveStableTarget(cameraController.Cam.transform);
 
         if (Camera.main != null)
-            return Camera.main.transform;
+            return ResolveStableTarget(Camera.main.transform);
 
         Camera[] cams = FindObjectsByType<Camera>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
         Camera best = null;
@@ -331,14 +398,18 @@ public class CompassBarAutoSetup : MonoBehaviour
             }
         }
 
-        return best != null ? best.transform : null;
+        return best != null ? ResolveStableTarget(best.transform) : null;
     }
 
-    private static bool ShouldUseLocalYaw(Transform t)
+    private Transform ResolveStableTarget(Transform camTransform)
     {
-        if (t == null) return false;
-        string n = t.name.ToLowerInvariant();
-        return n.Contains("yawpivot") || n.Contains("pivot") || n.Contains("turret");
+        if (camTransform == null) return null;
+        if (!preferRootBodyTarget) return camTransform;
+
+        Rigidbody rb = camTransform.GetComponentInParent<Rigidbody>();
+        if (rb != null) return rb.transform;
+
+        return camTransform.root != null ? camTransform.root : camTransform;
     }
 }
 

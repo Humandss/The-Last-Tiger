@@ -20,12 +20,20 @@ public class ZoomScopeOverlay : MonoBehaviour
     private CanvasGroup canvasGroup;
     private RawImage vignetteImage;
     private RectTransform crosshairRoot;
+    private Texture2D crosshairTexture;
     private int lastW;
     private int lastH;
 
     private void Awake()
     {
         cameraController = GetComponent<CameraController>();
+        BuildUI();
+        RefreshLayout(true);
+    }
+
+    private void OnEnable()
+    {
+        // Rebuild to avoid stale hierarchy when domain reload is disabled.
         BuildUI();
         RefreshLayout(true);
     }
@@ -113,7 +121,7 @@ public class ZoomScopeOverlay : MonoBehaviour
 
     private RectTransform CreateCrosshairRoot(Transform parent)
     {
-        GameObject root = new GameObject("CenterCrosshair", typeof(RectTransform));
+        GameObject root = new GameObject("CenterCrosshair", typeof(RectTransform), typeof(RawImage));
         root.transform.SetParent(parent, false);
 
         RectTransform rect = root.GetComponent<RectTransform>();
@@ -121,28 +129,48 @@ public class ZoomScopeOverlay : MonoBehaviour
         rect.anchorMax = new Vector2(0.5f, 0.5f);
         rect.pivot = new Vector2(0.5f, 0.5f);
         rect.anchoredPosition = Vector2.zero;
-        rect.sizeDelta = Vector2.zero;
+        rect.sizeDelta = new Vector2(64f, 64f);
 
-        CreateLine(rect, "H", new Vector2(64f, 2f), crosshairColor);
-        CreateLine(rect, "V", new Vector2(2f, 64f), crosshairColor);
+        RawImage img = root.GetComponent<RawImage>();
+        crosshairTexture = BuildCrosshairTexture(64, 64, 2, crosshairColor);
+        img.texture = crosshairTexture;
+        img.color = Color.white;
+        img.raycastTarget = false;
         return rect;
     }
 
-    private static void CreateLine(Transform parent, string name, Vector2 size, Color color)
+    private static Texture2D BuildCrosshairTexture(int width, int height, int thickness, Color color)
     {
-        GameObject go = new GameObject(name, typeof(RectTransform), typeof(Image));
-        go.transform.SetParent(parent, false);
+        width = Mathf.Max(8, width);
+        height = Mathf.Max(8, height);
+        thickness = Mathf.Max(1, thickness);
 
-        RectTransform rect = go.GetComponent<RectTransform>();
-        rect.anchorMin = new Vector2(0.5f, 0.5f);
-        rect.anchorMax = new Vector2(0.5f, 0.5f);
-        rect.pivot = new Vector2(0.5f, 0.5f);
-        rect.anchoredPosition = Vector2.zero;
-        rect.sizeDelta = size;
+        Texture2D tex = new Texture2D(width, height, TextureFormat.RGBA32, false);
+        tex.wrapMode = TextureWrapMode.Clamp;
+        tex.filterMode = FilterMode.Point;
 
-        Image img = go.GetComponent<Image>();
-        img.color = color;
-        img.raycastTarget = false;
+        Color clear = new Color(0f, 0f, 0f, 0f);
+        Color[] pixels = new Color[width * height];
+        for (int i = 0; i < pixels.Length; i++) pixels[i] = clear;
+        tex.SetPixels(pixels);
+
+        int cx = width / 2;
+        int cy = height / 2;
+        int halfT = thickness / 2;
+
+        for (int y = 0; y < height; y++)
+        {
+            for (int x = 0; x < width; x++)
+            {
+                bool onVertical = Mathf.Abs(x - cx) <= halfT;
+                bool onHorizontal = Mathf.Abs(y - cy) <= halfT;
+                if (onVertical || onHorizontal)
+                    tex.SetPixel(x, y, color);
+            }
+        }
+
+        tex.Apply(false, false);
+        return tex;
     }
 
     private static Texture2D BuildBinocularVignetteTexture(int width, int height, float radiusX, float radiusY, float sepPx, float softN)
@@ -185,5 +213,11 @@ public class ZoomScopeOverlay : MonoBehaviour
 
         tex.Apply(false, false);
         return tex;
+    }
+
+    private void OnDestroy()
+    {
+        if (crosshairTexture != null)
+            Destroy(crosshairTexture);
     }
 }

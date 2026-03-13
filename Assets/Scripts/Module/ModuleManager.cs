@@ -64,12 +64,8 @@ public class ModuleManager : MonoBehaviour
         if (!showOnHitOnly) return;
         if (ModuleDebugHUD.Instance == null) return;
 
-        if(hudChannel == DebugHudChannel.Enemy)
-        {
-            string text = BuildBadListText(maxLines);
-            ModuleDebugHUD.Instance.Show(this, text);
-        }
-       
+        string text = BuildBadListText(maxLines);
+        ModuleDebugHUD.Instance.Show(this, text, hudChannel);
     }
 
     private string BuildBadListText(int maxLines)
@@ -85,7 +81,7 @@ public class ModuleManager : MonoBehaviour
         }
 
         var sb = new StringBuilder();
-        sb.AppendLine($"<b>{gameObject.name}</b>");
+        sb.AppendLine($"<size=20><b>{gameObject.name}</b></size>");
         sb.AppendLine();
 
         if (bad.Count == 0)

@@ -15,6 +15,8 @@ public class CameraController : MonoBehaviour
     [SerializeField] private float maxFovClamp = 90f;
     [SerializeField] private bool lockCursorWhileZooming = true;
     [SerializeField] private bool hideCursorWhileZooming = true;
+    [SerializeField] private bool lockCursorWhenNotZooming = true;
+    [SerializeField] private bool hideCursorWhenNotZooming = true;
     private bool isZooming;
     private int zoomIndex = 1;
     private float targetFov;
@@ -84,10 +86,7 @@ public class CameraController : MonoBehaviour
     {
         HandleZoomInput();
         UpdateZoomFov(Time.deltaTime);
-
-        // Some systems can unlock cursor; keep it centered while zooming.
-        if (isZooming)
-            ApplyCursorForZoom(true);
+        RefreshCursorState();
     }
 
     private void LateUpdate()
@@ -100,7 +99,7 @@ public class CameraController : MonoBehaviour
         if (Input.GetKeyDown(zoomHoldKey))
         {
             isZooming = !isZooming;
-            ApplyCursorForZoom(isZooming);
+            RefreshCursorState();
         }
 
         bool canWheel = !wheelOnlyWhileZooming || isZooming;
@@ -118,28 +117,30 @@ public class CameraController : MonoBehaviour
             : Mathf.Clamp(baseFov, minFovClamp, maxFovClamp);
     }
 
-    private void ApplyCursorForZoom(bool zoomOn)
+    private void RefreshCursorState()
     {
-        if (!lockCursorWhileZooming && !hideCursorWhileZooming) return;
+        bool wantLock = isZooming ? lockCursorWhileZooming : lockCursorWhenNotZooming;
+        bool wantHide = isZooming ? hideCursorWhileZooming : hideCursorWhenNotZooming;
 
-        if (zoomOn)
-        {
-            if (!_cursorStateCaptured)
-            {
-                _prevCursorLock = Cursor.lockState;
-                _prevCursorVisible = Cursor.visible;
-                _cursorStateCaptured = true;
-            }
-
-            if (lockCursorWhileZooming)
-                Cursor.lockState = CursorLockMode.Locked;
-            if (hideCursorWhileZooming)
-                Cursor.visible = false;
-        }
-        else
+        if (!wantLock && !wantHide)
         {
             RestoreCursorState();
+            return;
         }
+
+        if (!_cursorStateCaptured)
+        {
+            _prevCursorLock = Cursor.lockState;
+            _prevCursorVisible = Cursor.visible;
+            _cursorStateCaptured = true;
+        }
+
+        if (wantLock)
+            Cursor.lockState = CursorLockMode.Locked;
+        else if (Cursor.lockState == CursorLockMode.Locked)
+            Cursor.lockState = CursorLockMode.None;
+
+        Cursor.visible = !wantHide;
     }
 
     private void RestoreCursorState()

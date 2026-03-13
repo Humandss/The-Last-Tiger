@@ -16,6 +16,7 @@ public class CompassBar : MonoBehaviour
     [Header("Tuning")]
     [SerializeField, Min(1f)] private float widthPer360 = 2048f;
     [SerializeField] private bool useLocalYaw = false;
+    [SerializeField] private bool preferRootBodyTarget = true;
 
     public void Configure(Transform targetTransform, RectTransform a, RectTransform b, float stripWidth)
     {
@@ -64,13 +65,13 @@ public class CompassBar : MonoBehaviour
         CameraController cameraController = FindAnyObjectByType<CameraController>();
         if (cameraController != null && cameraController.Cam != null)
         {
-            target = cameraController.Cam.transform;
+            target = ResolveStableTarget(cameraController.Cam.transform);
             return true;
         }
 
         if (Camera.main != null)
         {
-            target = Camera.main.transform;
+            target = ResolveStableTarget(Camera.main.transform);
             return true;
         }
 
@@ -91,11 +92,22 @@ public class CompassBar : MonoBehaviour
 
         if (best != null)
         {
-            target = best.transform;
+            target = ResolveStableTarget(best.transform);
             return true;
         }
 
         return false;
+    }
+
+    private Transform ResolveStableTarget(Transform camTransform)
+    {
+        if (camTransform == null) return null;
+        if (!preferRootBodyTarget) return camTransform;
+
+        Rigidbody rb = camTransform.GetComponentInParent<Rigidbody>();
+        if (rb != null) return rb.transform;
+
+        return camTransform.root != null ? camTransform.root : camTransform;
     }
 
     private static float GetYaw(Transform t, bool local)

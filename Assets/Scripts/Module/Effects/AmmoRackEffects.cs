@@ -168,7 +168,7 @@ public class AmmoRackEffects : TankEffectsManager
 
     private void StartAmmoPopLoop()
     {
-        if (ammoPopRoutine != null) return;
+        if (ammoPopRoutine != null && ammoEventTriggered) return;
         ammoPopRoutine = StartCoroutine(CoAmmoPopLoop());
     }
 

@@ -39,15 +39,23 @@ public class PlayerTankSoundController : SoundController
     [SerializeField] private bool debugEngineState = false;
 
     [Header("Radio Effect")]
+    [SerializeField] private AudioClip[] radioOn;
+    [SerializeField] private float radioOnVolume;
+    [SerializeField] private AudioClip[] radioOff;
+    [SerializeField] private float radioOffVolume;
     [SerializeField] private AudioMixer radioMixer;
     [SerializeField] private AudioMixerSnapshot normalSnapshot;
     [SerializeField] private AudioMixerSnapshot radioSnapshot;
     [SerializeField] private float transitionTime = 0.05f;
 
     [Header("Voice Clips")]
-    [SerializeField] private AudioClip fireClip;
-    [SerializeField] private AudioClip reloadClip;
-    [SerializeField] private AudioClip targetDownClip;
+    [SerializeField] private AudioClip fireCrewClip;
+    [SerializeField] private AudioClip reloadCrewClip;
+    [SerializeField] private AudioClip targetDownCrewClip;
+
+    [Header("Crew Subtitles")]
+    [SerializeField] private bool useCrewSubtitles = true;
+    [SerializeField] private CrewSubtitleManager subtitleManager;
 
     [Header("Startup Sequence")]
     [SerializeField] private AudioClip commanderReadyClip;
@@ -55,6 +63,7 @@ public class PlayerTankSoundController : SoundController
     [SerializeField] private AudioClip gunnerReadyClip;
     [SerializeField] private AudioClip loaderReadyClip;
     [SerializeField] private float clipGap = 0.5f;
+    [SerializeField] private float crewVoiceStartDelay = 0.15f;
 
     [Header("FlyBy")]
     [SerializeField] private float flyByRadius = 8f;
@@ -62,6 +71,10 @@ public class PlayerTankSoundController : SoundController
     [SerializeField] private AudioClip[] flyByClips;
     [SerializeField] private float flyByVolume = 1f;
     [SerializeField] private float flyByCooldown = 0.3f;
+
+    [Header("Reload")]
+    [SerializeField] private AudioClip[] reloadClips;
+    [SerializeField] private float reloadVolume = 1f;
 
     private float cooldownTimer = 0f;
     private float throttleCooldownTimer = 0f;
@@ -79,8 +92,10 @@ public class PlayerTankSoundController : SoundController
     private AudioSource inactiveEngineLoop;
     private Coroutine crossfadeRoutine;
 
-    public void PlayReload() => PlayCrewVoice(reloadClip);
-    public void PlayTargetDown() => PlayCrewVoice(targetDownClip);
+    public void PlayReload() => PlayEffectSounds(reloadClips, reloadVolume);
+    public void PlayFireCrewVoice() => PlayCrewVoiceWithRadio(fireCrewClip, 1f, CrewSubtitleCue.Fire);
+    public void PlayReloadCrewVoice() => PlayCrewVoiceWithRadio(reloadCrewClip, 1f, CrewSubtitleCue.Reload);
+    public void PlayTargetDown() => PlayCrewVoiceWithRadio(targetDownCrewClip, 1f, CrewSubtitleCue.TargetDown);
 
     protected override void Awake()
     {
@@ -91,6 +106,9 @@ public class PlayerTankSoundController : SoundController
 
         if (engineOneShotSource == null)
             engineOneShotSource = normalSource;
+
+        if (subtitleManager == null)
+            subtitleManager = FindAnyObjectByType<CrewSubtitleManager>();
 
         SetupEngineLoopSources();
 
@@ -452,26 +470,94 @@ public class PlayerTankSoundController : SoundController
 
     private IEnumerator PlayStartupSequence()
     {
-        yield return PlayAndWait(commanderReadyClip);
-        yield return PlayAndWait(driverReadyClip);
-        yield return PlayAndWait(gunnerReadyClip);
-        yield return PlayAndWait(loaderReadyClip);
+        yield return PlayAndWait(commanderReadyClip, CrewSubtitleCue.CommanderReady);
+        yield return PlayAndWait(driverReadyClip, CrewSubtitleCue.DriverReady);
+        yield return PlayAndWait(gunnerReadyClip, CrewSubtitleCue.GunnerReady);
+        yield return PlayAndWait(loaderReadyClip, CrewSubtitleCue.LoaderReady);
     }
 
-    private IEnumerator PlayAndWait(AudioClip clip)
+    private IEnumerator PlayAndWait(AudioClip clip, CrewSubtitleCue cue = CrewSubtitleCue.None)
     {
-        if (clip == null || radioSource == null) yield break;
-
-        radioSnapshot.TransitionTo(transitionTime);
-        radioSource.PlayOneShot(clip);
-        yield return new WaitForSeconds(clip.length + clipGap);
-        normalSnapshot.TransitionTo(transitionTime);
+        if (clip == null) yield break;
+        yield return PlayCrewVoiceWithRadioRoutine(clip, 1f, clipGap, cue);
     }
 
-    private void PlayCrewVoice(AudioClip clip)
+    public void PlayCrewVoiceWithRadio(AudioClip clip, float voiceVolume = 1f)
     {
-        if (clip == null || radioSource == null) return;
-        radioSource.PlayOneShot(clip);
+        if (clip == null) return;
+        StartCoroutine(PlayCrewVoiceWithRadioRoutine(clip, voiceVolume, 0f, CrewSubtitleCue.None));
+    }
+
+    public void PlayCrewVoiceWithRadio(AudioClip clip, float voiceVolume, CrewSubtitleCue cue)
+    {
+        if (clip == null) return;
+        StartCoroutine(PlayCrewVoiceWithRadioRoutine(clip, voiceVolume, 0f, cue));
+    }
+
+    public void PlayCrewVoiceWithRadio(AudioClip[] clips, float voiceVolume = 1f)
+    {
+        AudioClip clip = GetRandomClip(clips);
+        if (clip == null) return;
+        StartCoroutine(PlayCrewVoiceWithRadioRoutine(clip, voiceVolume, 0f, CrewSubtitleCue.None));
+    }
+
+    private static AudioClip GetRandomClip(AudioClip[] clips)
+    {
+        if (clips == null || clips.Length == 0) return null;
+        return clips[Random.Range(0, clips.Length)];
+    }
+
+    private IEnumerator PlayCrewVoiceWithRadioRoutine(AudioClip voiceClip, float voiceVolume, float extraGapAfter, CrewSubtitleCue cue)
+    {
+        if (voiceClip == null) yield break;
+
+        if (radioSnapshot != null)
+            radioSnapshot.TransitionTo(transitionTime);
+
+        AudioClip onClip = GetRandomClip(radioOn);
+        if (onClip != null && normalSource != null)
+        {
+            normalSource.PlayOneShot(onClip, radioOnVolume);
+            yield return new WaitForSeconds(onClip.length);
+        }
+
+        if (crewVoiceStartDelay > 0f)
+            yield return new WaitForSeconds(crewVoiceStartDelay);
+
+        ShowSubtitle(cue, voiceClip.length);
+
+        if (radioSource != null)
+            radioSource.PlayOneShot(voiceClip, voiceVolume);
+        else if (normalSource != null)
+            normalSource.PlayOneShot(voiceClip, voiceVolume);
+
+        yield return new WaitForSeconds(voiceClip.length);
+
+        AudioClip offClip = GetRandomClip(radioOff);
+        if (offClip != null && normalSource != null)
+        {
+            normalSource.PlayOneShot(offClip, radioOffVolume);
+            yield return new WaitForSeconds(offClip.length);
+        }
+
+        if (normalSnapshot != null)
+            normalSnapshot.TransitionTo(transitionTime);
+
+        if (extraGapAfter > 0f)
+            yield return new WaitForSeconds(extraGapAfter);
+    }
+
+    private void ShowSubtitle(CrewSubtitleCue cue, float duration)
+    {
+        if (!useCrewSubtitles || cue == CrewSubtitleCue.None) return;
+        if (subtitleManager == null) subtitleManager = FindAnyObjectByType<CrewSubtitleManager>();
+
+        if (subtitleManager != null)
+        {
+            subtitleManager.Show(cue, duration);
+            Debug.Log(cue);
+        }
+            
     }
 
 }

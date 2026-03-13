@@ -547,5 +547,8 @@ public class GunnerController : TankGunner, ITankGunner
         return true;
     }
 
+    public float CurrentRangeMeters => rangeMeters;
+    public float MaxRangeMeters => maxAimDistance;
+    public float MinRangeMeters => 5f;
    
 }

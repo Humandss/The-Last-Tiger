@@ -18,8 +18,9 @@ public interface ITankLoader
 }
 public class LoaderController : MonoBehaviour, ITankLoader
 {
-
+    [Header("Refs")]
     [SerializeField] private bool isAI = false;
+    [SerializeField] private PlayerTankSoundController soundController;
 
     [Header("Loader")]
     [SerializeField] private float reloadTime = 10.0f;
@@ -45,6 +46,7 @@ public class LoaderController : MonoBehaviour, ITankLoader
 
     void Awake()
     {
+        if(!isAI) soundController = GetComponent<PlayerTankSoundController>();
         LastSelectedAmmo = defaultAmmo;
         isLoaded = false;
         isLoading = false;
@@ -86,6 +88,8 @@ public class LoaderController : MonoBehaviour, ITankLoader
         isLoaded = false;
         co = StartCoroutine(LoadRoutine(type));
         loadedShell = GetShellDataFor(LastSelectedAmmo);
+
+        if (!isAI) soundController.PlayReload();
     }
 
     private void CeaseAction()
@@ -153,6 +157,11 @@ public class LoaderController : MonoBehaviour, ITankLoader
     public bool GetIsLoaded()
     {
         return isLoaded;
+    }
+    public bool IsAI => isAI;
+    public float GetLoading01()
+    {
+        return loading01;
     }
     public void IsShot()
     {
