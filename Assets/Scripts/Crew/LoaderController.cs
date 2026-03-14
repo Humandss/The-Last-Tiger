@@ -163,6 +163,12 @@ public class LoaderController : MonoBehaviour, ITankLoader
     {
         return loading01;
     }
+    public float GetReloadSecondsRemaining()
+    {
+        if (!isLoading) return 0f;
+        float duration = Mathf.Max(0.01f, reloadTime * reloadTimeMulSmoothed);
+        return Mathf.Max(0f, duration * (1f - loading01));
+    }
     public void IsShot()
     {
         isLoaded = false;

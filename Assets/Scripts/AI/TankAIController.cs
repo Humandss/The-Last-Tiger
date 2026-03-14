@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -17,58 +15,74 @@ public class TankAIController : MonoBehaviour
     [SerializeField] private TankCrewManager crewManager;
 
     [Header("Patrol")]
-    [SerializeField] private Transform[] waypoints;    // 인스펙터에서 웨이포인트 할당
+    [SerializeField] private Transform[] waypoints;
     [SerializeField] private float patrolWaitTime = 2f;
-    [SerializeField] private bool loopWaypoints = true; // 끝까지 가면 처음으로
+    [SerializeField] private bool loopWaypoints = true;
 
     [Header("Detection")]
     [SerializeField] private LayerMask occluderMask;
-    [SerializeField] private Vector3 eyeOffset = new Vector3(0f, 1.5f, 0f); // 눈 위치
+    [SerializeField] private Vector3 eyeOffset = new Vector3(0f, 1.5f, 0f);
 
-    [Header("Detection Penalty (커맨더 사망 시)")]
-    [SerializeField, Range(0f, 1f)] private float commanderDeadRangeMul = 0.5f;  // 감지 거리 배율
-    [SerializeField, Range(0f, 1f)] private float commanderDeadFovMul = 0.6f;  // 시야각 배율
-    private bool isCommanderDead = false;
+    [Header("Detection Penalty")]
+    [SerializeField, Range(0f, 1f)] private float commanderDeadRangeMul = 0.5f;
+    [SerializeField, Range(0f, 1f)] private float commanderDeadFovMul = 0.6f;
+    private bool isCommanderDead;
+
+    [Header("Suspicion Reaction")]
+    [SerializeField] private bool useSuspicionReaction = true;
+    [SerializeField] private float impactReactionRadius = 40f;
+    [SerializeField] private float impactReactionDuration = 4f;
+    [SerializeField] private float suspicionAimHeight = 1.2f;
+    [SerializeField] private float shellReactionCooldown = 0.75f;
 
     [Header("Retreat")]
-    [SerializeField] private float reverseTime = 3f;            // 후진 지속 시간
-    [SerializeField] private float retreatDistance = 40f;       // 도주 목적지 반경
-    private enum RetreatPhase { Reversing, Fleeing }
-    private RetreatPhase retreatPhase;
-    private float reverseTimer = 0f;
-    private Vector3 retreatDestination;
-    private bool hasRetreatDestination = false;
-
-    private enum CombatPhase { Sniping, Advancing }
-    private CombatPhase combatPhase = CombatPhase.Sniping;
-    private float phaseTimer = 0f;
-    private float fireTimer = 0f;
-    private float reactionTimer = 0f;
-    private bool isReacting = false;
+    [SerializeField] private float reverseTime = 3f;
+    [SerializeField] private float retreatDistance = 40f;
 
     [Header("Combat Phase")]
     [SerializeField] private float snipingDuration = 5f;
     [SerializeField] private float advanceDuration = 3f;
 
+    private enum RetreatPhase { Reversing, Fleeing }
+    private enum CombatPhase { Sniping, Advancing }
+
+    private RetreatPhase retreatPhase;
+    private CombatPhase combatPhase = CombatPhase.Sniping;
     private State currentState = State.Patrol;
-    private int waypointIndex = 0;
-    private float patrolWaitTimer = 0f;
-    private bool isWaiting = false;
-    private bool isActive = false;
+
+    private float reverseTimer;
+    private Vector3 retreatDestination;
+    private bool hasRetreatDestination;
+
+    private float phaseTimer;
+    private float reactionTimer;
+    private bool isReacting;
+
+    private int waypointIndex;
+    private float patrolWaitTimer;
+    private bool isWaiting;
+    private bool isActive;
+
+    private Vector3 suspiciousPoint;
+    private float suspiciousUntil = -999f;
+    private int lastNearbyShellId = -1;
+    private float lastNearbyShellReactTime = -999f;
+
     private void Awake()
     {
         if (player == null)
-            Debug.LogWarning("[TankAI] Player 오브젝트를 찾을 수 없습니다!");
+            Debug.LogWarning("[TankAI] Player object missing.");
 
         if (crewManager != null && profile != null)
             crewManager.SetSwapDelay(profile.crewSwapDelay);
 
         if (waypoints == null || waypoints.Length == 0)
         {
-            Debug.LogWarning("[TankAI] 웨이포인트 없음, 경계 상태로 대기");
-            isActive = true; // ← 이거 추가
+            Debug.LogWarning("[TankAI] No waypoints. Staying alert in place.");
+            isActive = true;
             return;
         }
+
         isActive = true;
         GoToWaypoint(0);
     }
@@ -85,20 +99,28 @@ public class TankAIController : MonoBehaviour
 
         switch (currentState)
         {
-            case State.Patrol: UpdatePatrol(); break;
-            case State.Combat: UpdateCombat(); break;
-            case State.Retreat: UpdateRetreat(); break;
+            case State.Patrol:
+                UpdatePatrol();
+                break;
+            case State.Combat:
+                UpdateCombat();
+                break;
+            case State.Retreat:
+                UpdateRetreat();
+                break;
         }
     }
 
-    // ===== PATROL =====
     private void UpdatePatrol()
     {
-        if (CanDetectPlayer()) // 순찰 중엔 시야각 체크
+        if (CanDetectPlayer())
         {
+            ClearSuspicion();
             ChangeState(State.Combat);
             return;
         }
+
+        UpdateSuspicionAim();
 
         if (isWaiting)
         {
@@ -116,69 +138,12 @@ public class TankAIController : MonoBehaviour
             isWaiting = true;
             patrolWaitTimer = patrolWaitTime;
             driver.Stop();
-            Debug.Log($"[TankAI] 웨이포인트 {waypointIndex} 도착, 대기 중...");
+            Debug.Log($"[TankAI] Reached waypoint {waypointIndex}, waiting.");
         }
     }
 
-    private void GoToWaypoint(int index)
-    {
-        if (waypoints == null || waypoints.Length == 0) return;
-
-        waypointIndex = index % waypoints.Length;
-        driver.SetDestination(waypoints[waypointIndex].position);
-        Debug.Log($"[TankAI] 웨이포인트 {waypointIndex} 이동");
-    }
-
-    private void GoToNextWaypoint()
-    {
-        if (!loopWaypoints && waypointIndex >= waypoints.Length - 1)
-        {
-            // 루프 안 하면 마지막 웨이포인트에서 정지
-            driver.Stop();
-            return;
-        }
-
-        GoToWaypoint((waypointIndex + 1) % waypoints.Length);
-    }
-
-    // ===== DETECTION =====
-    private bool CanSeePlayer()
-    {
-        if (player == null)
-        {
-            Debug.Log("[TankAI] player가 NULL!"); 
-            return false;
-        }
-
-        Vector3 eyePos = transform.position + eyeOffset;
-        Vector3 toPlayer = player.position - eyePos;
-        float dist = toPlayer.magnitude;
-
-        //거리 체크
-        // Debug.Log($"[TankAI] dist={dist:0.0} detectionRange={profile.detectionRange} angle={Vector3.Angle(transform.forward, toPlayer):0.0} fov={profile.fieldOfView}"); // 추가
-        float effectiveRange = profile.detectionRange *
-          (isCommanderDead ? commanderDeadRangeMul : 1f);
-
-        if (dist > effectiveRange) return false;
-
-        //레이캐스트로 장애물 체크
-        if (Physics.Raycast(eyePos, toPlayer.normalized, out var hit, dist, occluderMask))
-        {
-            // 장애물에 막힘
-            Debug.DrawLine(eyePos, hit.point, Color.red);
-            Debug.Log($"[TankAI] 장애물에 막힘: {hit.collider.gameObject.name}");
-            return false;
-        }
-
-        // 플레이어 직접 보임
-        Debug.DrawLine(eyePos, player.position, Color.green);
-        return true;
-    }
-
-    // ===== COMBAT =====
     private void UpdateCombat()
     {
-       
         if (!CanSeePlayer())
         {
             isReacting = false;
@@ -186,15 +151,17 @@ public class TankAIController : MonoBehaviour
             return;
         }
 
-        // 반응 딜레이
+        ClearSuspicion();
+
         if (!isReacting)
         {
             isReacting = true;
             reactionTimer = profile.reactionTime;
             driver.Stop();
-            Debug.Log("[TankAI] 반응 딜레이 시작");
+            Debug.Log("[TankAI] Reaction delay start");
             return;
         }
+
         if (reactionTimer > 0f)
         {
             reactionTimer -= Time.deltaTime;
@@ -230,19 +197,17 @@ public class TankAIController : MonoBehaviour
                 break;
         }
 
-        // 포탑 조준 + 사격은 항상
         AimTurretAtPlayer();
 
         ITankLoader loaderFunc = loader as ITankLoader;
         if (loaderFunc.GetIsLoaded() && IsTurretAimed())
-        {
             Shoot();
-        }
     }
 
     private void UpdateRetreat()
-    {     
-        if(!gunner.IsGunnerDead()) AimTurretAtPlayer();
+    {
+        if (!gunner.IsGunnerDead())
+            AimTurretAtPlayer();
 
         switch (retreatPhase)
         {
@@ -255,25 +220,166 @@ public class TankAIController : MonoBehaviour
         }
     }
 
-    // ===== RETREAT 조건 =====
+    private void GoToWaypoint(int index)
+    {
+        if (waypoints == null || waypoints.Length == 0) return;
+
+        waypointIndex = index % waypoints.Length;
+        driver.SetDestination(waypoints[waypointIndex].position);
+        Debug.Log($"[TankAI] Moving to waypoint {waypointIndex}");
+    }
+
+    private void GoToNextWaypoint()
+    {
+        if (!loopWaypoints && waypointIndex >= waypoints.Length - 1)
+        {
+            driver.Stop();
+            return;
+        }
+
+        GoToWaypoint((waypointIndex + 1) % waypoints.Length);
+    }
+
+    private bool CanSeePlayer()
+    {
+        if (player == null)
+        {
+            Debug.Log("[TankAI] player is null");
+            return false;
+        }
+
+        Vector3 eyePos = transform.position + eyeOffset;
+        Vector3 toPlayer = player.position - eyePos;
+        float dist = toPlayer.magnitude;
+
+        float effectiveRange = profile.detectionRange * (isCommanderDead ? commanderDeadRangeMul : 1f);
+        if (dist > effectiveRange) return false;
+
+        if (Physics.Raycast(eyePos, toPlayer.normalized, out var hit, dist, occluderMask))
+        {
+            Debug.DrawLine(eyePos, hit.point, Color.red);
+            Debug.Log($"[TankAI] Blocked by {hit.collider.gameObject.name}");
+            return false;
+        }
+
+        Debug.DrawLine(eyePos, player.position, Color.green);
+        return true;
+    }
+
+    private bool CanDetectPlayer()
+    {
+        if (!CanSeePlayer()) return false;
+
+        Vector3 toPlayer = player.position - transform.position;
+        Transform facingTransform = turret != null ? turret : transform;
+        float angle = Vector3.Angle(facingTransform.forward, toPlayer);
+        float effectiveFov = profile.fieldOfView * (isCommanderDead ? commanderDeadFovMul : 1f);
+        return angle < effectiveFov * 0.5f;
+    }
+
+    private void AimTurretAtPlayer()
+    {
+        Vector3 targetPos = player.position;
+
+        if (profile.useLeadTarget)
+        {
+            Rigidbody playerRb = player.GetComponent<Rigidbody>();
+            float dist = Vector3.Distance(turret.position, player.position);
+            float tof = dist / 800f;
+            if (playerRb != null) targetPos += playerRb.velocity * tof;
+        }
+
+        ShellData shellData = (loader as ITankLoader).GetLoadedShell();
+        gunner.SetAimTarget(targetPos, shellData);
+    }
+
+    private void UpdateSuspicionAim()
+    {
+        if (!useSuspicionReaction) return;
+        if (Time.time > suspiciousUntil) return;
+        if (gunner == null || gunner.IsGunnerDead()) return;
+
+        Vector3 aimPos = suspiciousPoint + Vector3.up * suspicionAimHeight;
+        ShellData shellData = (loader as ITankLoader)?.GetLoadedShell();
+       // Debug.Log($"[AI Aim] {name} suspicious aim -> {aimPos} until={suspiciousUntil:0.00} now={Time.time:0.00}");
+        gunner.SetAimTarget(aimPos, shellData);
+    }
+
+    private void RegisterNearbyShellSuspicion(Vector3 worldPoint)
+    {
+        if (!useSuspicionReaction)
+        {
+            Debug.Log($"[AI Suspicion] {name} skipped: useSuspicionReaction off");
+            return;
+        }
+        if (gunner == null || gunner.IsGunnerDead())
+        {
+            Debug.Log($"[AI Suspicion] {name} skipped: gunner unavailable");
+            return;
+        }
+        if (currentState == State.Combat)
+        {
+            Debug.Log($"[AI Suspicion] {name} skipped: already in combat");
+            return;
+        }
+
+        suspiciousPoint = worldPoint;
+        suspiciousUntil = Mathf.Max(suspiciousUntil, Time.time + impactReactionDuration);
+       // Debug.Log($"[AI Suspicion] {name} registered point={suspiciousPoint} until={suspiciousUntil:0.00}");
+    }
+
+    private void ClearSuspicion()
+    {
+        suspiciousUntil = -999f;
+    }
+
+    public void OnNearbyShell(int shellId, Vector3 shellWorldPos)
+    {
+        //Debug.Log($"[AI React] {name} received shell={shellId} pos={shellWorldPos}");
+
+        if (!useSuspicionReaction)
+        {
+            Debug.Log($"[AI React] {name} ignored: suspicion reaction off");
+            return;
+        }
+        if (currentState == State.Combat)
+        {
+            Debug.Log($"[AI React] {name} ignored: combat state");
+            return;
+        }
+        if (CanDetectPlayer())
+        {
+            Debug.Log($"[AI React] {name} ignored: can already detect player");
+            return;
+        }
+
+        float now = Time.time;
+        if (lastNearbyShellId == shellId && now - lastNearbyShellReactTime < shellReactionCooldown)
+        {
+            Debug.Log($"[AI React] {name} ignored: cooldown");
+            return;
+        }
+
+        lastNearbyShellId = shellId;
+        lastNearbyShellReactTime = now;
+
+        RegisterNearbyShellSuspicion(shellWorldPos);
+    }
 
     private bool ShouldRetreat()
     {
         if (crewManager == null) return false;
 
         bool gunBroken = !gunner.IsGunEquipmentOk;
-        // 거너 자리 공석 + 교체 불가 → 사격 불가 후퇴
         bool gunnerLost = !crewManager.IsGunnerAvailable();
-        // 드라이버 없으면 x
         bool canRetreat = crewManager.IsDriverAvailable();
-
         return canRetreat && (gunBroken || gunnerLost);
     }
+
     private void UpdateReversing()
     {
         reverseTimer -= Time.deltaTime;
 
-        // 플레이어 반대 방향으로 후진
         if (player != null)
         {
             Vector3 awayDir = (transform.position - player.position).normalized;
@@ -281,18 +387,16 @@ public class TankAIController : MonoBehaviour
             driver.SetReverseDestination(reverseTarget);
         }
 
-        // 후진 시간 끝나면 도주 페이즈로
         if (reverseTimer <= 0f)
         {
             retreatPhase = RetreatPhase.Fleeing;
             TrySetFleeDestination();
-            Debug.Log("[TankAI] 후진 완료 → 도주 시작");
+            Debug.Log("[TankAI] Reverse done -> flee");
         }
     }
 
     private void UpdateFleeing()
     {
-        // 목적지 없으면 재탐색
         if (!hasRetreatDestination)
         {
             if (!TrySetFleeDestination())
@@ -302,11 +406,10 @@ public class TankAIController : MonoBehaviour
             }
         }
 
-        // 도착하면 정지
         if (driver.IsArrived())
         {
             driver.Stop();
-            Debug.Log("[TankAI] 도주 완료, 정지");
+            Debug.Log("[TankAI] Retreat complete");
             return;
         }
 
@@ -324,32 +427,31 @@ public class TankAIController : MonoBehaviour
         {
             retreatDestination = hit.position;
             hasRetreatDestination = true;
-            Debug.Log($"[TankAI] 도주 목적지: {retreatDestination}");
+            Debug.Log($"[TankAI] Retreat destination: {retreatDestination}");
             return true;
         }
 
-        // 실패 시 45도씩 돌려가며 재시도
         for (int i = 1; i < 8; i++)
         {
-            Vector3 rotDir = Quaternion.Euler(0, i * 45f, 0) * awayDir;
+            Vector3 rotDir = Quaternion.Euler(0f, i * 45f, 0f) * awayDir;
             Vector3 rotCandidate = transform.position + rotDir * retreatDistance;
 
             if (NavMesh.SamplePosition(rotCandidate, out var rotHit, retreatDistance * 0.5f, NavMesh.AllAreas))
             {
                 retreatDestination = rotHit.position;
                 hasRetreatDestination = true;
-                Debug.Log($"[TankAI] 도주 목적지(재시도): {retreatDestination}");
+                Debug.Log($"[TankAI] Retreat destination retry: {retreatDestination}");
                 return true;
             }
         }
 
-        Debug.LogWarning("[TankAI] 도주 목적지를 찾을 수 없음!");
+        Debug.LogWarning("[TankAI] Could not find retreat destination.");
         return false;
     }
 
     private void ChangeState(State next)
     {
-        Debug.Log($"[TankAI] {currentState} → {next}");
+        Debug.Log($"[TankAI] {currentState} -> {next}");
         currentState = next;
 
         if (next == State.Combat)
@@ -358,7 +460,6 @@ public class TankAIController : MonoBehaviour
             combatPhase = CombatPhase.Sniping;
             phaseTimer = snipingDuration;
             isReacting = false;
-            fireTimer = profile.reactionTime; // 첫 발은 반응시간 후
         }
         else if (next == State.Retreat)
         {
@@ -366,11 +467,10 @@ public class TankAIController : MonoBehaviour
             reverseTimer = reverseTime;
             hasRetreatDestination = false;
             driver.Stop();
-            Debug.Log("[TankAI] 후퇴 시작 → 후진 페이즈");
+            Debug.Log("[TankAI] Retreat start -> reverse phase");
         }
     }
 
-    // 씬 뷰에서 감지 범위 시각화
     private void OnDrawGizmosSelected()
     {
         if (profile == null) return;
@@ -381,13 +481,12 @@ public class TankAIController : MonoBehaviour
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(transform.position, effectiveRange);
 
-        Vector3 leftDir = Quaternion.Euler(0, -effectiveFov * 0.5f, 0) * transform.forward;
-        Vector3 rightDir = Quaternion.Euler(0, effectiveFov * 0.5f, 0) * transform.forward;
+        Vector3 leftDir = Quaternion.Euler(0f, -effectiveFov * 0.5f, 0f) * transform.forward;
+        Vector3 rightDir = Quaternion.Euler(0f, effectiveFov * 0.5f, 0f) * transform.forward;
         Gizmos.color = Color.cyan;
         Gizmos.DrawRay(transform.position, leftDir * effectiveRange);
         Gizmos.DrawRay(transform.position, rightDir * effectiveRange);
 
-        // 후퇴 목적지 표시
         if (hasRetreatDestination)
         {
             Gizmos.color = Color.red;
@@ -395,56 +494,37 @@ public class TankAIController : MonoBehaviour
             Gizmos.DrawLine(transform.position, retreatDestination);
         }
 
+        if (useSuspicionReaction && Time.time <= suspiciousUntil)
+        {
+            Gizmos.color = new Color(1f, 0.6f, 0.1f, 1f);
+            Gizmos.DrawSphere(suspiciousPoint + Vector3.up * suspicionAimHeight, 0.6f);
+            Gizmos.DrawLine(transform.position + eyeOffset, suspiciousPoint + Vector3.up * suspicionAimHeight);
+            Gizmos.DrawWireSphere(transform.position, impactReactionRadius);
+        }
+
         if (waypoints == null || waypoints.Length < 2) return;
+
         Gizmos.color = Color.white;
         for (int i = 0; i < waypoints.Length; i++)
         {
             if (waypoints[i] == null) continue;
             Gizmos.DrawSphere(waypoints[i].position, 0.4f);
-            Gizmos.DrawLine(waypoints[i].position,
-                waypoints[(i + 1) % waypoints.Length].position);
+            Gizmos.DrawLine(waypoints[i].position, waypoints[(i + 1) % waypoints.Length].position);
         }
     }
-    private bool CanDetectPlayer()
-    {
-        if (!CanSeePlayer()) return false;
 
-        Vector3 toPlayer = player.position - transform.position;
-        float angle = Vector3.Angle(transform.forward, toPlayer);
-
-        float effectiveFov = profile.fieldOfView * (isCommanderDead ? commanderDeadFovMul : 1f);
-        return angle < effectiveFov * 0.5f;
-    }
-    private void AimTurretAtPlayer()
-    {
-        Vector3 targetPos = player.position;
-
-        if (profile.useLeadTarget)
-        {
-            var playerRb = player.GetComponent<Rigidbody>();
-            float dist = Vector3.Distance(turret.position, player.position);
-            float tof = dist / 800f;
-            if (playerRb != null) targetPos += playerRb.velocity * tof;
-        }
-
-        ShellData shellData = (loader as ITankLoader).GetLoadedShell();
-        gunner.SetAimTarget(targetPos, shellData);
-    }
     public void Die()
     {
         enabled = false;
         driver.SetDriverDead();
         gunner.SetGunnerDead();
-               
-        Debug.LogWarning($"[TankAI] {gameObject.name} 사망 -> AI 중지");
+        Debug.LogWarning($"[TankAI] {gameObject.name} dead -> AI stopped");
     }
-
-    // ===== 커맨더 사망 패널티 (TankCrewManager에서 호출) =====
 
     public void SetCommanderDead(bool dead)
     {
         isCommanderDead = dead;
-        Debug.Log($"[TankAI] 커맨더 사망={dead} → 시야 패널티 {(dead ? "적용" : "해제")}");
+        Debug.Log($"[TankAI] Commander dead={dead} -> detection penalty {(dead ? "on" : "off")}");
     }
 
     private bool IsTurretAimed() => gunner.IsAimed(5f);

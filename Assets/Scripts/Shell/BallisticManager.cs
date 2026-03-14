@@ -1,7 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
-using Unity.Burst.CompilerServices;
-using UnityEditor.EditorTools;
 using UnityEngine;
 
 public class BallisticManager : MonoBehaviour
@@ -59,7 +56,8 @@ public class BallisticManager : MonoBehaviour
     [SerializeField] private float speedLossPerCost = 0.002f; // cost->속도 감쇠(튜닝)
     [SerializeField] private float minThicknessM = 0.01f;     // 엣지/오차 방지
 
-
+    [Header("Shell Info")]
+    [SerializeField] private float aiReactionRadius = 40.0f;
     [SerializeField] private float radiusAt1Kg = 6.0f;
     [SerializeField] private int raysAt1Kg = 120;
     [SerializeField] private float baseFragDamage = 100.0f;
@@ -70,6 +68,8 @@ public class BallisticManager : MonoBehaviour
     private Vector3 fuzeOrigin;
     [SerializeField] private float fuzeOriginNudge = 0.1f;
     private bool isInitialized = false;
+
+    public int Id => id;
 
 
 
@@ -154,6 +154,8 @@ public class BallisticManager : MonoBehaviour
         velocity += g * dt;
         pos += velocity * dt;
 
+        NotifyNearbyAI(prevPos, pos);
+
         HandleImpact(prevPos);
 
         transform.position = pos;
@@ -229,7 +231,6 @@ public class BallisticManager : MonoBehaviour
 
     private void HandleArmorHit(RaycastHit hit, Vector3 segDir, float cosToNormal, float angleToNormal, ArmorManager zone)
     {
-
         var cam = hit.collider.transform.root.GetComponentInChildren<CameraController>();
         if (cam != null)
         {
@@ -532,6 +533,7 @@ public class BallisticManager : MonoBehaviour
 
     private void SpawnExplosion(RaycastHit hit)
     {
+
         if (explosionPrefab == null) return;
 
         var go = Instantiate(explosionPrefab, hit.point + hit.normal * enter,
@@ -541,5 +543,38 @@ public class BallisticManager : MonoBehaviour
         if (ps) Destroy(go, ps.main.duration + ps.main.startLifetime.constantMax + 0.5f);
         else Destroy(go, 1.3f);
     }
-  
+
+    private void NotifyNearbyAI(Vector3 from, Vector3 to)
+    {
+        if (!isPlayerShell) return;
+
+        TankAIController[] controllers = FindObjectsByType<TankAIController>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+        float radiusSqr = aiReactionRadius * aiReactionRadius;
+        int notifyCount = 0;
+
+        for (int i = 0; i < controllers.Length; i++)
+        {
+            TankAIController ai = controllers[i];
+            if (ai == null) continue;
+            float distSqr = DistancePointToSegmentSqr(ai.transform.position, from, to);
+            if (distSqr > radiusSqr) continue;
+
+            notifyCount++;
+           // Debug.Log($"[Shell->AI] shell={id} ai={ai.name} from={from} to={to} dist={Mathf.Sqrt(distSqr):0.0}");
+            ai.OnNearbyShell(id, to);
+        }
+
+    }
+
+    private static float DistancePointToSegmentSqr(Vector3 point, Vector3 a, Vector3 b)
+    {
+        Vector3 ab = b - a;
+        float denom = ab.sqrMagnitude;
+        if (denom <= 1e-6f) return (point - a).sqrMagnitude;
+
+        float t = Mathf.Clamp01(Vector3.Dot(point - a, ab) / denom);
+        Vector3 closest = a + ab * t;
+        return (point - closest).sqrMagnitude;
+    }
+
 }

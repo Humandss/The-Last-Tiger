@@ -4,6 +4,9 @@ using UnityEngine.UI;
 [RequireComponent(typeof(CameraController))]
 public class ZoomScopeOverlay : MonoBehaviour
 {
+    [Header("Build")]
+    [SerializeField] private int sortingOrder = -100;
+
     [Header("Fade")]
     [SerializeField] private float fadeSpeed = 10f;
     [SerializeField, Range(0f, 1f)] private float maxOverlayAlpha = 0.70f;
@@ -59,7 +62,7 @@ public class ZoomScopeOverlay : MonoBehaviour
 
         Canvas canvas = root.GetComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-        canvas.sortingOrder = 9999;
+        canvas.sortingOrder = sortingOrder;
 
         CanvasScaler scaler = root.GetComponent<CanvasScaler>();
         scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;

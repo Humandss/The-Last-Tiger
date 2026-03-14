@@ -104,6 +104,7 @@ public class AmmoRackEffects : TankEffectsManager
         {
             var m = list[i];
             if (!m) continue;
+            if (m.Type == ModuleType.Ammo) continue;
 
             m.TakeDamage(0.0f, DamageType.AmmoRack);
         }
@@ -238,7 +239,11 @@ public class AmmoRackEffects : TankEffectsManager
 
         for (int i = 0; i < list.Count; i++)
         {
-            list[i].TakeDamage(0.0f, DamageType.AmmoFire);
+            var module = list[i];
+            if (!module) continue;
+            if (module.Type == ModuleType.Ammo) continue;
+
+            module.TakeDamage(0.0f, DamageType.AmmoFire);
         }
     }
 }

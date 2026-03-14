@@ -252,6 +252,7 @@ MonoBehaviour:
   penCostPerMeter: 80
   speedLossPerCost: 0.002
   minThicknessM: 0.01
+  aiReactionRadius: 40
   radiusAt1Kg: 6
   raysAt1Kg: 120
   baseFragDamage: 120

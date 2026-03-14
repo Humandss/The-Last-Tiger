@@ -1,11 +1,11 @@
-using System.Collections;
+ï»¿using System.Collections;
 using System.Collections.Generic;
-using UnityEditor.EditorTools;
 using UnityEngine;
-
 
 public class CannonFireController : FireController
 {
+    protected override bool IsPlayerShell => true;
+
     [Header("Refs")]
     [SerializeField] private CameraController cameraShotShake;
 
@@ -13,16 +13,16 @@ public class CannonFireController : FireController
     [SerializeField, Range(0f, 2f)] private float turretShakeIntensity = 0.35f;
 
     [Header("Gun Recoil Visual")]
-    [SerializeField] private Transform recoilPart;            // µÚ·Î ¹Ð¸± Æ÷½Å ÆÄÃ÷
-    [SerializeField] private Vector3 recoilLocalAxis = new Vector3(0f, 0f, -1f); // ·ÎÄÃÃà ±âÁØ(º¸Åë -Z)
-    [SerializeField] private float recoilDistance = 0.18f;   // ÈÄÅð °Å¸®
-    [SerializeField] private float recoilKickSpeed = 14f;    // µÚ·Î °¥ ¶§ ¼Óµµ
-    [SerializeField] private float recoilReturnSpeed = 6f;   // º¹±Í ¼Óµµ
-    [SerializeField] private float recoilHoldTime = 0.03f;   // ³¡¿¡¼­ Àá±ñ ¸ØÃã(Å¸°Ý°¨)
+    [SerializeField] private Transform recoilPart;
+    [SerializeField] private Vector3 recoilLocalAxis = new Vector3(0f, 0f, -1f);
+    [SerializeField] private float recoilDistance = 0.18f;
+    [SerializeField] private float recoilKickSpeed = 14f;
+    [SerializeField] private float recoilReturnSpeed = 6f;
+    [SerializeField] private float recoilHoldTime = 0.03f;
 
     private Vector3 recoilBaseLocalPos;
-    private float recoilCur;      // ÇöÀç ÈÄÅð·® (0 ~ recoilDistance)
-    private float recoilTarget;   // ¸ñÇ¥ ÈÄÅð·®
+    private float recoilCur;
+    private float recoilTarget;
     private float recoilHoldTimer;
 
     private void Awake()
@@ -30,6 +30,7 @@ public class CannonFireController : FireController
         if (recoilPart != null)
             recoilBaseLocalPos = recoilPart.localPosition;
     }
+
     private void Update()
     {
         UpdateGunRecoil(Time.deltaTime);
@@ -39,7 +40,6 @@ public class CannonFireController : FireController
     {
         if (recoilPart == null) return;
 
-        // ³¡Á¡ È¦µå
         if (recoilHoldTimer > 0f)
         {
             recoilHoldTimer -= dt;
@@ -47,11 +47,9 @@ public class CannonFireController : FireController
             return;
         }
 
-        // ¸ñÇ¥°¡ µÚ·Î¸é ºü¸£°Ô Å±, ¸ñÇ¥°¡ 0ÀÌ¸é ÃµÃµÈ÷ º¹±Í
         float speed = (recoilTarget > recoilCur) ? recoilKickSpeed : recoilReturnSpeed;
         recoilCur = Mathf.MoveTowards(recoilCur, recoilTarget, speed * dt);
 
-        // µÚ·Î ³¡±îÁö °¬À¸¸é Àá±ñ ¸ØÃè´Ù°¡ º¹±Í ½ÃÀÛ
         if (Mathf.Approximately(recoilCur, recoilTarget) && recoilTarget > 0f)
         {
             recoilHoldTimer = recoilHoldTime;
@@ -64,10 +62,9 @@ public class CannonFireController : FireController
     private void TriggerGunRecoil()
     {
         if (recoilPart == null) return;
-
         recoilTarget = Mathf.Max(recoilTarget, recoilDistance);
-
     }
+
     private void ApplyRecoilVisual()
     {
         Vector3 axis = recoilLocalAxis.sqrMagnitude > 1e-6f ? recoilLocalAxis.normalized : Vector3.back;
@@ -77,13 +74,12 @@ public class CannonFireController : FireController
     private void TriggerShotShake()
     {
         if (cameraShotShake) cameraShotShake.TriggerShake(cameraShakeIntensity);
-  
     }
 
     public sealed override void FireProjectile(Vector3 dir, AmmoType type)
     {
         base.FireProjectile(dir, type);
         TriggerShotShake();
-        TriggerGunRecoil();     
+        TriggerGunRecoil();
     }
 }

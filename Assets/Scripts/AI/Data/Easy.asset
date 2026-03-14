@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 90e098aebaf867a47af4568eaff53042, type: 3}
   m_Name: Easy
   m_EditorClassIdentifier: 
-  detectionRange: 1000
+  detectionRange: 1500
   fieldOfView: 120
   preferredCombatRange: 25
   useLeadTarget: 0

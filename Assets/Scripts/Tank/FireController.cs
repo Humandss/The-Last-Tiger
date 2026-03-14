@@ -1,4 +1,4 @@
-using System.Collections;
+ï»¿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -22,6 +22,8 @@ public abstract class FireController : MonoBehaviour
     [SerializeField] private Vector3 dustSmokeLocalOffset = Vector3.zero;
     [SerializeField] private bool muzzleFlashFollowMuzzle = true;
 
+    protected virtual bool IsPlayerShell => false;
+
     protected void SpawnMuzzleFlash()
     {
         if (!muzzleFlashPrefab) return;
@@ -35,21 +37,17 @@ public abstract class FireController : MonoBehaviour
             fx.transform.SetParent(fxT, worldPositionStays: true);
 
         Destroy(fx, muzzleFlashLife);
-
     }
 
     protected void SpawnFireDust()
     {
         if (!dustSmokePrefab || !dustSpot) return;
 
-        // muzzle ±âÁØ À§Ä¡/È¸Àü
         Vector3 pos = dustSpot.TransformPoint(dustSmokeLocalOffset);
         Quaternion rot = dustSpot.rotation;
 
         GameObject fx = Instantiate(dustSmokePrefab, pos, rot);
-
         Destroy(fx, 1.5f);
-
     }
 
     public virtual void FireProjectile(Vector3 dir, AmmoType type)
@@ -65,6 +63,7 @@ public abstract class FireController : MonoBehaviour
             Debug.LogWarning("[FireController] projectile is NULL");
             return;
         }
+
         BallisticManager projectile = type switch
         {
             AmmoType.AP => APShell,
@@ -81,13 +80,14 @@ public abstract class FireController : MonoBehaviour
         Vector3 shotDir = dir.sqrMagnitude > 1e-8f ? dir.normalized : muzzle.forward.normalized;
         Vector3 spawnPos = muzzle.position + shotDir * 0.05f;
 
-        var shell = Instantiate(projectile, spawnPos, Quaternion.LookRotation(shotDir));
+        BallisticManager shell = Instantiate(projectile, spawnPos, Quaternion.LookRotation(shotDir));
         if (shell == null)
         {
             Debug.LogWarning("[FireController] BallisticManager component missing on projectile prefab");
             return;
         }
 
+        shell.isPlayerShell = IsPlayerShell;
         shell.Initialize(spawnPos, shotDir);
 
         SpawnMuzzleFlash();
