@@ -227,6 +227,9 @@ MonoBehaviour:
   worldMask:
     serializedVersion: 2
     m_Bits: 4294967295
+  moduleMask:
+    serializedVersion: 2
+    m_Bits: 512
   hitMeshMask:
     serializedVersion: 2
     m_Bits: 128
@@ -245,6 +248,8 @@ MonoBehaviour:
   penetrationSpeedLoss: 0.25
   minSpeedAfterPen: 30
   maxPenetrations: 0
+  maxImpactChainPerStep: 4
+  moduleDirectDamage: 35
   zoneSearchRadius: 0.35
   minCosForArmor: 0.05
   maxDist: 20

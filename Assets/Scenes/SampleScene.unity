@@ -1613,7 +1613,7 @@ MonoBehaviour:
   armorMm: 40
   material: 0
   ricochetBonusDeg: 0
-  drawGizmo: 1
+  drawGizmo: 0
   gizmoColor: {r: 0, g: 1, b: 1, a: 0.25}
 --- !u!65 &152422326
 BoxCollider:
@@ -1780,7 +1780,7 @@ MonoBehaviour:
   armorMm: 25
   material: 1
   ricochetBonusDeg: 0
-  drawGizmo: 1
+  drawGizmo: 0
   gizmoColor: {r: 0, g: 1, b: 1, a: 0.25}
 --- !u!65 &157871527
 BoxCollider:
@@ -1873,7 +1873,7 @@ MonoBehaviour:
   armorMm: 99
   material: 1
   ricochetBonusDeg: 0
-  drawGizmo: 1
+  drawGizmo: 0
   gizmoColor: {r: 0, g: 1, b: 1, a: 0.25}
 --- !u!1 &162549647
 GameObject:
@@ -2665,7 +2665,7 @@ MonoBehaviour:
   armorMm: 20
   material: 0
   ricochetBonusDeg: 0
-  drawGizmo: 1
+  drawGizmo: 0
   gizmoColor: {r: 0, g: 1, b: 1, a: 0.25}
 --- !u!65 &217689844
 BoxCollider:
@@ -3452,7 +3452,7 @@ MonoBehaviour:
   armorMm: 40
   material: 0
   ricochetBonusDeg: 0
-  drawGizmo: 1
+  drawGizmo: 0
   gizmoColor: {r: 0, g: 1, b: 1, a: 0.25}
 --- !u!65 &280638311
 BoxCollider:
@@ -3650,7 +3650,7 @@ MonoBehaviour:
   armorMm: 40
   material: 0
   ricochetBonusDeg: 0
-  drawGizmo: 1
+  drawGizmo: 0
   gizmoColor: {r: 0, g: 1, b: 1, a: 0.25}
 --- !u!65 &291006811
 BoxCollider:
@@ -3756,7 +3756,7 @@ MonoBehaviour:
   armorMm: 40
   material: 0
   ricochetBonusDeg: 0
-  drawGizmo: 1
+  drawGizmo: 0
   gizmoColor: {r: 0, g: 1, b: 1, a: 0.25}
 --- !u!65 &295409837
 BoxCollider:
@@ -4406,7 +4406,7 @@ MonoBehaviour:
   armorMm: 45
   material: 0
   ricochetBonusDeg: 0
-  drawGizmo: 1
+  drawGizmo: 0
   gizmoColor: {r: 0, g: 1, b: 1, a: 0.25}
 --- !u!65 &332205469
 BoxCollider:
@@ -4459,7 +4459,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!195 &336159478
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -5326,7 +5326,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &414415416
 Transform:
   m_ObjectHideFlags: 0
@@ -5336,7 +5336,7 @@ Transform:
   m_GameObject: {fileID: 414415415}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 1, z: 0, w: 0}
-  m_LocalPosition: {x: -208, y: 0.02, z: 1167}
+  m_LocalPosition: {x: -52, y: 0.02, z: 538}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -6471,7 +6471,7 @@ MonoBehaviour:
   armorMm: 40
   material: 0
   ricochetBonusDeg: 0
-  drawGizmo: 1
+  drawGizmo: 0
   gizmoColor: {r: 0, g: 1, b: 1, a: 0.25}
 --- !u!65 &472327964
 BoxCollider:
@@ -6744,7 +6744,7 @@ MonoBehaviour:
   armorMm: 75
   material: 1
   ricochetBonusDeg: 0
-  drawGizmo: 1
+  drawGizmo: 0
   gizmoColor: {r: 0, g: 1, b: 1, a: 0.25}
 --- !u!65 &494092813
 BoxCollider:
@@ -6970,7 +6970,7 @@ MonoBehaviour:
   armorMm: 40
   material: 0
   ricochetBonusDeg: 0
-  drawGizmo: 1
+  drawGizmo: 0
   gizmoColor: {r: 0, g: 1, b: 1, a: 0.25}
 --- !u!65 &509550704
 BoxCollider:
@@ -8072,7 +8072,7 @@ MonoBehaviour:
   armorMm: 45
   material: 0
   ricochetBonusDeg: 0
-  drawGizmo: 1
+  drawGizmo: 0
   gizmoColor: {r: 0, g: 1, b: 1, a: 0.25}
 --- !u!1 &622238524
 GameObject:
@@ -9492,7 +9492,7 @@ MonoBehaviour:
   armorMm: 75
   material: 1
   ricochetBonusDeg: 0
-  drawGizmo: 1
+  drawGizmo: 0
   gizmoColor: {r: 0, g: 1, b: 1, a: 0.25}
 --- !u!65 &758442626
 BoxCollider:
@@ -9597,7 +9597,7 @@ MonoBehaviour:
   armorMm: 60
   material: 1
   ricochetBonusDeg: 0
-  drawGizmo: 1
+  drawGizmo: 0
   gizmoColor: {r: 0, g: 1, b: 1, a: 0.25}
 --- !u!136 &759888922
 CapsuleCollider:
@@ -10605,7 +10605,7 @@ MonoBehaviour:
   armorMm: 20
   material: 0
   ricochetBonusDeg: 0
-  drawGizmo: 1
+  drawGizmo: 0
   gizmoColor: {r: 0, g: 1, b: 1, a: 0.25}
 --- !u!65 &840151009
 BoxCollider:
@@ -10850,7 +10850,7 @@ MonoBehaviour:
   armorMm: 40
   material: 0
   ricochetBonusDeg: 0
-  drawGizmo: 1
+  drawGizmo: 0
   gizmoColor: {r: 0, g: 1, b: 1, a: 0.25}
 --- !u!65 &876772609
 BoxCollider:
@@ -14196,7 +14196,7 @@ MonoBehaviour:
   armorMm: 53
   material: 1
   ricochetBonusDeg: 0
-  drawGizmo: 1
+  drawGizmo: 0
   gizmoColor: {r: 0, g: 1, b: 1, a: 0.25}
 --- !u!65 &980534630
 BoxCollider:
@@ -15009,7 +15009,7 @@ MonoBehaviour:
   armorMm: 40
   material: 0
   ricochetBonusDeg: 0
-  drawGizmo: 1
+  drawGizmo: 0
   gizmoColor: {r: 0, g: 1, b: 1, a: 0.25}
 --- !u!65 &1073223197
 BoxCollider:
@@ -15176,7 +15176,7 @@ MonoBehaviour:
   armorMm: 40
   material: 0
   ricochetBonusDeg: 0
-  drawGizmo: 1
+  drawGizmo: 0
   gizmoColor: {r: 0, g: 1, b: 1, a: 0.25}
 --- !u!65 &1112015773
 BoxCollider:
@@ -15511,7 +15511,7 @@ MonoBehaviour:
   armorMm: 20
   material: 0
   ricochetBonusDeg: 0
-  drawGizmo: 1
+  drawGizmo: 0
   gizmoColor: {r: 0, g: 1, b: 1, a: 0.25}
 --- !u!65 &1124263895
 BoxCollider:
@@ -15616,7 +15616,7 @@ MonoBehaviour:
   armorMm: 40
   material: 0
   ricochetBonusDeg: 0
-  drawGizmo: 1
+  drawGizmo: 0
   gizmoColor: {r: 0, g: 1, b: 1, a: 0.25}
 --- !u!65 &1138438507
 BoxCollider:
@@ -15814,7 +15814,7 @@ MonoBehaviour:
   armorMm: 40
   material: 0
   ricochetBonusDeg: 0
-  drawGizmo: 1
+  drawGizmo: 0
   gizmoColor: {r: 0, g: 1, b: 1, a: 0.25}
 --- !u!65 &1146247907
 BoxCollider:
@@ -16350,7 +16350,7 @@ MonoBehaviour:
   armorMm: 75
   material: 1
   ricochetBonusDeg: 0
-  drawGizmo: 1
+  drawGizmo: 0
   gizmoColor: {r: 0, g: 1, b: 1, a: 0.25}
 --- !u!65 &1215816501
 BoxCollider:
@@ -16546,7 +16546,7 @@ Transform:
   m_GameObject: {fileID: 1250946044}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.2251, y: 0.139, z: 0.49}
+  m_LocalPosition: {x: 0.21, y: 0.133, z: -0.34}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -16568,7 +16568,7 @@ MonoBehaviour:
   armorMm: 60
   material: 1
   ricochetBonusDeg: 0
-  drawGizmo: 1
+  drawGizmo: 0
   gizmoColor: {r: 0, g: 1, b: 1, a: 0.25}
 --- !u!136 &1250946047
 CapsuleCollider:
@@ -17679,7 +17679,7 @@ MonoBehaviour:
   armorMm: 20
   material: 0
   ricochetBonusDeg: 0
-  drawGizmo: 1
+  drawGizmo: 0
   gizmoColor: {r: 0, g: 1, b: 1, a: 0.25}
 --- !u!65 &1368852391
 BoxCollider:
@@ -17942,7 +17942,7 @@ MonoBehaviour:
   armorMm: 53
   material: 1
   ricochetBonusDeg: 0
-  drawGizmo: 1
+  drawGizmo: 0
   gizmoColor: {r: 0, g: 1, b: 1, a: 0.25}
 --- !u!65 &1408373164
 BoxCollider:
@@ -18999,7 +18999,7 @@ MonoBehaviour:
   armorMm: 53
   material: 1
   ricochetBonusDeg: 0
-  drawGizmo: 1
+  drawGizmo: 0
   gizmoColor: {r: 0, g: 1, b: 1, a: 0.25}
 --- !u!65 &1505748135
 BoxCollider:
@@ -19571,7 +19571,7 @@ MonoBehaviour:
   armorMm: 75
   material: 1
   ricochetBonusDeg: 0
-  drawGizmo: 1
+  drawGizmo: 0
   gizmoColor: {r: 0, g: 1, b: 1, a: 0.25}
 --- !u!65 &1549575473
 BoxCollider:
@@ -20510,7 +20510,7 @@ MonoBehaviour:
   armorMm: 45
   material: 0
   ricochetBonusDeg: 0
-  drawGizmo: 1
+  drawGizmo: 0
   gizmoColor: {r: 0, g: 1, b: 1, a: 0.25}
 --- !u!65 &1597968852
 BoxCollider:
@@ -21282,7 +21282,7 @@ MonoBehaviour:
   armorMm: 40
   material: 0
   ricochetBonusDeg: 0
-  drawGizmo: 1
+  drawGizmo: 0
   gizmoColor: {r: 0, g: 1, b: 1, a: 0.25}
 --- !u!65 &1634247327
 BoxCollider:
@@ -22746,7 +22746,7 @@ MonoBehaviour:
   armorMm: 90
   material: 1
   ricochetBonusDeg: 0
-  drawGizmo: 1
+  drawGizmo: 0
   gizmoColor: {r: 0, g: 1, b: 1, a: 0.25}
 --- !u!65 &1695786302
 BoxCollider:
@@ -24650,7 +24650,7 @@ MonoBehaviour:
   armorMm: 53
   material: 1
   ricochetBonusDeg: 0
-  drawGizmo: 1
+  drawGizmo: 0
   gizmoColor: {r: 0, g: 1, b: 1, a: 0.25}
 --- !u!65 &1805883914
 BoxCollider:
@@ -24725,7 +24725,7 @@ MonoBehaviour:
   armorMm: 45
   material: 0
   ricochetBonusDeg: 0
-  drawGizmo: 1
+  drawGizmo: 0
   gizmoColor: {r: 0, g: 1, b: 1, a: 0.25}
 --- !u!65 &1838795496
 BoxCollider:
@@ -24847,8 +24847,8 @@ Transform:
   m_GameObject: {fileID: 1843072874}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 37.89, y: 0.555, z: 281.95}
-  m_LocalScale: {x: 5.4884, y: 1.8382312, z: 0.13264506}
+  m_LocalPosition: {x: -49.843, y: 1.143, z: 537.414}
+  m_LocalScale: {x: 0.7052594, y: 1.8382312, z: 0.13264506}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -26198,7 +26198,7 @@ MonoBehaviour:
   armorMm: 99
   material: 1
   ricochetBonusDeg: 0
-  drawGizmo: 1
+  drawGizmo: 0
   gizmoColor: {r: 0, g: 1, b: 1, a: 0.25}
 --- !u!1 &2010580509
 GameObject:
@@ -26695,7 +26695,7 @@ MonoBehaviour:
   armorMm: 53
   material: 1
   ricochetBonusDeg: 0
-  drawGizmo: 1
+  drawGizmo: 0
   gizmoColor: {r: 0, g: 1, b: 1, a: 0.25}
 --- !u!65 &2054304839
 BoxCollider:
@@ -27148,7 +27148,7 @@ MonoBehaviour:
   armorMm: 25
   material: 1
   ricochetBonusDeg: 0
-  drawGizmo: 1
+  drawGizmo: 0
   gizmoColor: {r: 0, g: 1, b: 1, a: 0.25}
 --- !u!65 &2101236150
 BoxCollider:

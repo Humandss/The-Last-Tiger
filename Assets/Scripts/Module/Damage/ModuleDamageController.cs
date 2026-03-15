@@ -49,11 +49,11 @@ public class ModuleDamageController : MonoBehaviour, IDamageable
     [SerializeField] private float damagedThreshold01 = 0.6f;
 
     [Header("Multipliers")]
-    [SerializeField] private float directMul = 1.0f;   // 직격 배수
-    [SerializeField] private float fragMul = 1.0f;     // 파편 배수
-    [SerializeField] private float defaultFireDam =1.0f;
-    [SerializeField] private float ammoFireDam = 10.0f;
-    [SerializeField] private float explosionDam = 150.0f;
+    [SerializeField] private float directMul = 4f;   // 직격 배수
+    [SerializeField] private float fragMul = 1f;     // 파편 배수
+    [SerializeField] private float defaultFireDam =1f;
+    [SerializeField] private float ammoFireDam = 10f;
+    [SerializeField] private float explosionDam = 150f;
 
     [Header("Tuning")]
     [SerializeField] private bool destroyObjectOnZero = false;
