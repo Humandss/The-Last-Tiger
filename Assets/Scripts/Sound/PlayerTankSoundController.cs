@@ -555,7 +555,7 @@ public class PlayerTankSoundController : SoundController
         if (subtitleManager != null)
         {
             subtitleManager.Show(cue, duration);
-            Debug.Log(cue);
+
         }
             
     }

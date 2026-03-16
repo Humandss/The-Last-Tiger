@@ -84,6 +84,15 @@ public class CameraController : MonoBehaviour
 
     private void Update()
     {
+        if (PlayerCrewInteriorOverlay.IsInputCaptured)
+        {
+            RestoreCursorState();
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+            UpdateZoomFov(Time.deltaTime);
+            return;
+        }
+
         HandleZoomInput();
         UpdateZoomFov(Time.deltaTime);
         RefreshCursorState();

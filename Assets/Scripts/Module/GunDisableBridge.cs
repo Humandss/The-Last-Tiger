@@ -32,7 +32,7 @@ public class GunDisableBridge : MonoBehaviour
     private void OnGunStateChanged(ModuleDamageController who, ModuleState prev, ModuleState next)
     {
         if (gunner == null) return;
-        if (next == ModuleState.Destroyed) gunner.SetGunDestroyed();
+        gunner.SetGunDestroyed(next == ModuleState.Destroyed);
         gunner.SetGunHpRatio(who.Hp01);
         Debug.Log($"[GunBridge] 포신 → state={next} hp={who.Hp01:0.00}");
     }
@@ -40,7 +40,7 @@ public class GunDisableBridge : MonoBehaviour
     private void OnBreechStateChanged(ModuleDamageController who, ModuleState prev, ModuleState next)
     {
         if (gunner == null) return;
-        if (next == ModuleState.Destroyed) gunner.SetBreechDestroyed();
+        gunner.SetBreechDestroyed(next == ModuleState.Destroyed);
         Debug.Log($"[GunBridge] 브리치 → state={next}");
     }
 
@@ -50,13 +50,13 @@ public class GunDisableBridge : MonoBehaviour
 
         if (gunModule != null)
         {
-            if (gunModule.State == ModuleState.Destroyed) gunner.SetGunDestroyed();
+            gunner.SetGunDestroyed(gunModule.State == ModuleState.Destroyed);
             gunner.SetGunHpRatio(gunModule.Hp01);
         }
 
         if (breechModule != null)
         {
-            if (breechModule.State == ModuleState.Destroyed) gunner.SetBreechDestroyed();
+            gunner.SetBreechDestroyed(breechModule.State == ModuleState.Destroyed);
         }
     }
 }

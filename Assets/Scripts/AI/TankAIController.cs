@@ -12,7 +12,7 @@ public class TankAIController : MonoBehaviour
     [SerializeField] private Transform turret;
     [SerializeField] private AIProfile profile;
     [SerializeField] private Transform player;
-    [SerializeField] private TankCrewManager crewManager;
+    [SerializeField] private TankCrewManagerBase crewManager;
 
     [Header("Patrol")]
     [SerializeField] private Transform[] waypoints;

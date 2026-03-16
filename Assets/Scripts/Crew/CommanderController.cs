@@ -45,6 +45,8 @@ public class CommanderController : MonoBehaviour
 
     private void Update()
     {
+        if (PlayerCrewInteriorOverlay.IsInputCaptured) return;
+
         HandleViewModeInput();
 
         if (requireRightMouse && !Input.GetMouseButton(1)) return;

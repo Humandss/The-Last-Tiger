@@ -5,16 +5,14 @@ using UnityEngine.AI;
 
 public class TankAIDriver : MonoBehaviour
 {
-
-
     [Header("Refs")]
-    [SerializeField] private DriverController driver; // 플레이어랑 동일한 컴포넌트 재사용
+    [SerializeField] private DriverController driver;
     [SerializeField] private NavMeshAgent agent;
 
     [Header("Settings")]
-    [SerializeField] private float arrivalRadius = 1.5f;    // 도착 판정
-    [SerializeField] private float angleToMove = 25f;       // 이 각도 이내면 전진
-    [SerializeField] private float pivotThreshold = 60f;    // 이 각도 넘으면 제자리 회전
+    [SerializeField] private float arrivalRadius = 1.5f;
+    [SerializeField] private float angleToMove = 25f;
+    [SerializeField] private float pivotThreshold = 60f;
 
     private Vector3 destination;
     private bool hasDestination = false;
@@ -25,13 +23,16 @@ public class TankAIDriver : MonoBehaviour
     private void Update()
     {
         if (driverDead) return;
+        if (agent == null || !agent.enabled) return;
 
         if (isReversing)
         {
             UpdateReverseInput();
             return;
         }
+
         if (!hasDestination) return;
+        if (!agent.isOnNavMesh) return;
         if (!agent.hasPath) return;
 
         UpdateAIInput();
@@ -39,14 +40,12 @@ public class TankAIDriver : MonoBehaviour
 
     private void UpdateAIInput()
     {
-        // NavMesh가 계산한 다음 스티어링 포인트
         Vector3 nextPoint = agent.steeringTarget;
         Vector3 dir = nextPoint - transform.position;
         dir.y = 0f;
 
         if (dir.sqrMagnitude < 1e-4f)
         {
-            // 도착
             driver.SetInput(0f, 0f, 0f);
             return;
         }
@@ -54,44 +53,41 @@ public class TankAIDriver : MonoBehaviour
         float angle = Vector3.SignedAngle(transform.forward, dir.normalized, Vector3.up);
         float absAngle = Mathf.Abs(angle);
 
-        float throttle, steer, pivot;
+        float throttle;
+        float steer;
+        float pivot;
 
         if (absAngle > pivotThreshold)
         {
-            // 많이 틀어졌으면 제자리 회전 우선
             throttle = 0f;
             steer = 0f;
             pivot = Mathf.Sign(angle);
         }
         else if (absAngle > angleToMove)
         {
-            // 조금 틀어졌으면 전진하면서 조향
             throttle = 0.5f;
             steer = Mathf.Clamp(angle / 45f, -1f, 1f);
             pivot = 0f;
         }
         else
         {
-            // 방향 맞으면 전진
             throttle = 1f;
             steer = Mathf.Clamp(angle / 45f, -1f, 1f);
             pivot = 0f;
         }
 
         driver.SetInput(throttle, steer, pivot);
-
-        // NavMeshAgent 위치 동기화 (경로 계산용)
         agent.nextPosition = transform.position;
     }
+
     private void UpdateReverseInput()
     {
-        // 제자리 회전 없이 항상 후진 + 조향
         Vector3 backward = -transform.forward;
         float angle = Vector3.SignedAngle(backward, reverseDir, Vector3.up);
         float steer = Mathf.Clamp(angle / 45f, -1f, 1f);
-
         driver.SetInput(-1f, steer, 0f);
     }
+
     public void SetReverseDestination(Vector3 awayFrom)
     {
         isReversing = true;
@@ -101,12 +97,34 @@ public class TankAIDriver : MonoBehaviour
         dir.y = 0f;
         reverseDir = dir.sqrMagnitude > 1e-4f ? dir.normalized : -transform.forward;
     }
+
     public void SetDestination(Vector3 dest)
     {
-        isReversing = false; 
+        isReversing = false;
         destination = dest;
         hasDestination = true;
-        agent.SetDestination(dest);
+
+        if (agent == null || !agent.enabled)
+        {
+            hasDestination = false;
+            return;
+        }
+
+        if (!agent.isOnNavMesh)
+        {
+            if (NavMesh.SamplePosition(transform.position, out var selfHit, 8f, NavMesh.AllAreas))
+                agent.Warp(selfHit.position);
+            else
+            {
+                hasDestination = false;
+                return;
+            }
+        }
+
+        if (NavMesh.SamplePosition(dest, out var destHit, 8f, NavMesh.AllAreas))
+            agent.SetDestination(destHit.position);
+        else
+            agent.SetDestination(dest);
     }
 
     public void Stop()
@@ -115,15 +133,20 @@ public class TankAIDriver : MonoBehaviour
         hasDestination = false;
         driver.SetInput(0f, 0f, 0f);
     }
-    
+
     public void SetDriverDead()
     {
         driverDead = true;
-        agent.enabled = false;
+        if (agent != null)
+            agent.enabled = false;
         Stop();
     }
+
     public bool IsArrived()
     {
+        if (agent == null || !agent.enabled || !agent.isOnNavMesh)
+            return false;
+
         return !agent.pathPending && agent.remainingDistance < arrivalRadius;
     }
 }

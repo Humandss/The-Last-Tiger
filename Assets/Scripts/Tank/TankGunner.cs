@@ -25,6 +25,7 @@ public abstract class TankGunner : MonoBehaviour
     [SerializeField] private bool gunDestroyed;
     [SerializeField] private bool breechDestroyed;
     [SerializeField] private bool gunnerDead;
+    [SerializeField] private bool gunnerTaskBlocked;
 
     [Header("Dispersion")]
     [SerializeField] protected bool useDispersion = true;
@@ -44,10 +45,12 @@ public abstract class TankGunner : MonoBehaviour
     protected float prevGunPitch;
 
     public void SetGunDestroyed() => gunDestroyed = true;
+    public void SetGunDestroyed(bool destroyed) => gunDestroyed = destroyed;
     public void SetBreechDestroyed() => breechDestroyed = true;
+    public void SetBreechDestroyed(bool destroyed) => breechDestroyed = destroyed;
     public void SetGunnerDead() => gunnerDead = true;
-    public bool IsGunnerDead() => gunnerDead;
-    public bool CanFire => !gunDestroyed && !breechDestroyed && !gunnerDead;
+    public bool IsGunnerDead() => gunnerDead || gunnerTaskBlocked;
+    public bool CanFire => !gunDestroyed && !breechDestroyed && !gunnerDead && !gunnerTaskBlocked;
 
     public bool IsGunEquipmentOk => !gunDestroyed && !breechDestroyed;
 
@@ -177,6 +180,10 @@ public abstract class TankGunner : MonoBehaviour
         gunnerDead = dead;
         gunnerMul = Mathf.Lerp(0.45f, 1f, Mathf.Clamp01(hpRatio)); // 최소 45%까지
     }
+    public void SetGunnerTaskBlocked(bool blocked)
+    {
+        gunnerTaskBlocked = blocked;
+    }
     public void SetGunHpRatio(float hpRatio)
     {
         gunHpRatio = Mathf.Clamp01(hpRatio);
@@ -207,3 +214,7 @@ public abstract class TankGunner : MonoBehaviour
     public abstract void ApplyFcsToWorldPoint();
     public abstract bool TrySolvePitchForRange(out float solvedPitchDeg);
 }
+
+
+
+

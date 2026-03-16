@@ -61,6 +61,11 @@ public class GunnerController : TankGunner, ITankGunner
 
     private void Update()
     {
+        if (PlayerCrewInteriorOverlay.IsInputCaptured)
+        {
+            UpdateTurretSound();
+            return;
+        }
         if (Input.GetMouseButtonDown(2))
         {
             Ray ray = commanderCam.ScreenPointToRay(Input.mousePosition);
@@ -90,7 +95,7 @@ public class GunnerController : TankGunner, ITankGunner
 
         if (IsGunnerDead())
         {
-            Debug.Log("[Gunner] 사망! 포탑 조종 불가");
+            Debug.Log("[Gunner] ���!");
             isAiming = false;
             isAligning = false;
             StopTracking();
@@ -139,7 +144,6 @@ public class GunnerController : TankGunner, ITankGunner
             SetRange(rangeMeters + rangeStep);
             _rangeRepeatDir = +1;
             _rangeRepeatTimer = repeatDelay;
-            Debug.Log($"[Gunner] 사거리 -> {targetPoint}");
             return;
         }
 
@@ -148,7 +152,6 @@ public class GunnerController : TankGunner, ITankGunner
             SetRange(rangeMeters - rangeStep);
             _rangeRepeatDir = -1;
             _rangeRepeatTimer = repeatDelay;
-            Debug.Log($"[Gunner] 사거리 -> {targetPoint}");
             return;
         }
 
@@ -187,7 +190,7 @@ public class GunnerController : TankGunner, ITankGunner
     {
         if (!targetPoint.HasValue)
         {
-            Debug.LogWarning("[Gunner] 지정한 지점이 없어. 먼저 미들클릭으로 지점을 지정해줘");
+            Debug.LogWarning("[Gunner] No designated point. Use middle mouse to designate a point first.");
             return;
         }
 
@@ -196,21 +199,18 @@ public class GunnerController : TankGunner, ITankGunner
             trackingTarget = designatedTarget;
             StartTracking();
             isAiming = false;
-            Debug.Log($"[Gunner] 트래킹 에임 시작 -> {trackingTarget.name}");
             return;
         }
 
         StopTracking();
         isAiming = true;
         aimPoint = targetPoint.Value;
-        Debug.Log($"[Gunner] 고정 사인 에임 -> {aimPoint}");
     }
 
     public void AlignHull()
     {
         isAiming = false;
         isAligning = true;
-        Debug.Log("[Gunner] 차신 정렬!");
     }
 
     private bool AlignHullStep()
@@ -243,14 +243,14 @@ public class GunnerController : TankGunner, ITankGunner
         designatedTarget = null;
         targetPoint = null;
         StopTracking();
-        Debug.Log("[Gunner] 공격 대기");
+        Debug.Log("[Gunner] Cease action");
     }
 
     public void SetRange(float meters)
     {
         if (float.IsNaN(meters) || float.IsInfinity(meters))
         {
-            Debug.LogWarning("[Gunner] 사거리 입력이 유효하지 않아 무시합니다");
+            Debug.LogWarning("[Gunner] Invalid range input ignored.");
             return;
         }
 
@@ -264,7 +264,6 @@ public class GunnerController : TankGunner, ITankGunner
         if (loaded == null)
         {
             rangeMeters = prevRange;
-            Debug.LogWarning("[Gunner] 장전된 포탄이 없어 FCS 계산 불가");
             return;
         }
 
@@ -273,7 +272,6 @@ public class GunnerController : TankGunner, ITankGunner
         if (!TrySolvePitchForRange(out float pitchDeg))
         {
             rangeMeters = prevRange;
-            Debug.LogWarning("[Gunner] FCS 솔브 실패(도달 불가 or 수치 제한)");
             return;
         }
 
@@ -283,27 +281,25 @@ public class GunnerController : TankGunner, ITankGunner
         pitchTargetLocalX = targetLocalX;
         isAligning = false;
 
-        Debug.Log($"[Gunner] 사거리 = {rangeMeters:0}m");
-        Debug.Log($"[Gunner] 고각 목표 -> {pitchDeg:0.00}deg (localX={pitchTargetLocalX:0.00})");
     }
 
     public override void Fire()
     {
         if (!CanFire)
         {
-            Debug.Log("[Gunner] 자신 고장! 사격 불가");
+            Debug.Log("[Gunner] ��ݺҰ�!");
             return;
         }
 
         if (!loaderFunc.GetIsLoaded() || loaderFunc.GetIsLoading())
         {
-            Debug.Log("[Gunner] 장전이 되지 않았습니다. 사격 불가");
+            Debug.Log("[Gunner] ������ �ȵ���!");
             return;
         }
 
         Vector3 shotDir = GetDispersionShotDirection();
         AmmoType loadedAmmo = loaderFunc.GetLoadedAmmoType();
-        Debug.Log($"[Gunner] 발사! range={rangeMeters:0}m dir={shotDir}");
+        Debug.Log($"[Gunner] ����! range={rangeMeters:0}m dir={shotDir}");
 
         fireController.FireProjectile(shotDir, loadedAmmo);
         soundController.PlayGunFireClips();
@@ -507,3 +503,4 @@ public class GunnerController : TankGunner, ITankGunner
     public float MaxRangeMeters => maxAimDistance;
     public float MinRangeMeters => 5f;
 }
+

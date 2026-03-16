@@ -1,9 +1,11 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-[RequireComponent(typeof(CameraController))]
 public class ZoomScopeOverlay : MonoBehaviour
 {
+    [Header("Refs")]
+    [SerializeField] private CameraController cameraController;
+
     [Header("Build")]
     [SerializeField] private int sortingOrder = -100;
 
@@ -19,7 +21,6 @@ public class ZoomScopeOverlay : MonoBehaviour
     [Header("Reticle")]
     [SerializeField] private Color crosshairColor = new Color(1f, 1f, 1f, 0.75f);
 
-    private CameraController cameraController;
     private CanvasGroup canvasGroup;
     private RawImage vignetteImage;
     private RectTransform crosshairRoot;
@@ -29,7 +30,8 @@ public class ZoomScopeOverlay : MonoBehaviour
 
     private void Awake()
     {
-        cameraController = GetComponent<CameraController>();
+        if (cameraController == null)
+            cameraController = FindObjectOfType<CameraController>(true);
         BuildUI();
         RefreshLayout(true);
     }
@@ -43,6 +45,8 @@ public class ZoomScopeOverlay : MonoBehaviour
 
     private void Update()
     {
+        if (cameraController == null)
+            cameraController = FindObjectOfType<CameraController>(true);
         if (cameraController == null || canvasGroup == null) return;
 
         float t = cameraController.IsZooming ? Mathf.Lerp(0.35f, 1f, cameraController.ZoomAmount01) : 0f;

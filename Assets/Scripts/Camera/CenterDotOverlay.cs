@@ -1,9 +1,11 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-[RequireComponent(typeof(CameraController))]
 public class CenterDotOverlay : MonoBehaviour
 {
+    [Header("Refs")]
+    [SerializeField] private CameraController cameraController;
+
     [Header("Build")]
     [SerializeField] private bool buildOnAwake = true;
     [SerializeField] private int sortingOrder = 9998;
@@ -19,7 +21,6 @@ public class CenterDotOverlay : MonoBehaviour
     [SerializeField, Min(12)] private int reloadFontSize = 20;
     [SerializeField, Min(0f)] private float reloadTextOffsetY = 52f;
 
-    private CameraController cameraController;
     private GameObject overlayRoot;
     private GameObject dotGroup;
     private Text reloadText;
@@ -27,7 +28,8 @@ public class CenterDotOverlay : MonoBehaviour
 
     private void Awake()
     {
-        cameraController = GetComponent<CameraController>();
+        if (cameraController == null)
+            cameraController = FindObjectOfType<CameraController>(true);
         if (loaderController == null)
             loaderController = FindNearestPlayerLoader();
         if (buildOnAwake) BuildUI();
@@ -44,7 +46,7 @@ public class CenterDotOverlay : MonoBehaviour
 
     private void Update()
     {
-        if (cameraController == null) cameraController = GetComponent<CameraController>();
+        if (cameraController == null) cameraController = FindObjectOfType<CameraController>(true);
         if (overlayRoot == null) overlayRoot = FindOverlayRoot();
         if (overlayRoot == null) return;
         if (dotGroup == null || reloadText == null) ResolveUiRefs();

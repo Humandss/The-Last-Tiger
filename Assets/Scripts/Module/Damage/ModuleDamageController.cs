@@ -118,6 +118,32 @@ public class ModuleDamageController : MonoBehaviour, IDamageable
 
     public ModuleType Type => moduleType;
 
+    public void RepairToFull()
+    {
+        RepairToHp(maxHp);
+    }
+
+    public void RepairToDamagedState()
+    {
+        float targetHp01 = Mathf.Clamp01(damagedThreshold01 * 0.9f);
+        float targetHp = Mathf.Max(1f, maxHp * targetHp01);
+        RepairToHp(targetHp);
+    }
+
+    public void RepairToHp(float targetHp)
+    {
+        float clampedTargetHp = Mathf.Clamp(targetHp, 0f, maxHp);
+        if (clampedTargetHp <= hp)
+            return;
+
+        var prevState = State;
+        hp = clampedTargetHp;
+        var nextState = State;
+
+        if (prevState != nextState)
+            OnStateChanged?.Invoke(this, prevState, nextState);
+    }
+
 
     public ModuleState State
     {
