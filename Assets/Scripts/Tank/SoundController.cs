@@ -24,12 +24,39 @@ public abstract class SoundController : MonoBehaviour
     [SerializeField] private AudioClip[] ammoExplosion;
     [SerializeField] private float ammoExplosionVolume = 1.0f;
 
+    [Header("Fire Effect")]
+    [SerializeField] private AudioClip fireLoopClip;
+    [SerializeField] private float fireLoopVolume = 1f;
+    private AudioSource fireLoopSource;
+
     private bool isMoving = false;
 
     public void IsTurretMoving(bool isMoving) => SetTurretMoving(isMoving);
     public void PlayGunFireClips() => PlayEffectSounds(gunFireClip, gunFireVolume);
     public void PlayAmmoExplosion() => PlayEffectSounds(ammoExplosion, ammoExplosionVolume);
     public void PlayAmmoPop() => PlayEffectSounds(ammoPop, ammoPopVolume);
+    public void PlayFire() => StartFireLoop();
+    public void StopFire() => StopFireLoop();
+
+    private void StartFireLoop()
+    {
+        if (fireLoopSource == null)
+            fireLoopSource = EnsureSourceExists(null, "Audio_FireLoop");
+
+        if (fireLoopSource == null || fireLoopClip == null) return;
+        if (fireLoopSource.isPlaying) return;
+        fireLoopSource.clip   = fireLoopClip;
+        fireLoopSource.loop   = true;
+        fireLoopSource.volume = fireLoopVolume;
+        fireLoopSource.spatialBlend = 1f;
+        fireLoopSource.Play();
+    }
+
+    private void StopFireLoop()
+    {
+        if (fireLoopSource != null && fireLoopSource.isPlaying)
+            fireLoopSource.Stop();
+    }
 
     protected virtual void Awake()
     {
@@ -55,9 +82,11 @@ public abstract class SoundController : MonoBehaviour
 
     private void EnsureDedicatedAudioSources()
     {
-        normalSource = EnsureSourceExists(normalSource, "Audio_Normal");
-        loopSource = EnsureSourceExists(loopSource, "Audio_EngineLoop");
+        normalSource      = EnsureSourceExists(normalSource,      "Audio_Normal");
+        loopSource        = EnsureSourceExists(loopSource,        "Audio_EngineLoop");
         turretAudioSource = EnsureSourceExists(turretAudioSource, "Audio_Turret");
+        fireLoopSource    = EnsureSourceExists(fireLoopSource,    "Audio_FireLoop");
+        fireLoopSource.loop = true;
 
         if (ReferenceEquals(loopSource, normalSource))
             loopSource = CreateDedicatedSource("Audio_EngineLoop_Auto", loopSource);

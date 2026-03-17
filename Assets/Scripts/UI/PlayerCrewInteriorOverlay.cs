@@ -17,6 +17,8 @@ public class PlayerCrewInteriorOverlay : MonoBehaviour
     [SerializeField] private bool buildOnAwake = true;
     [SerializeField] private bool startVisible = false;
     [SerializeField] private int sortingOrder = 15000;
+    [SerializeField] private Vector2 crewPopupPivot   = new Vector2(1f, 1f);
+    [SerializeField] private Vector2 modulePopupPivot = new Vector2(1f, 1f);
 
     [Header("Layout")]
     [SerializeField] private Vector2 panelSize = new Vector2(920f, 520f);
@@ -37,8 +39,11 @@ public class PlayerCrewInteriorOverlay : MonoBehaviour
     [SerializeField] private Color damagedColor = new Color(0.98f, 0.78f, 0.36f, 1f);
     [SerializeField] private Color destroyedColor = new Color(0.92f, 0.32f, 0.26f, 1f);
     [SerializeField] private Color emptyColor = new Color(0.44f, 0.48f, 0.53f, 0.85f);
+    [SerializeField] private Color fireColor = new Color(1.0f, 0.3f, 0.15f, 1f);
 
     private GameObject overlayRoot;
+    private RectTransform mainPanelRect;
+    private Canvas mainCanvas;
     private Font builtinFont;
     private ModuleDamageController[] cachedModules;
     private int lastScreenWidth;
@@ -47,19 +52,25 @@ public class PlayerCrewInteriorOverlay : MonoBehaviour
     private readonly List<CrewRow> crewRows = new List<CrewRow>();
     private readonly List<ModuleRowUI> damagedRows = new List<ModuleRowUI>();
     private readonly List<ModuleRowUI> destroyedRows = new List<ModuleRowUI>();
+
+    // Action panel
     private Text actionTitleText;
     private Text selectionText;
-    private Button moveDriverButton;
-    private Button moveGunnerButton;
-    private Button moveLoaderButton;
-    private Button repairDriverButton;
-    private Button repairGunnerButton;
-    private Button repairLoaderButton;
-    private Button repairMachineGunnerButton;
-    private GameObject moveButtonsRow;
-    private GameObject repairButtonsRow;
-    private ModuleType selectedCrewType = ModuleType.Commander;
-    private ModuleDamageController selectedRepairModule;
+    private Button suppressDriverButton;
+    private Button suppressGunnerButton;
+    private Button suppressLoaderButton;
+    private Button suppressMGButton;
+    private GameObject suppressionButtonsRow;
+
+    // Crew swap popup
+    private GameObject crewPopupPanel;
+    private RectTransform crewPopupRect;
+    private ModuleType popupCrewType = ModuleType.Commander; // Commander = none
+
+    // Module repair popup
+    private GameObject modulePopupPanel;
+    private RectTransform modulePopupRect;
+    private ModuleDamageController popupModule = null;
 
     private sealed class CrewRow
     {
@@ -68,6 +79,7 @@ public class PlayerCrewInteriorOverlay : MonoBehaviour
         public Button button;
         public Text labelText;
         public Text valueText;
+        public RectTransform rowRect;
     }
 
     private sealed class ModuleRowUI
@@ -78,12 +90,12 @@ public class PlayerCrewInteriorOverlay : MonoBehaviour
         public ModuleDamageController module;
     }
 
+    // ── Unity Lifecycle ─────────────────────────────────────────────
+
     private void Awake()
     {
-        if (moduleManager == null)
-            moduleManager = GetComponent<ModuleManager>();
-        if (crewManager == null)
-            crewManager = GetComponent<PlayerCrewManager>();
+        if (moduleManager == null) moduleManager = GetComponent<ModuleManager>();
+        if (crewManager == null)   crewManager   = GetComponent<PlayerCrewManager>();
 
         CacheModules();
 
@@ -112,8 +124,24 @@ public class PlayerCrewInteriorOverlay : MonoBehaviour
         }
 
         if (overlayRoot != null && overlayRoot.activeSelf)
+        {
+            // 팝업 외부 클릭 시 닫기
+            if (Input.GetMouseButtonDown(0))
+            {
+                Camera cam = mainCanvas != null && mainCanvas.renderMode != RenderMode.ScreenSpaceOverlay ? Camera.main : null;
+                if (crewPopupPanel != null && crewPopupPanel.activeSelf
+                    && !RectTransformUtility.RectangleContainsScreenPoint(crewPopupRect, Input.mousePosition, cam))
+                    HideCrewPopup();
+                if (modulePopupPanel != null && modulePopupPanel.activeSelf
+                    && !RectTransformUtility.RectangleContainsScreenPoint(modulePopupRect, Input.mousePosition, cam))
+                    HideModulePopup();
+            }
+
             RefreshUI();
+        }
     }
+
+    // ── Build ────────────────────────────────────────────────────────
 
     [ContextMenu("Build Crew Interior UI")]
     public void BuildUI()
@@ -122,14 +150,16 @@ public class PlayerCrewInteriorOverlay : MonoBehaviour
         crewRows.Clear();
         damagedRows.Clear();
         destroyedRows.Clear();
+        HideAllPopups();
         builtinFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
 
-        GameObject root = new GameObject("PlayerCrewInteriorOverlayUI", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
+        GameObject root = new GameObject("PlayerCrewInteriorOverlayUI",
+            typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
         overlayRoot = root;
 
-        Canvas canvas = root.GetComponent<Canvas>();
-        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-        canvas.sortingOrder = sortingOrder;
+        mainCanvas = root.GetComponent<Canvas>();
+        mainCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
+        mainCanvas.sortingOrder = sortingOrder;
 
         CanvasScaler scaler = root.GetComponent<CanvasScaler>();
         scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
@@ -149,13 +179,18 @@ public class PlayerCrewInteriorOverlay : MonoBehaviour
         backdrop.offsetMax = Vector2.zero;
 
         panelSize = GetResponsivePanelSize();
-        lastScreenWidth = Screen.width;
+        lastScreenWidth  = Screen.width;
         lastScreenHeight = Screen.height;
+
         RectTransform panel = CreateImageRect("Panel", root.transform, new Vector2(0.5f, 0.5f), panelSize, panelColor);
+        mainPanelRect = panel;
         AddOutline(panel.gameObject, borderColor, 1f);
 
         BuildHeader(panel);
         BuildBody(panel);
+        BuildCrewPopup(panel);
+        BuildModulePopup(panel);
+
         Canvas.ForceUpdateCanvases();
         LayoutRebuilder.ForceRebuildLayoutImmediate(panel);
         RefreshUI();
@@ -169,14 +204,14 @@ public class PlayerCrewInteriorOverlay : MonoBehaviour
         Text title = CreateText("Title", panel, "TANK STATUS", 30, TextAnchor.MiddleCenter, titleColor);
         title.rectTransform.anchorMin = new Vector2(0f, 1f);
         title.rectTransform.anchorMax = new Vector2(1f, 1f);
-        title.rectTransform.pivot = new Vector2(0.5f, 1f);
+        title.rectTransform.pivot     = new Vector2(0.5f, 1f);
         title.rectTransform.anchoredPosition = new Vector2(0f, -24f);
         title.rectTransform.sizeDelta = new Vector2(-40f, 34f);
 
         Text hint = CreateText("Hint", panel, "TAB TO CLOSE", 14, TextAnchor.MiddleCenter, labelColor);
         hint.rectTransform.anchorMin = new Vector2(0f, 1f);
         hint.rectTransform.anchorMax = new Vector2(1f, 1f);
-        hint.rectTransform.pivot = new Vector2(0.5f, 1f);
+        hint.rectTransform.pivot     = new Vector2(0.5f, 1f);
         hint.rectTransform.anchoredPosition = new Vector2(0f, -58f);
         hint.rectTransform.sizeDelta = new Vector2(-40f, 20f);
 
@@ -198,26 +233,26 @@ public class PlayerCrewInteriorOverlay : MonoBehaviour
         HorizontalLayoutGroup hlg = body.GetComponent<HorizontalLayoutGroup>();
         hlg.spacing = 24f;
         hlg.childAlignment = TextAnchor.UpperLeft;
-        hlg.childForceExpandWidth = true;
+        hlg.childForceExpandWidth  = true;
         hlg.childForceExpandHeight = true;
-        hlg.childControlWidth = true;
+        hlg.childControlWidth  = true;
         hlg.childControlHeight = true;
 
         ContentSizeFitter bodyFitter = body.AddComponent<ContentSizeFitter>();
         bodyFitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
-        bodyFitter.verticalFit = ContentSizeFitter.FitMode.Unconstrained;
+        bodyFitter.verticalFit   = ContentSizeFitter.FitMode.Unconstrained;
 
         RectTransform crewColumn = CreateColumn(body.transform, "CREW");
+
         GameObject dividerGo = new GameObject("Divider", typeof(RectTransform), typeof(Image));
         dividerGo.transform.SetParent(body.transform, false);
-        RectTransform divider = dividerGo.GetComponent<RectTransform>();
         Image dividerImage = dividerGo.GetComponent<Image>();
         dividerImage.color = dividerColor;
         dividerImage.raycastTarget = false;
-        LayoutElement dividerLayout = divider.gameObject.AddComponent<LayoutElement>();
-        dividerLayout.minWidth = 1f;
+        LayoutElement dividerLayout = dividerGo.AddComponent<LayoutElement>();
+        dividerLayout.minWidth      = 1f;
         dividerLayout.preferredWidth = 1f;
-        dividerLayout.flexibleWidth = 0f;
+        dividerLayout.flexibleWidth  = 0f;
         dividerLayout.flexibleHeight = 1f;
 
         RectTransform moduleColumn = CreateColumn(body.transform, "MODULE");
@@ -232,42 +267,42 @@ public class PlayerCrewInteriorOverlay : MonoBehaviour
         GameObject column = new GameObject(header + "Column", typeof(RectTransform), typeof(VerticalLayoutGroup));
         column.transform.SetParent(parent, false);
 
-        RectTransform rect = column.GetComponent<RectTransform>();
         LayoutElement layout = column.AddComponent<LayoutElement>();
-        layout.flexibleWidth = 1f;
+        layout.flexibleWidth  = 1f;
         layout.flexibleHeight = 1f;
-        layout.minWidth = 0f;
+        layout.minWidth       = 0f;
         layout.preferredWidth = panelSize.x * 0.46f;
 
         VerticalLayoutGroup vlg = column.GetComponent<VerticalLayoutGroup>();
         vlg.spacing = 12f;
         vlg.childAlignment = TextAnchor.UpperLeft;
-        vlg.childForceExpandWidth = true;
+        vlg.childForceExpandWidth  = true;
         vlg.childForceExpandHeight = false;
-        vlg.childControlWidth = true;
+        vlg.childControlWidth  = true;
         vlg.childControlHeight = true;
         vlg.padding = new RectOffset(0, 0, 8, 0);
 
-        Text headerText = CreateText(header + "Header", rect, header, 24, TextAnchor.MiddleLeft, titleColor);
+        Text headerText = CreateText(header + "Header", column.GetComponent<RectTransform>(), header, 24, TextAnchor.MiddleLeft, titleColor);
         LayoutElement headerLayout = headerText.gameObject.AddComponent<LayoutElement>();
         headerLayout.preferredHeight = 30f;
 
-        return rect;
+        return column.GetComponent<RectTransform>();
     }
 
     private void BuildCrewColumn(RectTransform column)
     {
-        AddCrewRow(column, "Commander(You)", ModuleType.Commander, 0);
-        AddCrewRow(column, "Gunner", ModuleType.Gunner, 0);
-        AddCrewRow(column, "Loader", ModuleType.Loader, 0);
-        AddCrewRow(column, "Driver", ModuleType.Driver, 0);
+        AddCrewRow(column, "Commander", ModuleType.Commander, 0);
+        AddCrewRow(column, "Gunner",         ModuleType.Gunner,    0);
+        AddCrewRow(column, "Loader",         ModuleType.Loader,    0);
+        AddCrewRow(column, "Driver",         ModuleType.Driver,    0);
         AddDividerLine(column, "DriverToMGLine");
         AddCrewRow(column, "Machine Gunner", ModuleType.MachineGunner, 0);
     }
 
     private void AddCrewRow(RectTransform parent, string label, ModuleType type, int indexWithinType)
     {
-        GameObject row = new GameObject(label + "Row", typeof(RectTransform), typeof(Image), typeof(Button), typeof(HorizontalLayoutGroup));
+        GameObject row = new GameObject(label + "Row",
+            typeof(RectTransform), typeof(Image), typeof(Button), typeof(HorizontalLayoutGroup));
         row.transform.SetParent(parent, false);
 
         Image rowImage = row.GetComponent<Image>();
@@ -277,34 +312,36 @@ public class PlayerCrewInteriorOverlay : MonoBehaviour
         Button rowButton = row.GetComponent<Button>();
         rowButton.transition = Selectable.Transition.ColorTint;
         ColorBlock cb = rowButton.colors;
-        cb.normalColor = new Color(1f, 1f, 1f, 0.02f);
+        cb.normalColor      = new Color(1f, 1f, 1f, 0.02f);
         cb.highlightedColor = new Color(1f, 1f, 1f, 0.08f);
-        cb.pressedColor = new Color(1f, 1f, 1f, 0.12f);
-        cb.selectedColor = new Color(1f, 1f, 1f, 0.10f);
-        cb.disabledColor = new Color(1f, 1f, 1f, 0.01f);
+        cb.pressedColor     = new Color(1f, 1f, 1f, 0.12f);
+        cb.selectedColor    = new Color(1f, 1f, 1f, 0.10f);
+        cb.disabledColor    = new Color(1f, 1f, 1f, 0.01f);
         rowButton.colors = cb;
-        ModuleType capturedType = type;
-        rowButton.onClick.AddListener(() => SelectCrew(capturedType));
+
+        RectTransform rowRect    = row.GetComponent<RectTransform>();
+        ModuleType    capturedType = type;
+        rowButton.onClick.AddListener(() => OnCrewRowClicked(capturedType, rowRect));
 
         LayoutElement rowLayout = row.AddComponent<LayoutElement>();
         rowLayout.preferredHeight = 34f;
 
         HorizontalLayoutGroup hlg = row.GetComponent<HorizontalLayoutGroup>();
         hlg.spacing = 16f;
-        hlg.childAlignment = TextAnchor.MiddleLeft;
-        hlg.childForceExpandWidth = false;
+        hlg.childAlignment       = TextAnchor.MiddleLeft;
+        hlg.childForceExpandWidth  = false;
         hlg.childForceExpandHeight = true;
-        hlg.childControlWidth = true;
+        hlg.childControlWidth  = true;
         hlg.childControlHeight = true;
 
         Text nameText = CreateText(label + "Name", row.transform, label, 21, TextAnchor.MiddleLeft, titleColor);
         LayoutElement nameLayout = nameText.gameObject.AddComponent<LayoutElement>();
         nameLayout.flexibleWidth = 1f;
-        nameLayout.minWidth = 180f;
+        nameLayout.minWidth      = 180f;
 
         Text valueText = CreateText(label + "Value", row.transform, "OK", 19, TextAnchor.MiddleRight, normalColor);
         valueText.horizontalOverflow = HorizontalWrapMode.Overflow;
-        valueText.verticalOverflow = VerticalWrapMode.Truncate;
+        valueText.verticalOverflow   = VerticalWrapMode.Truncate;
         LayoutElement valueLayout = valueText.gameObject.AddComponent<LayoutElement>();
         valueLayout.preferredWidth = 220f;
 
@@ -312,11 +349,12 @@ public class PlayerCrewInteriorOverlay : MonoBehaviour
 
         crewRows.Add(new CrewRow
         {
-            type = type,
-            indexWithinType = indexWithinType,
-            button = rowButton,
-            labelText = nameText,
-            valueText = valueText
+            type             = type,
+            indexWithinType  = indexWithinType,
+            button           = rowButton,
+            labelText        = nameText,
+            valueText        = valueText,
+            rowRect          = rowRect
         });
     }
 
@@ -324,15 +362,14 @@ public class PlayerCrewInteriorOverlay : MonoBehaviour
     {
         GameObject line = new GameObject(name, typeof(RectTransform), typeof(Image));
         line.transform.SetParent(parent, false);
-        Image lineImage = line.GetComponent<Image>();
-        lineImage.color = dividerColor;
+        line.GetComponent<Image>().color = dividerColor;
         LayoutElement lineLayout = line.AddComponent<LayoutElement>();
         lineLayout.preferredHeight = 1f;
     }
 
     private void BuildModuleColumn(RectTransform column)
     {
-        AddSectionHeader(column, "Damaged", damagedColor);
+        AddSectionHeader(column, "Damaged",   damagedColor);
         for (int i = 0; i < 6; i++)
             damagedRows.Add(AddModuleRow(column, "DamagedRow" + i));
 
@@ -345,40 +382,31 @@ public class PlayerCrewInteriorOverlay : MonoBehaviour
     private void AddSectionHeader(RectTransform parent, string title, Color color)
     {
         Text header = CreateText(title + "Header", parent, title, 20, TextAnchor.MiddleLeft, color);
-        LayoutElement layout = header.gameObject.AddComponent<LayoutElement>();
-        layout.preferredHeight = 26f;
+        header.gameObject.AddComponent<LayoutElement>().preferredHeight = 26f;
     }
 
     private ModuleRowUI AddModuleRow(RectTransform parent, string name)
     {
-        GameObject rowRoot = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(LayoutElement), typeof(ModuleRowClickHandler));
+        GameObject rowRoot = new GameObject(name,
+            typeof(RectTransform), typeof(Image), typeof(LayoutElement), typeof(ModuleRowClickHandler));
         rowRoot.transform.SetParent(parent, false);
 
         Image bg = rowRoot.GetComponent<Image>();
         bg.color = new Color(1f, 1f, 1f, 0.015f);
         bg.raycastTarget = true;
 
-        LayoutElement layout = rowRoot.GetComponent<LayoutElement>();
-        layout.preferredHeight = 24f;
+        rowRoot.GetComponent<LayoutElement>().preferredHeight = 24f;
 
-        Text row = CreateText(name + "Text", rowRoot.transform, string.Empty, 18, TextAnchor.MiddleLeft, labelColor);
-        row.rectTransform.anchorMin = Vector2.zero;
-        row.rectTransform.anchorMax = Vector2.one;
-        row.rectTransform.offsetMin = new Vector2(8f, 0f);
-        row.rectTransform.offsetMax = new Vector2(-8f, 0f);
-        row.horizontalOverflow = HorizontalWrapMode.Overflow;
-        row.verticalOverflow = VerticalWrapMode.Truncate;
+        Text rowText = CreateText(name + "Text", rowRoot.transform, string.Empty, 18, TextAnchor.MiddleLeft, labelColor);
+        rowText.rectTransform.anchorMin  = Vector2.zero;
+        rowText.rectTransform.anchorMax  = Vector2.one;
+        rowText.rectTransform.offsetMin  = new Vector2(8f, 0f);
+        rowText.rectTransform.offsetMax  = new Vector2(-8f, 0f);
+        rowText.horizontalOverflow = HorizontalWrapMode.Overflow;
+        rowText.verticalOverflow   = VerticalWrapMode.Truncate;
 
-        ModuleRowUI rowUi = new ModuleRowUI
-        {
-            root = rowRoot,
-            text = row,
-            background = bg,
-            module = null
-        };
-
-        ModuleRowClickHandler clickHandler = rowRoot.GetComponent<ModuleRowClickHandler>();
-        clickHandler.OnClicked = button => OnModuleRowClicked(rowUi, button);
+        ModuleRowUI rowUi = new ModuleRowUI { root = rowRoot, text = rowText, background = bg, module = null };
+        rowRoot.GetComponent<ModuleRowClickHandler>().OnClicked = btn => OnModuleRowClicked(rowUi, btn);
 
         return rowUi;
     }
@@ -387,130 +415,258 @@ public class PlayerCrewInteriorOverlay : MonoBehaviour
     {
         GameObject spacer = new GameObject("Spacer", typeof(RectTransform));
         spacer.transform.SetParent(parent, false);
-        LayoutElement layout = spacer.AddComponent<LayoutElement>();
-        layout.preferredHeight = height;
+        spacer.AddComponent<LayoutElement>().preferredHeight = height;
     }
 
     private void BuildActionPanel(RectTransform panel)
     {
-        GameObject footer = new GameObject("ActionPanel", typeof(RectTransform), typeof(Image), typeof(VerticalLayoutGroup));
+        GameObject footer = new GameObject("ActionPanel",
+            typeof(RectTransform), typeof(Image), typeof(VerticalLayoutGroup));
         footer.transform.SetParent(panel, false);
 
         RectTransform footerRect = footer.GetComponent<RectTransform>();
-        footerRect.anchorMin = new Vector2(0.5f, 0f);
-        footerRect.anchorMax = new Vector2(0.5f, 0f);
-        footerRect.pivot = new Vector2(0.5f, 0f);
-        footerRect.anchoredPosition = new Vector2(0f, 18f);
-        footerRect.sizeDelta = new Vector2(panelSize.x - 72f, actionPanelHeight);
+        footerRect.anchorMin         = new Vector2(0.5f, 0f);
+        footerRect.anchorMax         = new Vector2(0.5f, 0f);
+        footerRect.pivot             = new Vector2(0.5f, 0f);
+        footerRect.anchoredPosition  = new Vector2(0f, 18f);
+        footerRect.sizeDelta         = new Vector2(panelSize.x - 72f, actionPanelHeight);
 
-        Image footerImage = footer.GetComponent<Image>();
-        footerImage.color = new Color(1f, 1f, 1f, 0.03f);
+        footer.GetComponent<Image>().color = new Color(1f, 1f, 1f, 0.03f);
 
         VerticalLayoutGroup footerLayout = footer.GetComponent<VerticalLayoutGroup>();
-        footerLayout.padding = new RectOffset(18, 18, 12, 12);
-        footerLayout.spacing = 12f;
-        footerLayout.childAlignment = TextAnchor.UpperLeft;
-        footerLayout.childControlHeight = true;
-        footerLayout.childControlWidth = true;
-        footerLayout.childForceExpandWidth = true;
+        footerLayout.padding              = new RectOffset(18, 18, 12, 12);
+        footerLayout.spacing              = 12f;
+        footerLayout.childAlignment       = TextAnchor.UpperLeft;
+        footerLayout.childControlHeight   = true;
+        footerLayout.childControlWidth    = true;
+        footerLayout.childForceExpandWidth  = true;
         footerLayout.childForceExpandHeight = false;
 
-        actionTitleText = CreateText("RoleTitle", footer.transform, "CURRENT CREW ROLE", 16, TextAnchor.MiddleLeft, titleColor);
-        LayoutElement roleTitleLayout = actionTitleText.gameObject.AddComponent<LayoutElement>();
-        roleTitleLayout.preferredHeight = 22f;
+        actionTitleText = CreateText("ActionTitle", footer.transform, "STATUS", 16, TextAnchor.MiddleLeft, titleColor);
+        actionTitleText.gameObject.AddComponent<LayoutElement>().preferredHeight = 22f;
 
-        selectionText = CreateText("SelectionText", footer.transform, "Select a crew member to move.", 18, TextAnchor.MiddleLeft, labelColor);
-        LayoutElement selectionLayout = selectionText.gameObject.AddComponent<LayoutElement>();
-        selectionLayout.preferredHeight = 24f;
+        selectionText = CreateText("SelectionText", footer.transform,
+            "Click crew to reassign.  Click a module to repair.", 18, TextAnchor.MiddleLeft, labelColor);
+        selectionText.gameObject.AddComponent<LayoutElement>().preferredHeight = 24f;
 
-        moveButtonsRow = new GameObject("MoveButtons", typeof(RectTransform), typeof(HorizontalLayoutGroup));
-        moveButtonsRow.transform.SetParent(footer.transform, false);
+        // 화재 진압 버튼 행
+        suppressionButtonsRow = new GameObject("SuppressionButtons",
+            typeof(RectTransform), typeof(HorizontalLayoutGroup));
+        suppressionButtonsRow.transform.SetParent(footer.transform, false);
 
-        HorizontalLayoutGroup buttonsLayout = moveButtonsRow.GetComponent<HorizontalLayoutGroup>();
-        buttonsLayout.spacing = 44f;
-        buttonsLayout.childAlignment = TextAnchor.MiddleLeft;
-        buttonsLayout.childControlHeight = true;
-        buttonsLayout.childControlWidth = false;
-        buttonsLayout.childForceExpandWidth = false;
-        buttonsLayout.childForceExpandHeight = false;
+        HorizontalLayoutGroup suppressLayout = suppressionButtonsRow.GetComponent<HorizontalLayoutGroup>();
+        suppressLayout.spacing              = 26f;
+        suppressLayout.childAlignment       = TextAnchor.MiddleLeft;
+        suppressLayout.childControlHeight   = true;
+        suppressLayout.childControlWidth    = false;
+        suppressLayout.childForceExpandWidth  = false;
+        suppressLayout.childForceExpandHeight = false;
+        suppressionButtonsRow.AddComponent<LayoutElement>().preferredHeight = 40f;
 
-        LayoutElement buttonsRowLayout = moveButtonsRow.AddComponent<LayoutElement>();
-        buttonsRowLayout.preferredHeight = 40f;
+        suppressDriverButton = CreateSuppressionButton(suppressionButtonsRow.transform, "Driver",          ModuleType.Driver);
+        suppressGunnerButton = CreateSuppressionButton(suppressionButtonsRow.transform, "Gunner",          ModuleType.Gunner);
+        suppressLoaderButton = CreateSuppressionButton(suppressionButtonsRow.transform, "Loader",          ModuleType.Loader);
+        suppressMGButton     = CreateSuppressionButton(suppressionButtonsRow.transform, "MG",  ModuleType.MachineGunner);
 
-        moveDriverButton = CreateActionButton(moveButtonsRow.transform, "Move Into Driver", ModuleType.Driver);
-        moveGunnerButton = CreateActionButton(moveButtonsRow.transform, "Move Into Gunner", ModuleType.Gunner);
-        moveLoaderButton = CreateActionButton(moveButtonsRow.transform, "Move Into Loader", ModuleType.Loader);
-
-        repairButtonsRow = new GameObject("RepairButtons", typeof(RectTransform), typeof(HorizontalLayoutGroup));
-        repairButtonsRow.transform.SetParent(footer.transform, false);
-
-        HorizontalLayoutGroup repairLayout = repairButtonsRow.GetComponent<HorizontalLayoutGroup>();
-        repairLayout.spacing = 26f;
-        repairLayout.childAlignment = TextAnchor.MiddleLeft;
-        repairLayout.childControlHeight = true;
-        repairLayout.childControlWidth = false;
-        repairLayout.childForceExpandWidth = false;
-        repairLayout.childForceExpandHeight = false;
-
-        LayoutElement repairButtonsRowLayout = repairButtonsRow.AddComponent<LayoutElement>();
-        repairButtonsRowLayout.preferredHeight = 40f;
-
-        repairDriverButton = CreateRepairButton(repairButtonsRow.transform, "Assign Driver", ModuleType.Driver);
-        repairGunnerButton = CreateRepairButton(repairButtonsRow.transform, "Assign Gunner", ModuleType.Gunner);
-        repairLoaderButton = CreateRepairButton(repairButtonsRow.transform, "Assign Loader", ModuleType.Loader);
-        repairMachineGunnerButton = CreateRepairButton(repairButtonsRow.transform, "Assign Machine Gunner", ModuleType.MachineGunner);
+        suppressionButtonsRow.SetActive(false);
     }
 
-    private Button CreateActionButton(Transform parent, string label, ModuleType targetSeat)
+    private void BuildCrewPopup(RectTransform panel)
     {
-        GameObject go = new GameObject(label, typeof(RectTransform), typeof(Image), typeof(Button), typeof(LayoutElement));
-        go.transform.SetParent(parent, false);
+        crewPopupPanel = BuildPopupBase(panel, "CrewPopupPanel", 220f, crewPopupPivot);
+        crewPopupRect  = crewPopupPanel.GetComponent<RectTransform>();
+        crewPopupPanel.SetActive(false);
+    }
 
-        Image image = go.GetComponent<Image>();
-        image.color = new Color(1f, 1f, 1f, 0.08f);
+    private void BuildModulePopup(RectTransform panel)
+    {
+        modulePopupPanel = BuildPopupBase(panel, "ModulePopupPanel", 260f, modulePopupPivot);
+        modulePopupRect  = modulePopupPanel.GetComponent<RectTransform>();
+        modulePopupPanel.SetActive(false);
+    }
 
-        Button button = go.GetComponent<Button>();
-        button.transition = Selectable.Transition.ColorTint;
-        ColorBlock cb = button.colors;
-        cb.normalColor = new Color(1f, 1f, 1f, 0.08f);
-        cb.highlightedColor = new Color(1f, 1f, 1f, 0.16f);
-        cb.pressedColor = new Color(1f, 1f, 1f, 0.24f);
-        cb.selectedColor = new Color(1f, 1f, 1f, 0.16f);
-        cb.disabledColor = new Color(1f, 1f, 1f, 0.03f);
-        button.colors = cb;
-        button.onClick.AddListener(() => TryMoveSelectedCrew(targetSeat));
+    private GameObject BuildPopupBase(RectTransform panel, string name, float width, Vector2 pivot)
+    {
+        GameObject popup = new GameObject(name,
+            typeof(RectTransform), typeof(Image), typeof(VerticalLayoutGroup));
+        popup.transform.SetParent(panel, false);
 
-        LayoutElement layout = go.GetComponent<LayoutElement>();
-        layout.preferredWidth = 280f;
-        layout.preferredHeight = 34f;
+        Image bg = popup.GetComponent<Image>();
+        bg.color = new Color(0.08f, 0.10f, 0.13f, 0.97f);
+        bg.raycastTarget = true;
+        AddOutline(popup, borderColor, 1f);
 
-        Text text = CreateText("Label", go.transform, label, 16, TextAnchor.MiddleLeft, titleColor);
+        VerticalLayoutGroup vlg = popup.GetComponent<VerticalLayoutGroup>();
+        vlg.padding              = new RectOffset(6, 6, 6, 6);
+        vlg.spacing              = 4f;
+        vlg.childAlignment       = TextAnchor.UpperLeft;
+        vlg.childControlWidth    = true;
+        vlg.childControlHeight   = true;
+        vlg.childForceExpandWidth  = true;
+        vlg.childForceExpandHeight = false;
+
+        ContentSizeFitter fitter = popup.AddComponent<ContentSizeFitter>();
+        fitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+        fitter.verticalFit   = ContentSizeFitter.FitMode.PreferredSize;
+
+        RectTransform rect = popup.GetComponent<RectTransform>();
+        rect.sizeDelta = new Vector2(width, 0f);
+        rect.anchorMin = Vector2.zero;
+        rect.anchorMax = Vector2.zero;
+        rect.pivot     = pivot;
+
+        return popup;
+    }
+
+    // ── Popup ─────────────────────────────────────────────────────
+
+    private void OnCrewRowClicked(ModuleType crewType, RectTransform anchor)
+    {
+        if (crewType == ModuleType.Commander) return;
+
+        // 같은 크루 다시 클릭 → 닫기
+        if (crewPopupPanel != null && crewPopupPanel.activeSelf && popupCrewType == crewType)
+        {
+            HideCrewPopup();
+            return;
+        }
+
+        if (crewManager == null) return;
+
+        ModuleType[] targets = crewManager.GetAvailablePlayerSwapTargets(crewType);
+        if (targets == null || targets.Length == 0) { HideCrewPopup(); return; }
+
+        var options = new List<(string, UnityEngine.Events.UnityAction)>();
+        foreach (ModuleType seat in targets)
+        {
+            ModuleType capturedSeat = seat;
+            options.Add(($"→ {GetSeatDisplayName(seat)}", () =>
+            {
+                crewManager.StartPlayerCrewMove(crewType, capturedSeat);
+                HideCrewPopup();
+            }));
+        }
+
+        popupCrewType = crewType;
+        ShowPopupAt(crewPopupPanel, crewPopupRect, anchor, options);
+    }
+
+    private void OnModuleRowClicked(ModuleRowUI row, PointerEventData.InputButton button)
+    {
+        if (row?.module == null || button != PointerEventData.InputButton.Left) return;
+
+        ModuleDamageController module = row.module;
+
+        // 같은 모듈 다시 클릭 → 닫기
+        if (modulePopupPanel != null && modulePopupPanel.activeSelf && popupModule == module)
+        {
+            HideModulePopup();
+            return;
+        }
+
+        if (crewManager == null) return;
+
+        ModuleType[] crewTypes = { ModuleType.Driver, ModuleType.Gunner, ModuleType.Loader, ModuleType.MachineGunner };
+        var options = new List<(string, UnityEngine.Events.UnityAction)>();
+        foreach (ModuleType crew in crewTypes)
+        {
+            if (!crewManager.CanAssignRepairCrew(crew, module)) continue;
+            float dur = crewManager.GetRepairDuration(module);
+            ModuleType capturedCrew = crew;
+            ModuleType assignedSeat = crewManager.GetAssignedSeatForCrew(crew);
+            string roleLabel = (assignedSeat != ModuleType.Commander)
+                ? GetSeatDisplayName(assignedSeat)
+                : GetSeatDisplayName(crew);
+            options.Add(($"Assign {roleLabel} ({dur:0.0}s)", () =>
+            {
+                crewManager.StartPlayerRepair(capturedCrew, module);
+                HideModulePopup();
+            }));
+        }
+
+        if (options.Count == 0) { HideModulePopup(); return; }
+
+        popupModule = module;
+        ShowPopupAt(modulePopupPanel, modulePopupRect, row.root.GetComponent<RectTransform>(), options);
+    }
+
+    private void ShowPopupAt(GameObject panel, RectTransform rect, RectTransform anchor, List<(string label, UnityEngine.Events.UnityAction action)> options)
+    {
+        if (panel == null) return;
+
+        // 기존 버튼 제거
+        for (int i = panel.transform.childCount - 1; i >= 0; i--)
+            DestroyImmediate(panel.transform.GetChild(i).gameObject);
+
+        // 새 버튼 추가
+        foreach (var (label, action) in options)
+            AddPopupButton(panel, label, action);
+
+        // 앵커 기준 위치 계산 (오른쪽 상단 모서리)
+        Vector3[] corners = new Vector3[4];
+        anchor.GetWorldCorners(corners); // [2] = top-right
+
+        Vector2 localPos = mainPanelRect.InverseTransformPoint(corners[2]);
+        rect.anchoredPosition = localPos + new Vector2(panelSize.x * 0.5f - 4f, panelSize.y * 0.5f);
+        panel.SetActive(true);
+        Canvas.ForceUpdateCanvases();
+        LayoutRebuilder.ForceRebuildLayoutImmediate(rect);
+    }
+
+    private void AddPopupButton(GameObject panel, string label, UnityEngine.Events.UnityAction action)
+    {
+        GameObject go = new GameObject(label,
+            typeof(RectTransform), typeof(Image), typeof(Button), typeof(LayoutElement));
+        go.transform.SetParent(panel.transform, false);
+
+        Image img = go.GetComponent<Image>();
+        img.color = new Color(1f, 1f, 1f, 0.04f);
+
+        Button btn = go.GetComponent<Button>();
+        btn.transition = Selectable.Transition.ColorTint;
+        ColorBlock cb = btn.colors;
+        cb.normalColor      = new Color(1f, 1f, 1f, 0.04f);
+        cb.highlightedColor = new Color(1f, 1f, 1f, 0.14f);
+        cb.pressedColor     = new Color(1f, 1f, 1f, 0.22f);
+        cb.selectedColor    = new Color(1f, 1f, 1f, 0.10f);
+        btn.colors = cb;
+        btn.onClick.AddListener(action);
+
+        go.GetComponent<LayoutElement>().preferredHeight = 30f;
+
+        Text text = CreateText(label + "Text", go.transform, label, 16, TextAnchor.MiddleLeft, titleColor);
         text.rectTransform.anchorMin = Vector2.zero;
         text.rectTransform.anchorMax = Vector2.one;
-        text.rectTransform.offsetMin = new Vector2(14f, 0f);
-        text.rectTransform.offsetMax = new Vector2(-10f, 0f);
+        text.rectTransform.offsetMin = new Vector2(10f, 0f);
+        text.rectTransform.offsetMax = new Vector2(-6f, 0f);
         text.horizontalOverflow = HorizontalWrapMode.Overflow;
-        text.resizeTextForBestFit = true;
-        text.resizeTextMinSize = 12;
-        text.resizeTextMaxSize = 16;
-
-        return button;
+        text.verticalOverflow   = VerticalWrapMode.Truncate;
     }
 
-    private Button CreateRepairButton(Transform parent, string label, ModuleType crewType)
+    private void HideCrewPopup()
     {
-        Button button = CreateActionButton(parent, label, ModuleType.Commander);
-        button.onClick.RemoveAllListeners();
-        button.onClick.AddListener(() => TryAssignRepairCrew(crewType));
-        return button;
+        if (crewPopupPanel != null) crewPopupPanel.SetActive(false);
+        popupCrewType = ModuleType.Commander;
     }
+
+    private void HideModulePopup()
+    {
+        if (modulePopupPanel != null) modulePopupPanel.SetActive(false);
+        popupModule = null;
+    }
+
+    private void HideAllPopups()
+    {
+        HideCrewPopup();
+        HideModulePopup();
+    }
+
+    // ── Refresh ──────────────────────────────────────────────────
 
     private void RefreshUI()
     {
-        if (moduleManager == null)
-            moduleManager = GetComponent<ModuleManager>();
-        if (moduleManager == null)
-            return;
+        if (moduleManager == null) moduleManager = GetComponent<ModuleManager>();
+        if (moduleManager == null) return;
 
         CacheModules();
         RefreshCrewRows();
@@ -527,75 +683,85 @@ public class PlayerCrewInteriorOverlay : MonoBehaviour
 
             if (module == null)
             {
-                row.valueText.text = "EMPTY";
-                row.valueText.color = emptyColor;
-                if (row.button != null)
-                    row.button.interactable = false;
+                // 모듈 미설정 크루는 살아있는 것으로 간주
+                if (row.type == ModuleType.Commander)
+                {
+                    row.valueText.text  = "Player";
+                    row.valueText.color = normalColor;
+                    if (row.button != null) row.button.interactable = false;
+                }
+                else
+                {
+                    row.valueText.text  = crewManager != null ? crewManager.GetCrewSeatLabel(row.type) : "OK";
+                    row.valueText.color = normalColor;
+                    if (row.button != null) row.button.interactable = true;
+                }
+                if (row.labelText != null) row.labelText.color = (popupCrewType == row.type) ? normalColor : titleColor;
                 continue;
             }
 
             if (crewManager != null && crewManager.IsPlayerRepairInProgress && crewManager.RepairingCrewType == row.type)
             {
-                row.valueText.text = "Repairing";
+                string moduleName = crewManager.RepairingModule != null ? crewManager.RepairingModule.PartName : "Module";
+                row.valueText.text  = $"Repairing: {moduleName}";
                 row.valueText.color = damagedColor;
-                if (row.button != null)
-                    row.button.interactable = false;
+                if (row.button != null) row.button.interactable = false;
+            }
+            else if (crewManager != null && crewManager.IsPlayerSuppressionInProgress && crewManager.SuppressingCrewType == row.type)
+            {
+                row.valueText.text  = "Extinguishing";
+                row.valueText.color = fireColor;
+                if (row.button != null) row.button.interactable = false;
             }
             else if (crewManager != null && crewManager.IsPlayerSwapInProgress && crewManager.MovingCrewType == row.type)
             {
-                row.valueText.text = crewManager.GetCrewSeatLabel(row.type);
+                row.valueText.text  = crewManager.GetCrewSeatLabel(row.type);
                 row.valueText.color = damagedColor;
-                if (row.button != null)
-                    row.button.interactable = false;
+                if (row.button != null) row.button.interactable = false;
             }
             else if (module.State == ModuleState.Destroyed)
             {
-                row.valueText.text = "KIA";
+                row.valueText.text  = "KIA";
                 row.valueText.color = destroyedColor;
-                if (row.button != null)
-                    row.button.interactable = false;
+                if (row.button != null) row.button.interactable = false;
             }
             else if (module.State == ModuleState.Damaged)
             {
-                row.valueText.text = crewManager != null ? crewManager.GetCrewSeatLabel(row.type) : $"{Mathf.RoundToInt(module.Hp01 * 100f)}%";
+                row.valueText.text  = crewManager != null ? crewManager.GetCrewSeatLabel(row.type) : $"{Mathf.RoundToInt(module.Hp01 * 100f)}%";
                 row.valueText.color = damagedColor;
-                if (row.button != null)
-                    row.button.interactable = row.type != ModuleType.Commander;
+                if (row.button != null) row.button.interactable = row.type != ModuleType.Commander;
             }
             else
             {
-                row.valueText.text = crewManager != null ? crewManager.GetCrewSeatLabel(row.type) : "OK";
-                row.valueText.color = normalColor;
-                if (row.button != null)
-                    row.button.interactable = row.type != ModuleType.Commander;
+                string seatLabel = crewManager != null ? crewManager.GetCrewSeatLabel(row.type) : "OK";
+                bool isReassigned = crewManager != null
+                    && crewManager.GetAssignedSeatForCrew(row.type) != row.type
+                    && crewManager.GetAssignedSeatForCrew(row.type) != ModuleType.Commander;
+                row.valueText.text  = seatLabel;
+                row.valueText.color = isReassigned ? damagedColor : normalColor;
+                if (row.button != null) row.button.interactable = row.type != ModuleType.Commander;
             }
 
             if (row.labelText != null)
-                row.labelText.color = selectedCrewType == row.type ? normalColor : titleColor;
+                row.labelText.color = (popupCrewType == row.type) ? normalColor : titleColor;
         }
     }
 
     private void RefreshModuleRows()
     {
-        List<ModuleDamageController> damaged = new List<ModuleDamageController>();
+        List<ModuleDamageController> damaged   = new List<ModuleDamageController>();
         List<ModuleDamageController> destroyed = new List<ModuleDamageController>();
 
         for (int i = 0; i < cachedModules.Length; i++)
         {
             ModuleDamageController module = cachedModules[i];
-            if (module == null || IsCrewType(module.Type))
-                continue;
+            if (module == null || IsCrewType(module.Type)) continue;
 
-            if (module.State == ModuleState.Destroyed)
-                destroyed.Add(module);
-            else if (module.State == ModuleState.Damaged)
-                damaged.Add(module);
+            if (module.State == ModuleState.Destroyed) destroyed.Add(module);
+            else if (module.State == ModuleState.Damaged) damaged.Add(module);
         }
 
-        if (selectedRepairModule != null && selectedRepairModule.State == ModuleState.Healthy)
-            selectedRepairModule = null;
-
-        ApplyModuleList(damagedRows, damaged, damagedColor, "None");
+        ApplyModuleList(damagedRows,   damaged,   damagedColor,   "None");
         ApplyModuleList(destroyedRows, destroyed, destroyedColor, "None");
     }
 
@@ -607,24 +773,30 @@ public class PlayerCrewInteriorOverlay : MonoBehaviour
             if (i < values.Count)
             {
                 ModuleDamageController module = values[i];
-                row.module = module;
-                row.text.text = BuildModuleRowLabel(module);
-                row.text.color = activeColor;
-                row.background.color = selectedRepairModule == module
+                row.module        = module;
+                bool isBeingRepaired = crewManager != null
+                    && crewManager.IsPlayerRepairInProgress
+                    && crewManager.RepairingModule == module;
+                string repairSuffix = isBeingRepaired
+                    ? $" ← {GetCurrentRoleLabel(crewManager.RepairingCrewType)} ({crewManager.PlayerRepairSecondsRemaining:0.0}s)"
+                    : string.Empty;
+                row.text.text     = BuildModuleRowLabel(module) + repairSuffix;
+                row.text.color    = isBeingRepaired ? normalColor : activeColor;
+                row.background.color = (popupModule == module)
                     ? new Color(1f, 1f, 1f, 0.10f)
                     : new Color(1f, 1f, 1f, 0.015f);
             }
             else if (i == 0 && values.Count == 0)
             {
-                row.module = null;
-                row.text.text = emptyText;
-                row.text.color = emptyColor;
+                row.module        = null;
+                row.text.text     = emptyText;
+                row.text.color    = emptyColor;
                 row.background.color = new Color(1f, 1f, 1f, 0.015f);
             }
             else
             {
-                row.module = null;
-                row.text.text = string.Empty;
+                row.module        = null;
+                row.text.text     = string.Empty;
                 row.background.color = new Color(1f, 1f, 1f, 0.015f);
             }
         }
@@ -633,146 +805,125 @@ public class PlayerCrewInteriorOverlay : MonoBehaviour
     private void RefreshActionPanel()
     {
         if (selectionText == null) return;
+        if (crewManager == null) crewManager = GetComponent<PlayerCrewManager>();
 
-        if (crewManager == null)
-            crewManager = GetComponent<PlayerCrewManager>();
-
-        if (selectedRepairModule != null)
+        // 화재 진압 — 최우선
+        bool fireActive = moduleManager != null && moduleManager.IsOnFire;
+        if (fireActive)
         {
-            actionTitleText.text = "REPAIR ASSIGNMENT";
-            string moduleLabel = string.IsNullOrWhiteSpace(selectedRepairModule.PartName)
-                ? selectedRepairModule.Type.ToString()
-                : selectedRepairModule.PartName;
+            int remaining = crewManager != null
+                ? crewManager.MaxSuppression - crewManager.SuppressionCount
+                : 0;
 
-            if (crewManager != null && crewManager.IsPlayerRepairInProgress)
-            {
-                selectionText.text = $"{crewManager.RepairingCrewType} repairing {moduleLabel} ({crewManager.PlayerRepairSecondsRemaining:0.0}s)";
-            }
+            actionTitleText.text  = "FIRE EXTINGUISHING";
+            actionTitleText.color = fireColor;
+
+            if (crewManager != null && crewManager.IsPlayerSuppressionInProgress)
+                selectionText.text = $"{crewManager.SuppressingCrewType} extinguishing... ({crewManager.PlayerSuppressionSecondsRemaining:0.0}s)  [{remaining}/{crewManager.MaxSuppression} remaining]";
             else
-            {
-                float repairDuration = crewManager != null ? crewManager.GetRepairDuration(selectedRepairModule) : 0f;
-                selectionText.text = $"{moduleLabel} selected. Choose a crew to repair ({repairDuration:0.0}s).";
-            }
+                selectionText.text = $"Assign a crew to extinguish the fire.  [{remaining}/{(crewManager != null ? crewManager.MaxSuppression : 3)} remaining]";
 
-            SetButtonsVisible(false, true);
-            SetMoveButtonState(repairDriverButton, crewManager != null && crewManager.CanAssignRepairCrew(ModuleType.Driver, selectedRepairModule));
-            SetMoveButtonState(repairGunnerButton, crewManager != null && crewManager.CanAssignRepairCrew(ModuleType.Gunner, selectedRepairModule));
-            SetMoveButtonState(repairLoaderButton, crewManager != null && crewManager.CanAssignRepairCrew(ModuleType.Loader, selectedRepairModule));
-            SetMoveButtonState(repairMachineGunnerButton, crewManager != null && crewManager.CanAssignRepairCrew(ModuleType.MachineGunner, selectedRepairModule));
+            suppressionButtonsRow?.SetActive(true);
+            SetButtonState(suppressDriverButton, crewManager != null && crewManager.CanAssignFireSuppression(ModuleType.Driver));
+            SetButtonState(suppressGunnerButton, crewManager != null && crewManager.CanAssignFireSuppression(ModuleType.Gunner));
+            SetButtonState(suppressLoaderButton, crewManager != null && crewManager.CanAssignFireSuppression(ModuleType.Loader));
+            SetButtonState(suppressMGButton,     crewManager != null && crewManager.CanAssignFireSuppression(ModuleType.MachineGunner));
             return;
         }
 
-        actionTitleText.text = "CURRENT CREW ROLE";
-        if (selectedCrewType == ModuleType.Commander)
-        {
-            selectionText.text = "Select Gunner, Loader, Driver, or Machine Gunner.";
-            SetButtonsVisible(true, false);
-            SetMoveButtonState(moveDriverButton, false);
-            SetMoveButtonState(moveGunnerButton, false);
-            SetMoveButtonState(moveLoaderButton, false);
-            return;
-        }
+        // 기본 상태
+        suppressionButtonsRow?.SetActive(false);
+        actionTitleText.text  = "STATUS";
+        actionTitleText.color = titleColor;
 
-        string seatLabel = crewManager != null ? crewManager.GetCrewSeatLabel(selectedCrewType) : "Unknown";
-        if (crewManager != null && crewManager.IsPlayerSwapInProgress)
-            selectionText.text = $"{selectedCrewType} moving to {crewManager.MovingTargetSeat} ({crewManager.PlayerSwapSecondsRemaining:0.0}s)";
-        else
-            selectionText.text = $"{selectedCrewType} selected. Current seat: {seatLabel}";
-
-        SetButtonsVisible(true, false);
-        bool canMoveDriver = crewManager != null && crewManager.CanPlayerMoveCrew(selectedCrewType, ModuleType.Driver);
-        bool canMoveGunner = crewManager != null && crewManager.CanPlayerMoveCrew(selectedCrewType, ModuleType.Gunner);
-        bool canMoveLoader = crewManager != null && crewManager.CanPlayerMoveCrew(selectedCrewType, ModuleType.Loader);
-
-        SetMoveButtonState(moveDriverButton, canMoveDriver);
-        SetMoveButtonState(moveGunnerButton, canMoveGunner);
-        SetMoveButtonState(moveLoaderButton, canMoveLoader);
+        int suppressLeft = crewManager != null ? crewManager.MaxSuppression - crewManager.SuppressionCount : 3;
+        int maxSuppress  = crewManager != null ? crewManager.MaxSuppression : 3;
+        selectionText.text = $"Click crew to reassign.  Click a module to repair.  [Extinguisher: {suppressLeft}/{maxSuppress}]";
     }
 
-    private void SelectCrew(ModuleType crewType)
+    // ── Actions ──────────────────────────────────────────────────
+
+    private void TryAssignFireSuppression(ModuleType crewType)
     {
-        selectedCrewType = crewType;
-        selectedRepairModule = null;
-        RefreshUI();
+        if (crewManager == null) crewManager = GetComponent<PlayerCrewManager>();
+        crewManager?.StartFireSuppression(crewType);
     }
 
-    private void TryMoveSelectedCrew(ModuleType targetSeat)
+    // ── Button Factories ─────────────────────────────────────────
+
+    private Button CreateActionButton(Transform parent, string label)
     {
-        if (crewManager == null)
-            crewManager = GetComponent<PlayerCrewManager>();
-        if (crewManager == null) return;
+        GameObject go = new GameObject(label,
+            typeof(RectTransform), typeof(Image), typeof(Button), typeof(LayoutElement));
+        go.transform.SetParent(parent, false);
 
-        if (crewManager.StartPlayerCrewMove(selectedCrewType, targetSeat))
-            RefreshUI();
+        go.GetComponent<Image>().color = new Color(1f, 1f, 1f, 0.08f);
+
+        Button button = go.GetComponent<Button>();
+        button.transition = Selectable.Transition.ColorTint;
+        ColorBlock cb = button.colors;
+        cb.normalColor      = new Color(1f, 1f, 1f, 0.08f);
+        cb.highlightedColor = new Color(1f, 1f, 1f, 0.16f);
+        cb.pressedColor     = new Color(1f, 1f, 1f, 0.24f);
+        cb.selectedColor    = new Color(1f, 1f, 1f, 0.16f);
+        cb.disabledColor    = new Color(1f, 1f, 1f, 0.03f);
+        button.colors = cb;
+
+        LayoutElement layout = go.GetComponent<LayoutElement>();
+        layout.preferredWidth  = 200f;
+        layout.preferredHeight = 34f;
+
+        Text text = CreateText("Label", go.transform, label, 16, TextAnchor.MiddleLeft, titleColor);
+        text.rectTransform.anchorMin = Vector2.zero;
+        text.rectTransform.anchorMax = Vector2.one;
+        text.rectTransform.offsetMin = new Vector2(14f, 0f);
+        text.rectTransform.offsetMax = new Vector2(-10f, 0f);
+        text.horizontalOverflow = HorizontalWrapMode.Overflow;
+        text.resizeTextForBestFit = true;
+        text.resizeTextMinSize = 12;
+        text.resizeTextMaxSize = 16;
+
+        return button;
     }
 
-    private void TryAssignRepairCrew(ModuleType crewType)
+    private Button CreateSuppressionButton(Transform parent, string crewLabel, ModuleType crewType)
     {
-        if (crewManager == null)
-            crewManager = GetComponent<PlayerCrewManager>();
-        if (crewManager == null || selectedRepairModule == null)
-            return;
-
-        if (crewManager.StartPlayerRepair(crewType, selectedRepairModule))
-            RefreshUI();
+        Button button = CreateActionButton(parent, crewLabel);
+        button.onClick.AddListener(() => TryAssignFireSuppression(crewType));
+        return button;
     }
 
-    private void OnModuleRowClicked(ModuleRowUI row, PointerEventData.InputButton button)
-    {
-        if (row == null || row.module == null)
-            return;
-
-        if (button != PointerEventData.InputButton.Left)
-            return;
-
-        selectedRepairModule = row.module;
-        RefreshUI();
-    }
-
-    private void SetMoveButtonState(Button button, bool enabled)
+    private void SetButtonState(Button button, bool enabled)
     {
         if (button == null) return;
         button.interactable = enabled;
     }
 
-    private void SetButtonsVisible(bool showMoveButtons, bool showRepairButtons)
-    {
-        if (moveButtonsRow != null)
-            moveButtonsRow.SetActive(showMoveButtons);
-        if (repairButtonsRow != null)
-            repairButtonsRow.SetActive(showRepairButtons);
-    }
+    // ── Helpers ──────────────────────────────────────────────────
 
     private static string BuildModuleRowLabel(ModuleDamageController module)
     {
-        if (module == null)
-            return string.Empty;
+        if (module == null) return string.Empty;
 
         string label = string.IsNullOrWhiteSpace(module.PartName)
             ? module.Type.ToString()
             : module.PartName;
 
-        if (module.State == ModuleState.Damaged)
-            return $"- {label} ({Mathf.RoundToInt(module.Hp01 * 100f)}%)";
-
-        return "- " + label;
+        return module.State == ModuleState.Damaged
+            ? $"- {label} ({Mathf.RoundToInt(module.Hp01 * 100f)}%)"
+            : "- " + label;
     }
 
     private ModuleDamageController FindModule(ModuleType type, int indexWithinType)
     {
-        if (cachedModules == null)
-            return null;
+        if (cachedModules == null) return null;
 
         int found = 0;
         for (int i = 0; i < cachedModules.Length; i++)
         {
             ModuleDamageController module = cachedModules[i];
-            if (module == null || module.Type != type)
-                continue;
-
-            if (found == indexWithinType)
-                return module;
-
+            if (module == null || module.Type != type) continue;
+            if (found == indexWithinType) return module;
             found++;
         }
 
@@ -781,9 +932,7 @@ public class PlayerCrewInteriorOverlay : MonoBehaviour
 
     private void CacheModules()
     {
-        if (moduleManager == null)
-            moduleManager = GetComponent<ModuleManager>();
-
+        if (moduleManager == null) moduleManager = GetComponent<ModuleManager>();
         cachedModules = moduleManager != null
             ? moduleManager.GetComponentsInChildren<ModuleDamageController>(true)
             : GetComponentsInChildren<ModuleDamageController>(true);
@@ -798,6 +947,25 @@ public class PlayerCrewInteriorOverlay : MonoBehaviour
             || type == ModuleType.MachineGunner;
     }
 
+    private string GetCurrentRoleLabel(ModuleType crewType)
+    {
+        if (crewManager == null) return GetSeatDisplayName(crewType);
+        ModuleType seat = crewManager.GetAssignedSeatForCrew(crewType);
+        return (seat != ModuleType.Commander) ? GetSeatDisplayName(seat) : GetSeatDisplayName(crewType);
+    }
+
+    private static string GetSeatDisplayName(ModuleType seatType)
+    {
+        switch (seatType)
+        {
+            case ModuleType.Driver:       return "Driver";
+            case ModuleType.Gunner:       return "Gunner";
+            case ModuleType.Loader:       return "Loader";
+            case ModuleType.MachineGunner: return "Machine Gunner";
+            default:                      return seatType.ToString();
+        }
+    }
+
     private void Toggle()
     {
         if (overlayRoot == null)
@@ -807,8 +975,8 @@ public class PlayerCrewInteriorOverlay : MonoBehaviour
         overlayRoot.SetActive(next);
         IsInputCaptured = next;
 
-        if (next)
-            RefreshUI();
+        if (!next) HideAllPopups();
+        else RefreshUI();
     }
 
     private RectTransform CreateImageRect(string name, Transform parent, Vector2 anchor, Vector2 size, Color color)
@@ -819,7 +987,7 @@ public class PlayerCrewInteriorOverlay : MonoBehaviour
         RectTransform rect = go.GetComponent<RectTransform>();
         rect.anchorMin = anchor;
         rect.anchorMax = anchor;
-        rect.pivot = new Vector2(0.5f, 0.5f);
+        rect.pivot     = new Vector2(0.5f, 0.5f);
         rect.sizeDelta = size;
 
         Image image = go.GetComponent<Image>();
@@ -831,7 +999,7 @@ public class PlayerCrewInteriorOverlay : MonoBehaviour
     private void AddOutline(GameObject go, Color color, float thickness)
     {
         Outline outline = go.AddComponent<Outline>();
-        outline.effectColor = color;
+        outline.effectColor    = color;
         outline.effectDistance = new Vector2(thickness, -thickness);
     }
 
@@ -841,24 +1009,21 @@ public class PlayerCrewInteriorOverlay : MonoBehaviour
         go.transform.SetParent(parent, false);
 
         Text text = go.GetComponent<Text>();
-        text.font = builtinFont != null ? builtinFont : Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        text.text = content;
-        text.fontSize = fontSize;
+        text.font      = builtinFont != null ? builtinFont : Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        text.text      = content;
+        text.fontSize  = fontSize;
         text.alignment = alignment;
-        text.color = color;
+        text.color     = color;
         text.raycastTarget = false;
         return text;
     }
 
     private void DestroyOverlayRoot()
     {
-        if (overlayRoot == null)
-            return;
+        if (overlayRoot == null) return;
 
-        if (Application.isPlaying)
-            Destroy(overlayRoot);
-        else
-            DestroyImmediate(overlayRoot);
+        if (Application.isPlaying) Destroy(overlayRoot);
+        else DestroyImmediate(overlayRoot);
 
         overlayRoot = null;
         IsInputCaptured = false;
@@ -866,7 +1031,7 @@ public class PlayerCrewInteriorOverlay : MonoBehaviour
 
     private Vector2 GetResponsivePanelSize()
     {
-        float width = Mathf.Clamp(Screen.width * panelWidthRatio, minPanelSize.x, maxPanelSize.x);
+        float width  = Mathf.Clamp(Screen.width  * panelWidthRatio,  minPanelSize.x, maxPanelSize.x);
         float height = Mathf.Clamp(Screen.height * panelHeightRatio, minPanelSize.y, maxPanelSize.y);
         return new Vector2(width, height);
     }

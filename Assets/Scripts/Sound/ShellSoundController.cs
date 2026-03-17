@@ -17,6 +17,7 @@ public class ShellSoundController : MonoBehaviour
     [SerializeField] private float hitVolume = 1f;
     [SerializeField] private float ricochetVolume = 1f;
     [SerializeField] private float explosionVolume = 1f;
+    [SerializeField] private float fireVolume = 1f;
 
     public void PlayHit(Vector3 pos) => PlayRandom(hitClips, pos, hitVolume);
     public void PlayRicochet(Vector3 pos) => PlayRandom(ricochetClips, pos, ricochetVolume);

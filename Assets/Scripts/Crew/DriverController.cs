@@ -104,7 +104,6 @@ public class DriverController : MonoBehaviour
         if (driverDead || driverTaskBlocked)
         {
             StopAll();
-            Debug.Log("[Driver] 조종 불능!");
             return;
         }
 
@@ -112,7 +111,6 @@ public class DriverController : MonoBehaviour
         if (immobilized)
         {
             StopAll();
-            Debug.Log("[Driver] 기동 불가!");
             return;
         }
 
@@ -122,7 +120,6 @@ public class DriverController : MonoBehaviour
             if (ImmobilizedByTracks)
             {
                 StopAll();
-                Debug.Log("[Driver] 궤도 수리 요망!");
                 return;
             }
 
@@ -186,11 +183,7 @@ public class DriverController : MonoBehaviour
 
     public void DriverHotKeys()
     {
-        if (PlayerCrewInteriorOverlay.IsInputCaptured)
-        {
-            StopAll();
-            return;
-        }
+        if (PlayerCrewInteriorOverlay.IsInputCaptured) return;
 
         if (Input.GetKeyDown(KeyCode.Space))
         {

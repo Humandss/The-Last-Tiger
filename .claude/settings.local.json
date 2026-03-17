@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find C:UsersBaboDocumentsGitHubThe-Last-TigerAssetsScripts -iname *turret* -type f)"
+    ]
+  }
+}

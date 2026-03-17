@@ -2336,7 +2336,8 @@ MonoBehaviour:
   followParent: 1
   autoStopAfterTime: 0
   stopAfterSeconds: 15
-  fireSpawnPoint: {fileID: 202421991}
+  onFire: 0
+  fireSpawnPoint: {fileID: 1763614345}
   firePrefab: {fileID: 8215615344314890366, guid: 965fcc7cfc108bd4aa222f6e13e435e1,
     type: 3}
   onlyOnce: 1
@@ -2516,6 +2517,7 @@ MonoBehaviour:
   followParent: 1
   autoStopAfterTime: 0
   stopAfterSeconds: 15
+  onFire: 0
   fireSpawnPoint: {fileID: 214311634}
   firePrefab: {fileID: 8215615344314890366, guid: 965fcc7cfc108bd4aa222f6e13e435e1,
     type: 3}
@@ -4344,7 +4346,6 @@ GameObject:
   - component: {fileID: 336159480}
   - component: {fileID: 336159479}
   - component: {fileID: 336159478}
-  - component: {fileID: 336159491}
   - component: {fileID: 336159494}
   - component: {fileID: 336159493}
   - component: {fileID: 336159492}
@@ -4641,41 +4642,6 @@ Transform:
   - {fileID: 7498687078727266523}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
---- !u!114 &336159491
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 336159477}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ccc927f27cefea848a228b783854f696, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  isAI: 1
-  moduleManager: {fileID: 0}
-  gunnerController: {fileID: 336159482}
-  driverController: {fileID: 336159483}
-  loaderController: {fileID: 336159487}
-  aiController: {fileID: 336159484}
-  gunnerModule: {fileID: 0}
-  driverModule: {fileID: 0}
-  loaderModule: {fileID: 0}
-  machineGunnerModule: {fileID: 0}
-  commanderModule: {fileID: 0}
-  machineGunnerFillingRole: 3
-  commanderFillingRole: 3
-  swapDelay: 0
-  gunnerSwapPending: 0
-  driverSwapPending: 0
-  loaderSwapPending: 0
-  movingCrewType: 8
-  movingTargetSeat: 8
-  playerSwapEndsAt: -1
-  repairingCrewType: 8
-  repairingModule: {fileID: 0}
-  playerRepairEndsAt: -1
 --- !u!82 &336159492
 AudioSource:
   m_ObjectHideFlags: 0
@@ -4905,6 +4871,8 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 973ab3b9408df134085d1d5bfababe24, type: 3}
   - {fileID: 8300000, guid: 972910c9a16cedb4ca49c773f0ff5978, type: 3}
   ammoExplosionVolume: 4
+  fireLoopClip: {fileID: 8300000, guid: 88ab2f5ce15b67243993314afd355285, type: 3}
+  fireLoopVolume: 1
 --- !u!1 &342756878
 GameObject:
   m_ObjectHideFlags: 0
@@ -5763,6 +5731,8 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 973ab3b9408df134085d1d5bfababe24, type: 3}
   - {fileID: 8300000, guid: 972910c9a16cedb4ca49c773f0ff5978, type: 3}
   ammoExplosionVolume: 2
+  fireLoopClip: {fileID: 8300000, guid: 88ab2f5ce15b67243993314afd355285, type: 3}
+  fireLoopVolume: 1
 --- !u!114 &414415434
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7567,6 +7537,7 @@ MonoBehaviour:
   followParent: 1
   autoStopAfterTime: 1
   stopAfterSeconds: 15
+  onFire: 0
   fireSpawnPoint: {fileID: 275501131}
   explosionPoint: {fileID: 1694111154}
   blowoff: {fileID: 600274567}
@@ -8780,6 +8751,7 @@ MonoBehaviour:
   followParent: 1
   autoStopAfterTime: 0
   stopAfterSeconds: 15
+  onFire: 0
   fireSpawnPoint: {fileID: 313551616}
   firePrefab: {fileID: 8215615344314890366, guid: 965fcc7cfc108bd4aa222f6e13e435e1,
     type: 3}
@@ -10809,6 +10781,7 @@ MonoBehaviour:
   followParent: 1
   autoStopAfterTime: 1
   stopAfterSeconds: 15
+  onFire: 0
   fireSpawnPoint: {fileID: 1846348469}
   explosionPoint: {fileID: 286346778}
   blowoff: {fileID: 889998166}
@@ -10896,6 +10869,7 @@ GameObject:
   - component: {fileID: 900324757}
   - component: {fileID: 900324759}
   - component: {fileID: 900324758}
+  - component: {fileID: 900324760}
   m_Layer: 9
   m_Name: Engine
   m_TagString: Untagged
@@ -10963,6 +10937,31 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &900324760
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 900324756}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1a9b3166b5bbe4e489781251769b7a4f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  module: {fileID: 900324758}
+  moduleMgr: {fileID: 1644377955}
+  tickInterval: 1.5
+  localOffset: {x: 0, y: 0, z: 0}
+  followParent: 1
+  autoStopAfterTime: 0
+  stopAfterSeconds: 15
+  onFire: 0
+  fireSpawnPoint: {fileID: 1763614345}
+  firePrefab: {fileID: 8215615344314890366, guid: 965fcc7cfc108bd4aa222f6e13e435e1,
+    type: 3}
+  onlyOnce: 0
+  engineFireChance: 0.3
 --- !u!1 &907622768
 GameObject:
   m_ObjectHideFlags: 0
@@ -11016,6 +11015,7 @@ MonoBehaviour:
   followParent: 1
   autoStopAfterTime: 0
   stopAfterSeconds: 15
+  onFire: 0
   fireSpawnPoint: {fileID: 245461300}
   firePrefab: {fileID: 8215615344314890366, guid: 965fcc7cfc108bd4aa222f6e13e435e1,
     type: 3}
@@ -13763,6 +13763,7 @@ MonoBehaviour:
   followParent: 1
   autoStopAfterTime: 0
   stopAfterSeconds: 15
+  onFire: 0
   fireSpawnPoint: {fileID: 1763614345}
   explosionPoint: {fileID: 1324072338}
   blowoff: {fileID: 959147072}
@@ -16026,7 +16027,8 @@ MonoBehaviour:
   followParent: 1
   autoStopAfterTime: 0
   stopAfterSeconds: 15
-  fireSpawnPoint: {fileID: 1202924559}
+  onFire: 0
+  fireSpawnPoint: {fileID: 1763614345}
   firePrefab: {fileID: 8215615344314890366, guid: 965fcc7cfc108bd4aa222f6e13e435e1,
     type: 3}
   onlyOnce: 1
@@ -17245,7 +17247,7 @@ MonoBehaviour:
   side: 0
   partName: Gun Breech
   maxHp: 100
-  hp: 100
+  hp: 0
   damagedThreshold01: 0.6
   directMul: 1
   fragMul: 1
@@ -18130,6 +18132,7 @@ MonoBehaviour:
   followParent: 1
   autoStopAfterTime: 0
   stopAfterSeconds: 15
+  onFire: 0
   fireSpawnPoint: {fileID: 1763614345}
   explosionPoint: {fileID: 1324072338}
   blowoff: {fileID: 1438332392}
@@ -19677,6 +19680,7 @@ MonoBehaviour:
   followParent: 1
   autoStopAfterTime: 0
   stopAfterSeconds: 15
+  onFire: 0
   fireSpawnPoint: {fileID: 1763614345}
   explosionPoint: {fileID: 1324072338}
   blowoff: {fileID: 1567205750}
@@ -20655,6 +20659,7 @@ MonoBehaviour:
   followParent: 1
   autoStopAfterTime: 0
   stopAfterSeconds: 15
+  onFire: 0
   fireSpawnPoint: {fileID: 1763614345}
   explosionPoint: {fileID: 1324072338}
   blowoff: {fileID: 1629556572}
@@ -21344,10 +21349,14 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 973ab3b9408df134085d1d5bfababe24, type: 3}
   - {fileID: 8300000, guid: 972910c9a16cedb4ca49c773f0ff5978, type: 3}
   ammoExplosionVolume: 2
+  fireLoopClip: {fileID: 8300000, guid: 88ab2f5ce15b67243993314afd355285, type: 3}
+  fireLoopVolume: 3
   radioSource: {fileID: 1644377960}
   driverController: {fileID: 1644377952}
+  moduleManager: {fileID: 0}
   engineOneShotSource: {fileID: 1644377964}
   engineStartClip: {fileID: 8300000, guid: 8b01236aaf87061438f687456687dd79, type: 3}
+  engineFailureClip: {fileID: 8300000, guid: 5ed6d6154d10f7a41ba40146ec4a161f, type: 3}
   engineIdleClip: {fileID: 8300000, guid: 880fbcf39cdc8bf4aad9b95a10af5b22, type: 3}
   engineRpmLowClip: {fileID: 8300000, guid: a70130683361c5440b5aa03fc9c50e32, type: 3}
   engineRpmSpeedClip: {fileID: 8300000, guid: cf7074cc3c990064ea22de32fc9baa9b, type: 3}
@@ -21812,6 +21821,7 @@ MonoBehaviour:
   driverController: {fileID: 1644377952}
   loaderController: {fileID: 1644377950}
   swapDelay: 5
+  suppressionDuration: 10
 --- !u!1 &1644851859
 GameObject:
   m_ObjectHideFlags: 0
@@ -22023,6 +22033,7 @@ MonoBehaviour:
   followParent: 1
   autoStopAfterTime: 0
   stopAfterSeconds: 15
+  onFire: 0
   fireSpawnPoint: {fileID: 313551616}
   firePrefab: {fileID: 8215615344314890366, guid: 965fcc7cfc108bd4aa222f6e13e435e1,
     type: 3}
@@ -22798,6 +22809,8 @@ MonoBehaviour:
   buildOnAwake: 1
   startVisible: 0
   sortingOrder: 15000
+  crewPopupPivot: {x: 3, y: 1.5}
+  modulePopupPivot: {x: 3, y: 1}
   panelSize: {x: 3200, y: 1800}
   panelWidthRatio: 1
   panelHeightRatio: 1
@@ -22814,6 +22827,7 @@ MonoBehaviour:
   damagedColor: {r: 0.96, g: 0.76, b: 0.36, a: 1}
   destroyedColor: {r: 0.86, g: 0.28, b: 0.22, a: 0.96}
   emptyColor: {r: 0.42, g: 0.46, b: 0.5, a: 0.85}
+  fireColor: {r: 1, g: 0.3, b: 0.15, a: 1}
 --- !u!114 &1727196689
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -23088,6 +23102,7 @@ MonoBehaviour:
   followParent: 1
   autoStopAfterTime: 0
   stopAfterSeconds: 15
+  onFire: 0
   fireSpawnPoint: {fileID: 313551616}
   firePrefab: {fileID: 8215615344314890366, guid: 965fcc7cfc108bd4aa222f6e13e435e1,
     type: 3}
@@ -23987,6 +24002,7 @@ MonoBehaviour:
   followParent: 1
   autoStopAfterTime: 0
   stopAfterSeconds: 15
+  onFire: 0
   fireSpawnPoint: {fileID: 1775719068}
   firePrefab: {fileID: 8215615344314890366, guid: 965fcc7cfc108bd4aa222f6e13e435e1,
     type: 3}
@@ -25455,6 +25471,7 @@ MonoBehaviour:
   followParent: 1
   autoStopAfterTime: 1
   stopAfterSeconds: 15
+  onFire: 0
   fireSpawnPoint: {fileID: 1846348469}
   explosionPoint: {fileID: 286346778}
   blowoff: {fileID: 1924356235}
@@ -26593,6 +26610,7 @@ MonoBehaviour:
   followParent: 1
   autoStopAfterTime: 0
   stopAfterSeconds: 15
+  onFire: 0
   fireSpawnPoint: {fileID: 245461300}
   firePrefab: {fileID: 8215615344314890366, guid: 965fcc7cfc108bd4aa222f6e13e435e1,
     type: 3}
@@ -26791,6 +26809,7 @@ MonoBehaviour:
   followParent: 1
   autoStopAfterTime: 0
   stopAfterSeconds: 15
+  onFire: 0
   fireSpawnPoint: {fileID: 245461300}
   firePrefab: {fileID: 8215615344314890366, guid: 965fcc7cfc108bd4aa222f6e13e435e1,
     type: 3}

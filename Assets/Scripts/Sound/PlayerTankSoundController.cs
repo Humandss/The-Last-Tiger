@@ -16,8 +16,10 @@ public class PlayerTankSoundController : SoundController
 
     [Header("Engine")]
     [SerializeField] private DriverController driverController;
+    [SerializeField] private ModuleManager moduleManager;
     [SerializeField] private AudioSource engineOneShotSource;
     [SerializeField] private AudioClip engineStartClip;
+    [SerializeField] private AudioClip engineFailureClip;
     [SerializeField] private AudioClip engineIdleClip;
     [SerializeField] private AudioClip engineRpmLowClip;
     [SerializeField] private AudioClip engineRpmSpeedClip;
@@ -92,6 +94,9 @@ public class PlayerTankSoundController : SoundController
     private AudioSource inactiveEngineLoop;
     private Coroutine crossfadeRoutine;
 
+    private ModuleDamageController engineModule;
+    private bool engineDestroyed = false;
+
     public void PlayReload() => PlayEffectSounds(reloadClips, reloadVolume);
     public void PlayFireCrewVoice() => PlayCrewVoiceWithRadio(fireCrewClip, 1f, CrewSubtitleCue.Fire);
     public void PlayReloadCrewVoice() => PlayCrewVoiceWithRadio(reloadCrewClip, 1f, CrewSubtitleCue.Reload);
@@ -122,6 +127,14 @@ public class PlayerTankSoundController : SoundController
 
     private void Start()
     {
+        if (moduleManager == null) moduleManager = GetComponent<ModuleManager>();
+        if (moduleManager != null)
+        {
+            engineModule = moduleManager.GetCrew(ModuleType.Engine);
+            if (engineModule != null)
+                engineModule.OnStateChanged += OnEngineStateChanged;
+        }
+
         float startDelay = 0f;
         if (engineStartClip != null && engineOneShotSource != null)
         {
@@ -179,6 +192,7 @@ public class PlayerTankSoundController : SoundController
 
     private void UpdateEngineLoop()
     {
+        if (engineDestroyed) return;
         if (!engineLoopArmed || driverController == null) return;
 
         float currentSpeed = Mathf.Abs(driverController.CurrentSpeed);
@@ -466,6 +480,50 @@ public class PlayerTankSoundController : SoundController
             EngineLoopState.RpmSpeed => engineRpmSpeedClip,
             _ => engineIdleClip
         };
+    }
+
+    private void OnDestroy()
+    {
+        if (engineModule != null)
+            engineModule.OnStateChanged -= OnEngineStateChanged;
+    }
+
+    private void OnEngineStateChanged(ModuleDamageController who, ModuleState prev, ModuleState next)
+    {
+        if (next == ModuleState.Destroyed)
+        {
+            engineDestroyed = true;
+            StopAllEngineSounds();
+            if (engineFailureClip != null && engineOneShotSource != null)
+                engineOneShotSource.PlayOneShot(engineFailureClip);
+        }
+        else if (prev == ModuleState.Destroyed)
+        {
+            engineDestroyed = false;
+            RestartEngine();
+        }
+    }
+
+    private void StopAllEngineSounds()
+    {
+        engineLoopArmed = false;
+        if (crossfadeRoutine != null) { StopCoroutine(crossfadeRoutine); crossfadeRoutine = null; }
+        if (engineLoopA != null) engineLoopA.Stop();
+        if (engineLoopB != null) engineLoopB.Stop();
+        if (engineOneShotSource != null) engineOneShotSource.Stop();
+    }
+
+    private void RestartEngine()
+    {
+        StopAllEngineSounds();
+
+        float startDelay = 0f;
+        if (engineStartClip != null && engineOneShotSource != null)
+        {
+            engineOneShotSource.PlayOneShot(engineStartClip);
+            startDelay = engineStartClip.length;
+        }
+        StartCoroutine(ArmEngineLoopAfterStart(startDelay));
     }
 
     private IEnumerator PlayStartupSequence()

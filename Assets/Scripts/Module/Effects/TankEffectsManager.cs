@@ -21,7 +21,7 @@ public abstract class TankEffectsManager : MonoBehaviour
     [SerializeField] private float stopAfterSeconds = 15f;
     protected float t;
     protected float life;
-    protected bool onFire = false;
+    [SerializeField] protected bool onFire = false;
 
     protected readonly List<ModuleDamageController> modules = new();
 
@@ -35,6 +35,8 @@ public abstract class TankEffectsManager : MonoBehaviour
             module.OnStateChanged += OnStateChanged;
         else
             Debug.LogWarning("[TankEffectsManager] ModuleDamageController not found!");
+
+        if(onFire) SpawnFire();
     }
 
     protected virtual void OnDestroy()

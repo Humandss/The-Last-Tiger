@@ -4,12 +4,14 @@ using System.Text;
 using UnityEngine;
 
 public class ModuleManager : MonoBehaviour
-{
+{ 
     [Header("Collect")]
     [SerializeField] private bool autoCollectOnAwake = true;
     [SerializeField] private bool includeInactive = true;
     [SerializeField] private List<ModuleDamageController> modules = new();
     private List<ModuleDamageController> aModules = new();
+
+
 
     [Header("HUD")]
     [SerializeField] private DebugHudChannel hudChannel = DebugHudChannel.Enemy;
@@ -17,11 +19,32 @@ public class ModuleManager : MonoBehaviour
     [SerializeField] private int maxLines = 20;
 
 
+    private TankFireEffects[] fireEffects;
+
+    public bool IsOnFire
+    {
+        get
+        {
+            for (int i = 0; i < fireEffects.Length; i++)
+                if (fireEffects[i] != null && fireEffects[i].IsOnFire) return true;
+            return false;
+        }
+    }
+
+    public void StopAllFires()
+    {
+        for (int i = 0; i < fireEffects.Length; i++)
+            if (fireEffects[i] != null && fireEffects[i].IsOnFire)
+                fireEffects[i].StopFire();
+    }
+
     public ModuleDamageController GetCrew(ModuleType type) => GetCrewModule(type);
 
     private void Awake()
     {
+        fireEffects = GetComponentsInChildren<TankFireEffects>(true);
         if (autoCollectOnAwake) CollectModules();
+
     }
 
     [ContextMenu("CollectModules")]

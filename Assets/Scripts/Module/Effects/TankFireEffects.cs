@@ -13,35 +13,37 @@ public class TankFireEffects : TankEffectsManager
     [SerializeField] private GameObject firePrefab;
 
     [Header("Options")]
-    [SerializeField] private bool onlyOnce = true; 
+    [SerializeField] private bool onlyOnce = true;
     [SerializeField] private float engineFireChance = 0.3f;
 
     private GameObject fireInstance;
- 
+
+    public bool IsOnFire => onFire;
+
     protected override void Awake()
     {
         base.Awake();
         // Engine: damaged에서 30% 발화
         module.OnDamaged += OnDamaged;
+        module.OnHit += OnHit;
     }
 
     protected override void OnDestroy()
     {
         base.OnDestroy();
         module.OnDamaged -= OnDamaged;
+        module.OnHit -= OnHit;
     }
     protected override void Update()
     {
         base.Update();
-
     }
 
     public override void OnStateChanged(ModuleDamageController who, ModuleState prev, ModuleState next)
     {
         base.OnStateChanged(who, prev, next);
         // FuelTank 파괴 시 불
-        if (who.Type == ModuleType.FuelTank) SpawnFire();
-
+        if (who.Type == ModuleType.FuelTank && next == ModuleState.Destroyed) SpawnFire();
     }
     private void OnDamaged(ModuleDamageController who, float dmg, DamageType type)
     {
@@ -52,8 +54,17 @@ public class TankFireEffects : TankEffectsManager
         if (onlyOnce && fireInstance != null) return;
 
         if (Random.value < engineFireChance) SpawnFire();
-      
+
     }
+    private void OnHit(ModuleDamageController who, DamageType type)
+    {
+        if (onFire) return;
+        if (who.Type != ModuleType.FuelTank) return;
+        if (who.State != ModuleState.Destroyed) return; //파괴되지 않은 상태면 호출x
+        
+        SpawnFire();
+    }
+
     public override void StopFire()
     {
         onFire = false;
@@ -63,7 +74,7 @@ public class TankFireEffects : TankEffectsManager
         if (fireInstance) Destroy(fireInstance);
         fireInstance = null;
 
-        Debug.Log($"[FIRE] fire stopped on {gameObject.name}");
+        soundController?.StopFire();
     }
     public override void TickDamage()
     {
@@ -89,6 +100,6 @@ public class TankFireEffects : TankEffectsManager
         if (followParent)
             fireInstance.transform.SetParent(t, worldPositionStays: true);
 
-        Debug.Log($"[FIRE] fire spawned on {gameObject.name}");
+        soundController?.PlayFire();
     }
 }

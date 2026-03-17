@@ -61,48 +61,47 @@ public class GunnerController : TankGunner, ITankGunner
 
     private void Update()
     {
-        if (PlayerCrewInteriorOverlay.IsInputCaptured)
-        {
-            UpdateTurretSound();
-            return;
-        }
-        if (Input.GetMouseButtonDown(2))
-        {
-            Ray ray = commanderCam.ScreenPointToRay(Input.mousePosition);
-            if (Physics.Raycast(ray, out RaycastHit hit, maxAimDistance, aimMask, QueryTriggerInteraction.Ignore))
-            {
-                targetPoint = hit.point;
+        bool inputBlocked = PlayerCrewInteriorOverlay.IsInputCaptured;
 
-                int hitLayerBit = 1 << hit.collider.gameObject.layer;
-                if ((trackableMask.value & hitLayerBit) != 0)
+        if (!inputBlocked)
+        {
+            if (Input.GetMouseButtonDown(2))
+            {
+                Ray ray = commanderCam.ScreenPointToRay(Input.mousePosition);
+                if (Physics.Raycast(ray, out RaycastHit hit, maxAimDistance, aimMask, QueryTriggerInteraction.Ignore))
                 {
-                    designatedTarget = hit.collider.transform;
-                    float dist = Vector3.Distance(ray.origin, hit.point);
-                    Debug.Log($"[Designator] TRACK target={designatedTarget.name}, point={hit.point}, dist={dist:0.0}m");
+                    targetPoint = hit.point;
+
+                    int hitLayerBit = 1 << hit.collider.gameObject.layer;
+                    if ((trackableMask.value & hitLayerBit) != 0)
+                    {
+                        designatedTarget = hit.collider.transform;
+                        float dist = Vector3.Distance(ray.origin, hit.point);
+                        Debug.Log($"[Designator] TRACK target={designatedTarget.name}, point={hit.point}, dist={dist:0.0}m");
+                    }
+                    else
+                    {
+                        designatedTarget = null;
+                        Debug.Log($"[Designator] POINT only, point={hit.point}");
+                    }
                 }
                 else
                 {
                     designatedTarget = null;
-                    Debug.Log($"[Designator] POINT only, point={hit.point}");
+                    Debug.Log("[Designator] no hit");
                 }
-            }
-            else
-            {
-                designatedTarget = null;
-                Debug.Log("[Designator] no hit");
             }
         }
 
         if (IsGunnerDead())
-        {
-            Debug.Log("[Gunner] 사망!");
+        { 
             isAiming = false;
             isAligning = false;
             StopTracking();
             return;
         }
 
-        HandleRangeHotkeys();
+        if (!inputBlocked) HandleRangeHotkeys();
 
         if (isAligning)
         {
@@ -287,19 +286,17 @@ public class GunnerController : TankGunner, ITankGunner
     {
         if (!CanFire)
         {
-            Debug.Log("[Gunner] 사격불가!");
             return;
         }
 
         if (!loaderFunc.GetIsLoaded() || loaderFunc.GetIsLoading())
         {
-            Debug.Log("[Gunner] 장전이 안됐음!");
             return;
         }
 
         Vector3 shotDir = GetDispersionShotDirection();
         AmmoType loadedAmmo = loaderFunc.GetLoadedAmmoType();
-        Debug.Log($"[Gunner] 조준! range={rangeMeters:0}m dir={shotDir}");
+        Debug.Log($"[Gunner] range={rangeMeters:0}m dir={shotDir}");
 
         fireController.FireProjectile(shotDir, loadedAmmo);
         soundController.PlayGunFireClips();

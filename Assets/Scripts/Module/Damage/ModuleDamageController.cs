@@ -30,7 +30,7 @@ public enum ModuleType
 
 public interface IDamageable
 {
-    void TakeDamage(float amount);
+    void TakeDamage(float amount, DamageType type);
 }
 
 public class ModuleDamageController : MonoBehaviour, IDamageable
@@ -58,8 +58,9 @@ public class ModuleDamageController : MonoBehaviour, IDamageable
     [Header("Tuning")]
     [SerializeField] private bool destroyObjectOnZero = false;
 
-    public event Action<ModuleDamageController, float, DamageType> OnDamaged; // (who, appliedDmg, type)
-    public event Action<ModuleDamageController, ModuleState, ModuleState> OnStateChanged;
+    public event Action<ModuleDamageController, float, DamageType> OnDamaged; // 대미지를 입을시
+    public event Action<ModuleDamageController, ModuleState, ModuleState> OnStateChanged; //상태 변화시
+    public event Action<ModuleDamageController, DamageType> OnHit; //상태, 대미지 무관 피격시
 
     public float MaxHp => maxHp;
     public float Hp => hp;
@@ -76,12 +77,11 @@ public class ModuleDamageController : MonoBehaviour, IDamageable
         hp = Mathf.Clamp(hp, 0f, maxHp);
     }
 
-    // 기존 인터페이스 유지(기본은 Fragment로 처리)
-    public void TakeDamage(float amount) => TakeDamage(amount, DamageType.Fragment);
-
-    //타입 포함 버전
     public void TakeDamage(float amount, DamageType type)
     {
+        //피격 이벤트 호출
+        OnHit?.Invoke(this, type);
+
         if (hp <= 0f) return;
 
         var prevState = State;

@@ -8,11 +8,20 @@ public class PlayerCrewManager : TankCrewManagerBase
     private readonly Dictionary<ModuleType, ModuleType> playerAssignments = new Dictionary<ModuleType, ModuleType>();
     private Coroutine playerSwapRoutine;
     private Coroutine playerRepairRoutine;
+    private Coroutine playerSuppressionRoutine;
 
     private float playerSwapEndsAt = -1f;
     private ModuleType repairingCrewType = ModuleType.Commander;
     private ModuleDamageController repairingModule;
     private float playerRepairEndsAt = -1f;
+
+    private ModuleType suppressingCrewType = ModuleType.Commander;
+    private float playerSuppressionEndsAt = -1f;
+    private int suppressionCount = 0;
+    private const int MaxSuppressionCount = 3;
+
+    [Header("Fire Suppression")]
+    [SerializeField] private float suppressionDuration = 10f;
 
     private ModuleType movingCrewType = ModuleType.Commander;
     private ModuleType movingTargetSeat = ModuleType.Commander;
@@ -23,6 +32,11 @@ public class PlayerCrewManager : TankCrewManagerBase
     public float PlayerRepairSecondsRemaining => Mathf.Max(0f, playerRepairEndsAt - Time.time);
     public ModuleType RepairingCrewType => repairingCrewType;
     public ModuleDamageController RepairingModule => repairingModule;
+    public bool IsPlayerSuppressionInProgress => suppressingCrewType != ModuleType.Commander;
+    public float PlayerSuppressionSecondsRemaining => Mathf.Max(0f, playerSuppressionEndsAt - Time.time);
+    public ModuleType SuppressingCrewType => suppressingCrewType;
+    public int SuppressionCount => suppressionCount;
+    public int MaxSuppression => MaxSuppressionCount;
     public ModuleType MovingCrewType => movingCrewType;
     public ModuleType MovingTargetSeat => movingTargetSeat;
 
@@ -42,11 +56,11 @@ public class PlayerCrewManager : TankCrewManagerBase
 
         playerAssignments.Clear();
 
-        if (!IsDestroyed(driverModule))
+        if (driverModule == null || !IsDestroyed(driverModule))
             playerAssignments[ModuleType.Driver] = ModuleType.Driver;
-        if (!IsDestroyed(gunnerModule))
+        if (gunnerModule == null || !IsDestroyed(gunnerModule))
             playerAssignments[ModuleType.Gunner] = ModuleType.Gunner;
-        if (!IsDestroyed(loaderModule))
+        if (loaderModule == null || !IsDestroyed(loaderModule))
             playerAssignments[ModuleType.Loader] = ModuleType.Loader;
     }
 
@@ -89,6 +103,9 @@ public class PlayerCrewManager : TankCrewManagerBase
 
         if (playerRepairRoutine != null && repairingCrewType == crewType)
             ResetPlayerRepairState(true);
+
+        if (playerSuppressionRoutine != null && suppressingCrewType == crewType)
+            ResetPlayerSuppressionState(true);
     }
     private void ResetPlayerSwapState(bool stopCoroutine)
     {
@@ -120,11 +137,17 @@ public class PlayerCrewManager : TankCrewManagerBase
         if (IsCrewUnavailableForPlayer(sourceCrew)) return false;
 
         ModuleDamageController sourceModule = GetCrewModuleByType(sourceCrew);
-        if (IsDestroyed(sourceModule)) return false;
+        if (sourceModule != null && sourceModule.State == ModuleState.Destroyed) return false;
 
         ModuleType currentSeat = GetAssignedSeatForCrew(sourceCrew);
         if (currentSeat == targetSeat) return false;
-        if (GetAssignedCrewForSeat(targetSeat).HasValue) return false;
+
+        ModuleType? targetOccupant = GetAssignedCrewForSeat(targetSeat);
+        if (targetOccupant.HasValue)
+        {
+            ModuleDamageController occupantModule = GetCrewModuleByType(targetOccupant.Value);
+            if (!IsDestroyed(occupantModule)) return false;
+        }
 
         return true;
     }
@@ -181,6 +204,9 @@ public class PlayerCrewManager : TankCrewManagerBase
         if (playerRepairRoutine != null && repairingCrewType == crewType)
             return "Repairing";
 
+        if (playerSuppressionRoutine != null && suppressingCrewType == crewType)
+            return "Extinguishing";
+
         if (playerSwapRoutine != null && movingCrewType == crewType)
             return $"Moving -> {GetSeatDisplayName(movingTargetSeat)}";
 
@@ -218,6 +244,62 @@ public class PlayerCrewManager : TankCrewManagerBase
         return true;
     }
 
+    public bool CanAssignFireSuppression(ModuleType crewType)
+    {
+        if (moduleManager == null || !moduleManager.IsOnFire) return false;
+        if (playerSuppressionRoutine != null) return false;
+        if (suppressionCount >= MaxSuppressionCount) return false;
+        if (!IsMovableCrew(crewType)) return false;
+        if (crewType == ModuleType.Commander) return false;
+        if (IsCrewUnavailableForPlayer(crewType)) return false;
+
+        ModuleDamageController crewModule = GetCrewModuleByType(crewType);
+        if (IsDestroyed(crewModule)) return false;
+
+        return true;
+    }
+
+    public bool StartFireSuppression(ModuleType crewType)
+    {
+        if (!CanAssignFireSuppression(crewType)) return false;
+
+        if (playerSuppressionRoutine != null)
+            ResetPlayerSuppressionState(true);
+
+        playerSuppressionRoutine = StartCoroutine(CoFireSuppression(crewType));
+        return true;
+    }
+
+    private void ResetPlayerSuppressionState(bool stopCoroutine)
+    {
+        if (stopCoroutine && playerSuppressionRoutine != null)
+            StopCoroutine(playerSuppressionRoutine);
+
+        playerSuppressionRoutine = null;
+        suppressingCrewType = ModuleType.Commander;
+        playerSuppressionEndsAt = -1f;
+    }
+
+    private IEnumerator CoFireSuppression(ModuleType crewType)
+    {
+        suppressingCrewType = crewType;
+        playerSuppressionEndsAt = Time.time + suppressionDuration;
+
+        ApplyPlayerAssignments();
+
+        yield return new WaitForSeconds(suppressionDuration);
+
+        ModuleDamageController crewModule = GetCrewModuleByType(crewType);
+        if (!IsDestroyed(crewModule) && moduleManager != null && moduleManager.IsOnFire)
+        {
+            moduleManager.StopAllFires();
+            suppressionCount++;
+        }
+
+        ResetPlayerSuppressionState(false);
+        ApplyPlayerAssignments();
+    }
+
     public float GetRepairDuration(ModuleDamageController targetModule)
     {
         if (targetModule == null)
@@ -244,7 +326,7 @@ public class PlayerCrewManager : TankCrewManagerBase
         yield return new WaitForSeconds(Mathf.Max(0.1f, swapDelay));
 
         ModuleDamageController sourceModule = GetCrewModuleByType(sourceCrew);
-        if (!IsDestroyed(sourceModule))
+        if (sourceModule == null || !IsDestroyed(sourceModule))
             playerAssignments[sourceCrew] = targetSeat;
 
         ResetPlayerSwapState(false);
@@ -300,6 +382,9 @@ public class PlayerCrewManager : TankCrewManagerBase
             return true;
 
         if (movingCrewType == crewType)
+            return true;
+
+        if (suppressingCrewType == crewType)
             return true;
 
         return false;

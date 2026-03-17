@@ -149,7 +149,7 @@ public class ShellExplosion
 
         // 최종 피해 적용 (1 대상 1회, 최대값)
         foreach (var kv in best)
-            kv.Key.TakeDamage(kv.Value);
+            kv.Key.TakeDamage(kv.Value, DamageType.Fragment);
 
         Debug.Log($"[EXPLOSION-RAYS] tnt={tntGrams:0.#}g radius={radius:0.00}m rays={rays} blocked={rayBlocked} rayHits={rayHits} uniqueTargets={best.Count}");
     }
