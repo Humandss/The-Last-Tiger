@@ -90,9 +90,9 @@ public class AmmoRackEffects : TankEffectsManager
         }
 
         Transform t = explosionPoint ? explosionPoint : transform;
+        Vector3 spawnPos = t.TransformPoint(localOffset);
 
-        explosionInstance = Instantiate(ammoExplosionPrefab);
-        explosionInstance.transform.position = t.TransformPoint(localOffset);
+        explosionInstance = PoolManager.Instance.Spawn(ammoExplosionPrefab, spawnPos, Quaternion.identity);
 
         blowoff.BlowOff(explosionPoint.position);
 
@@ -131,9 +131,9 @@ public class AmmoRackEffects : TankEffectsManager
         if (smokeInstance) return;
 
         Transform t = explosionPoint ? explosionPoint : transform;
+        Vector3 spawnPos = t.TransformPoint(localOffset);
 
-        smokeInstance = Instantiate(ammoSmokePrefab);
-        smokeInstance.transform.position = t.TransformPoint(localOffset);
+        smokeInstance = PoolManager.Instance.Spawn(ammoSmokePrefab, spawnPos, Quaternion.identity);
 
         if (followParent)
             smokeInstance.transform.SetParent(t, worldPositionStays: true);
@@ -164,7 +164,8 @@ public class AmmoRackEffects : TankEffectsManager
         foreach (var tr in trails) maxTrail = Mathf.Max(maxTrail, tr.time);
 
         float delay = Mathf.Max(fadeOutSeconds, maxLife, maxTrail) + destroyBuffer;
-        Destroy(vfx, delay);
+        vfx.transform.SetParent(null);
+        PoolManager.Instance.ReturnDelayed(vfx, delay);
     }
 
     private void StartAmmoPopLoop()
@@ -207,9 +208,9 @@ public class AmmoRackEffects : TankEffectsManager
         onFire = true;
         StartAmmoPopLoop();
         Transform t = fireSpawnPoint ? fireSpawnPoint : transform;
+        Vector3 spawnPos = t.TransformPoint(localOffset);
 
-        fireInstance = Instantiate(ammoFirePrefab);
-        fireInstance.transform.position = t.TransformPoint(localOffset);
+        fireInstance = PoolManager.Instance.Spawn(ammoFirePrefab, spawnPos, Quaternion.identity);
 
         if (followParent)
             fireInstance.transform.SetParent(t, worldPositionStays: true);

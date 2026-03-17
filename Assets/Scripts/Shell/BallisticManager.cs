@@ -91,6 +91,8 @@ public class BallisticManager : MonoBehaviour
 
     void OnEnable()
     {
+        if (trail) { trail.emitting = false; trail.Clear(); }
+        if (tracerLight) tracerLight.enabled = false;
         StartCoroutine(Run());
     }
 
@@ -118,6 +120,7 @@ public class BallisticManager : MonoBehaviour
         id = System.Threading.Interlocked.Increment(ref idSeq);
         isPenetratingTerrain = false;
         ricochetChance = 0;
+        penCount = 0;
         flightTime = 0.0f;
         pos = position;
         prevPos = pos;
@@ -141,7 +144,7 @@ public class BallisticManager : MonoBehaviour
         flightTime += dt;
         if (flightTime > shell.lifeTime)
         {
-            Destroy(gameObject);
+            PoolManager.Instance.Return(gameObject);
             return;
         }
 
@@ -302,7 +305,7 @@ public class BallisticManager : MonoBehaviour
 
         Debug.Log($"[NO PEN] zone={zone.zoneName}, original pen ={pen:0}, effective pen={penMm:0} eff={effectiveMm:0} angleN={angleToNormal:0}");
         if (shell.type == AmmoType.HE) ExplodeNow();
-        else Destroy(gameObject);
+        else PoolManager.Instance.Return(gameObject);
         return false;
     }
 
@@ -345,14 +348,14 @@ public class BallisticManager : MonoBehaviour
         penCount++;
         if (penCount > maxPenetrations)
         {
-            Destroy(gameObject);
+            PoolManager.Instance.Return(gameObject);
             return false;
         }
 
         Vector3 dirN = segDir.sqrMagnitude > 1e-8f ? segDir.normalized : velocity.normalized;
         if (dirN.sqrMagnitude < 1e-8f)
         {
-            Destroy(gameObject);
+            PoolManager.Instance.Return(gameObject);
             return false;
         }
 
@@ -364,7 +367,7 @@ public class BallisticManager : MonoBehaviour
         if (pen <= 0f)
         {
             if (shell.type == AmmoType.HE) ExplodeNow();
-            else Destroy(gameObject);
+            else PoolManager.Instance.Return(gameObject);
             return false;
         }
 
@@ -378,7 +381,7 @@ public class BallisticManager : MonoBehaviour
         if (speed < minSpeedAfterPen)
         {
             if (shell.type == AmmoType.HE) ExplodeNow();
-            else Destroy(gameObject);
+            else PoolManager.Instance.Return(gameObject);
             return false;
         }
 
@@ -389,7 +392,7 @@ public class BallisticManager : MonoBehaviour
     {
         if (dirN.sqrMagnitude < 1e-8f)
         {
-            Destroy(gameObject);
+            PoolManager.Instance.Return(gameObject);
             return false;
         }
 
@@ -399,7 +402,7 @@ public class BallisticManager : MonoBehaviour
         if (!TryFindExitPoint(hit.collider, startInside, dirN, out RaycastHit exitHit))
         {
             Debug.Log("[ObjPen] exit not found -> destroy");
-            Destroy(gameObject);
+            PoolManager.Instance.Return(gameObject);
             return false;
         }
 
@@ -420,7 +423,7 @@ public class BallisticManager : MonoBehaviour
         {
             Debug.Log($"[ObjPen] stop thickness={thicknessM:F3} cost={cost:F1} pen<=0");
             if (shell.type == AmmoType.HE) ExplodeNow();
-            else Destroy(gameObject);
+            else PoolManager.Instance.Return(gameObject);
             return false;
         }
 
@@ -431,7 +434,7 @@ public class BallisticManager : MonoBehaviour
         if (speed < minSpeedAfterPen)
         {
             if (shell.type == AmmoType.HE) ExplodeNow();
-            else Destroy(gameObject);
+            else PoolManager.Instance.Return(gameObject);
             return false;
         }
 
@@ -517,7 +520,7 @@ public class BallisticManager : MonoBehaviour
         _ = candidates;
         _ = insideOcc;
 
-        Destroy(gameObject);
+        PoolManager.Instance.Return(gameObject);
     }
 
     private void HandleGroundHit(RaycastHit hit, Vector3 dirN, float angleToNormal)
@@ -529,18 +532,19 @@ public class BallisticManager : MonoBehaviour
         }
 
         if (shell.type == AmmoType.HE) ExplodeNow();
-        else Destroy(gameObject);
+        else PoolManager.Instance.Return(gameObject);
     }
 
     private void SpawnExplosion(RaycastHit hit)
     {
         if (explosionPrefab == null) return;
 
-        GameObject go = Instantiate(explosionPrefab, hit.point + hit.normal * enter, Quaternion.LookRotation(hit.normal));
+        GameObject go = PoolManager.Instance.Spawn(explosionPrefab, hit.point + hit.normal * enter, Quaternion.LookRotation(hit.normal));
+        if (go == null) return;
 
         ParticleSystem ps = go.GetComponentInChildren<ParticleSystem>();
-        if (ps) Destroy(go, ps.main.duration + ps.main.startLifetime.constantMax + 0.5f);
-        else Destroy(go, 1.3f);
+        float delay = ps ? ps.main.duration + ps.main.startLifetime.constantMax + 0.5f : 1.3f;
+        PoolManager.Instance.ReturnDelayed(go, delay);
     }
 
     private void NotifyNearbyAI(Vector3 from, Vector3 to)

@@ -71,7 +71,11 @@ public class TankFireEffects : TankEffectsManager
         life = 0f;
         t = 0f;
 
-        if (fireInstance) Destroy(fireInstance);
+        if (fireInstance)
+        {
+            fireInstance.transform.SetParent(null);
+            PoolManager.Instance.Return(fireInstance);
+        }
         fireInstance = null;
 
         soundController?.StopFire();
@@ -93,9 +97,9 @@ public class TankFireEffects : TankEffectsManager
         }
         onFire = true;
         Transform t = fireSpawnPoint ? fireSpawnPoint : transform;
+        Vector3 spawnPos = t.TransformPoint(localOffset);
 
-        fireInstance = Instantiate(firePrefab);
-        fireInstance.transform.position = t.TransformPoint(localOffset);
+        fireInstance = PoolManager.Instance.Spawn(firePrefab, spawnPos, Quaternion.identity);
 
         if (followParent)
             fireInstance.transform.SetParent(t, worldPositionStays: true);

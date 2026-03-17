@@ -31,12 +31,13 @@ public abstract class FireController : MonoBehaviour
         Transform fxT = muzzleFxSocket ? muzzleFxSocket : muzzle;
         if (!fxT) return;
 
-        GameObject fx = Instantiate(muzzleFlashPrefab, fxT.position, fxT.rotation);
+        GameObject fx = PoolManager.Instance.Spawn(muzzleFlashPrefab, fxT.position, fxT.rotation);
+        if (fx == null) return;
 
         if (muzzleFlashFollowMuzzle)
             fx.transform.SetParent(fxT, worldPositionStays: true);
 
-        Destroy(fx, muzzleFlashLife);
+        StartCoroutine(ReturnAfterDelay(fx, muzzleFlashLife));
     }
 
     protected void SpawnFireDust()
@@ -46,8 +47,17 @@ public abstract class FireController : MonoBehaviour
         Vector3 pos = dustSpot.TransformPoint(dustSmokeLocalOffset);
         Quaternion rot = dustSpot.rotation;
 
-        GameObject fx = Instantiate(dustSmokePrefab, pos, rot);
-        Destroy(fx, 1.5f);
+        GameObject fx = PoolManager.Instance.Spawn(dustSmokePrefab, pos, rot);
+        if (fx == null) return;
+        StartCoroutine(ReturnAfterDelay(fx, 1.5f));
+    }
+
+    private IEnumerator ReturnAfterDelay(GameObject obj, float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        if (obj == null) yield break;
+        obj.transform.SetParent(null);
+        PoolManager.Instance.Return(obj);
     }
 
     public virtual void FireProjectile(Vector3 dir, AmmoType type)
@@ -80,7 +90,8 @@ public abstract class FireController : MonoBehaviour
         Vector3 shotDir = dir.sqrMagnitude > 1e-8f ? dir.normalized : muzzle.forward.normalized;
         Vector3 spawnPos = muzzle.position + shotDir * 0.05f;
 
-        BallisticManager shell = Instantiate(projectile, spawnPos, Quaternion.LookRotation(shotDir));
+        GameObject shellGO = PoolManager.Instance.Spawn(projectile.gameObject, spawnPos, Quaternion.LookRotation(shotDir));
+        BallisticManager shell = shellGO != null ? shellGO.GetComponent<BallisticManager>() : null;
         if (shell == null)
         {
             Debug.LogWarning("[FireController] BallisticManager component missing on projectile prefab");
