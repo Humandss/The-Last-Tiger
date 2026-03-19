@@ -4,6 +4,7 @@ public class CameraController : MonoBehaviour
 {
     [Header("Refs")]
     [SerializeField] private Camera commanderCam;
+    public static CameraController cameraInstance { get; private set; }
 
     [Header("Zoom")]
     [SerializeField] private KeyCode zoomHoldKey = KeyCode.Mouse1;
@@ -64,7 +65,12 @@ public class CameraController : MonoBehaviour
             baseFov = commanderCam.fieldOfView;
             targetFov = baseFov;
         }
-
+        if (cameraInstance != null && cameraInstance != this)
+        {
+            Destroy(this);
+            return;
+        }
+        cameraInstance = this;
         zoomIndex = Mathf.Clamp(zoomIndex, 0, zoomMagnifications.Length - 1);
         _baseLocalRot = transform.localRotation;
         _noiseSeed = Random.value * 1000f;

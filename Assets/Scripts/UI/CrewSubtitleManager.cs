@@ -7,9 +7,15 @@ public enum CrewSubtitleCue
     DriverReady,
     GunnerReady,
     LoaderReady,
+    LoadAP,
+    LoadHE,
     Fire,
     Reload,
-    TargetDown
+    TargetDown,
+    Penetrated,
+    NoPenetration,
+    Ricocheted,
+    EnemyInSight
 }
 
 public class CrewSubtitleManager : MonoBehaviour
@@ -29,9 +35,15 @@ public class CrewSubtitleManager : MonoBehaviour
     [SerializeField] private string driverReadyTextKr = "조종수, 준비 완료!";
     [SerializeField] private string gunnerReadyTextKr = "포수, 준비 완료!";
     [SerializeField] private string loaderReadyTextKr = "장전수, 준비 완료!";
+    [SerializeField] private string loadAPTextKr = "철갑탄 장전!";
+    [SerializeField] private string loadHETextKr = "고폭탄 장전!";
     [SerializeField] private string fireTextKr = "사격!";
     [SerializeField] private string reloadTextKr = "재장전 완료!";
     [SerializeField] private string targetDownTextKr = "목표 격파!";
+    [SerializeField] private string penetratedTextKr = "관통!";
+    [SerializeField] private string noPenetrationTextKr = "비관통!";
+    [SerializeField] private string ricochetedTextKr = "도탄!";
+    [SerializeField] private string enemyInSightTextKr = "적 전차 발견!";
 
     private void Awake()
     {
@@ -76,9 +88,17 @@ public class CrewSubtitleManager : MonoBehaviour
                 speaker = Fallback(loaderLabelKr, "장전수");
                 line = Fallback(loaderReadyTextKr, "장전수, 준비 완료!");
                 return true;
+            case CrewSubtitleCue.LoadAP:
+                speaker = Fallback(commanderLabelKr, "지휘관");
+                line = Fallback(loadAPTextKr, "철갑탄 장전!.");
+                return true;
+            case CrewSubtitleCue.LoadHE:
+                speaker = Fallback(commanderLabelKr, "지휘관");
+                line = Fallback(loadHETextKr, "고폭탄 장전!");
+                return true;
             case CrewSubtitleCue.Fire:
                 speaker = Fallback(gunnerLabelKr, "포수");
-                line = Fallback(fireTextKr, "사격!");
+                line = Fallback(fireTextKr, "발사!");
                 return true;
             case CrewSubtitleCue.Reload:
                 speaker = Fallback(loaderLabelKr, "장전수");
@@ -88,6 +108,23 @@ public class CrewSubtitleManager : MonoBehaviour
                 speaker = Fallback(commanderLabelKr, "지휘관");
                 line = Fallback(targetDownTextKr, "목표 격파!");
                 return true;
+            case CrewSubtitleCue.Penetrated:
+                speaker = Fallback(gunnerLabelKr, "포수");
+                line = Fallback(penetratedTextKr, "적 전차 관통!");
+                return true;
+            case CrewSubtitleCue.NoPenetration:
+                speaker = Fallback(gunnerLabelKr, "포수");
+                line = Fallback(noPenetrationTextKr, "적 전차 비관통!");
+                return true;
+            case CrewSubtitleCue.Ricocheted:
+                speaker = Fallback(gunnerLabelKr, "포수");
+                line = Fallback(ricochetedTextKr, "적 전차 도탄!");
+                return true;
+            case CrewSubtitleCue.EnemyInSight:
+                speaker = Fallback(commanderLabelKr, "전차장");
+                line = Fallback(enemyInSightTextKr, "적 전차 발견!");
+                return true;
+
             default:
                 return false;
         }

@@ -20,6 +20,7 @@ public class GunnerController : TankGunner, ITankGunner
     [SerializeField] private Transform hull;
     [SerializeField] private LayerMask trackableMask;
     private CannonFireController fireController;
+    private PlayerTankSoundController playerSoundController;
 
     [Header("Aim")]
     [SerializeField] private bool fcsHighArc = false;
@@ -52,6 +53,7 @@ public class GunnerController : TankGunner, ITankGunner
     {
         base.Awake();
         fireController = GetComponent<CannonFireController>();
+        playerSoundController = GetComponent<PlayerTankSoundController>();
     }
 
     private void Start()
@@ -78,6 +80,7 @@ public class GunnerController : TankGunner, ITankGunner
                         designatedTarget = hit.collider.transform;
                         float dist = Vector3.Distance(ray.origin, hit.point);
                         Debug.Log($"[Designator] TRACK target={designatedTarget.name}, point={hit.point}, dist={dist:0.0}m");
+                        playerSoundController.PlayInSightCrewVoice();
                     }
                     else
                     {
@@ -121,6 +124,7 @@ public class GunnerController : TankGunner, ITankGunner
         {
             AimAtWorldPoint(aimPoint);
             ApplyFcsToWorldPoint();
+      
         }
 
         DriveGunPitchToTarget();
@@ -294,13 +298,18 @@ public class GunnerController : TankGunner, ITankGunner
             return;
         }
 
+        playerSoundController.PlayFireCrewVoice();
+        Invoke(nameof(OnFire), 1.3f);
+
+    }
+    private void OnFire()
+    {
         Vector3 shotDir = GetDispersionShotDirection();
         AmmoType loadedAmmo = loaderFunc.GetLoadedAmmoType();
         Debug.Log($"[Gunner] range={rangeMeters:0}m dir={shotDir}");
 
         fireController.FireProjectile(shotDir, loadedAmmo);
         soundController.PlayGunFireClips();
-
         loaderFunc.IsShot();
         loaderFunc.LoadDefault();
     }

@@ -1,4 +1,5 @@
 using System.Collections;
+using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
 public enum AmmoType { None, AP, HE }
@@ -87,7 +88,14 @@ public class LoaderController : MonoBehaviour, ITankLoader
         loadedShell = GetShellDataFor(LastSelectedAmmo);
 
         if (!isAI && soundController != null)
+        {
             soundController.PlayReload();
+            if (type == AmmoType.AP) soundController.PlayAPLoad();
+            else if (type == AmmoType.HE) soundController.PlayHELoad();
+            else return;
+             
+        }
+            
     }
 
     private void CeaseAction()
@@ -127,6 +135,7 @@ public class LoaderController : MonoBehaviour, ITankLoader
         isLoaded = true;
 
         Debug.Log($"[Loader] Reload complete {shellType}");
+        if(!isAI) soundController.PlayReloadCrewVoice();
         co = null;
     }
 

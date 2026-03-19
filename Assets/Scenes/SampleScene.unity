@@ -8,8 +8,9 @@ OcclusionCullingSettings:
     smallestOccluder: 5
     smallestHole: 0.25
     backfaceThreshold: 100
-  m_SceneGUID: 00000000000000000000000000000000
-  m_OcclusionCullingData: {fileID: 0}
+  m_SceneGUID: 99c9720ab356a0642a771bea13969a05
+  m_OcclusionCullingData: {fileID: 36300000, guid: ce380fe1ab882994b818ed6a42882c38,
+    type: 2}
 --- !u!104 &2
 RenderSettings:
   m_ObjectHideFlags: 0
@@ -21437,9 +21438,35 @@ MonoBehaviour:
   normalSnapshot: {fileID: 24500006, guid: 35f6fe69b65b2b348a3c8c1d9cbfe9e6, type: 2}
   radioSnapshot: {fileID: 24500006, guid: 35f6fe69b65b2b348a3c8c1d9cbfe9e6, type: 2}
   transitionTime: 0.05
-  fireCrewClip: {fileID: 8300000, guid: e06ab62fa79ff2d4abf5aa51687c2a23, type: 3}
-  reloadCrewClip: {fileID: 0}
-  targetDownCrewClip: {fileID: 0}
+  loadAP:
+  - {fileID: 8300000, guid: baf3c832f7909ea41abff76bd9502e96, type: 3}
+  - {fileID: 8300000, guid: cc58892874e286c4c9a57b8a072f21af, type: 3}
+  - {fileID: 8300000, guid: 520da14f048e1a746ae9d71294cd36d9, type: 3}
+  loadHE:
+  - {fileID: 8300000, guid: e508b0105e606a747bd407204a0c0f1e, type: 3}
+  - {fileID: 8300000, guid: 520da14f048e1a746ae9d71294cd36d9, type: 3}
+  enemyInSightCrewClip:
+  - {fileID: 8300000, guid: 2f6087e4f8d32da49bd417e15bb0b63b, type: 3}
+  - {fileID: 8300000, guid: 3cc7892d46903704eb3a401a26e941f8, type: 3}
+  reloadCrewClip:
+  - {fileID: 8300000, guid: a8c0f12db4298ce44a2be5c8d3f6de08, type: 3}
+  - {fileID: 8300000, guid: 4707abbd0c86d2942a333cd4460c9cca, type: 3}
+  - {fileID: 8300000, guid: 7b8567bf34511544f969b74ae3d93b04, type: 3}
+  targetDownCrewClip: []
+  fireCrewClip:
+  - {fileID: 8300000, guid: e06ab62fa79ff2d4abf5aa51687c2a23, type: 3}
+  - {fileID: 8300000, guid: 78a317c5bc26c334d90736e99226e2b4, type: 3}
+  tankPenetrationCrewClip:
+  - {fileID: 8300000, guid: 4c1f5ebfa73e12a478f39e46e7c5b608, type: 3}
+  - {fileID: 8300000, guid: 3c6a8f1f33335d845ac6af932c3395a7, type: 3}
+  - {fileID: 8300000, guid: 1cd3878bd2f32d6488ec2afd297e6cde, type: 3}
+  - {fileID: 8300000, guid: e2c0305c5effe8d45a6c9489c3600192, type: 3}
+  tankNonePenetrationCrewClip:
+  - {fileID: 8300000, guid: c4271341b9015ea4583c078ac91066ae, type: 3}
+  - {fileID: 8300000, guid: b9956785cf3d75e42be0629427ef9a8b, type: 3}
+  tankRicochetCrewClip:
+  - {fileID: 8300000, guid: 0f5cbed7ad7942740b30fdd065895977, type: 3}
+  - {fileID: 8300000, guid: d96e24d7a722d9341973d35a44af369c, type: 3}
   useCrewSubtitles: 1
   subtitleManager: {fileID: 0}
   commanderReadyClip: {fileID: 8300000, guid: 9693ef7e4b08fb840a9dbe7cac571f97, type: 3}
@@ -22804,6 +22831,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   bottomOffset: 56
+  lineHeight: 40
   width: 1200
   fontSize: 30
   font: {fileID: 0}
@@ -22811,6 +22839,8 @@ MonoBehaviour:
   speakerColor: {r: 0.1, g: 0.9, b: 0.75, a: 1}
   fadeInSpeed: 10
   fadeOutSpeed: 5
+  moveSpeed: 8
+  maxEntries: 4
 --- !u!114 &1727196687
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -22833,9 +22863,15 @@ MonoBehaviour:
   driverReadyTextKr: "\uC870\uC885\uC218, \uC900\uBE44 \uC644\uB8CC!"
   gunnerReadyTextKr: "\uD3EC\uC218, \uC900\uBE44 \uC644\uB8CC!"
   loaderReadyTextKr: "\uC7A5\uC804\uC218, \uC900\uBE44 \uC644\uB8CC!"
+  loadAPTextKr: "\uCCA0\uAC11\uD0C4 \uC7A5\uC804!"
+  loadHETextKr: "\uACE0\uD3ED\uD0C4 \uC7A5\uC804!"
   fireTextKr: "\uC0AC\uACA9!"
   reloadTextKr: "\uC7AC\uC7A5\uC804 \uC644\uB8CC!"
   targetDownTextKr: "\uBAA9\uD45C \uACA9\uD30C!"
+  penetratedTextKr: "\uAD00\uD1B5!"
+  noPenetrationTextKr: "\uBE44\uAD00\uD1B5!"
+  ricochetedTextKr: "\uB3C4\uD0C4!"
+  enemyInSightTextKr: "\uC801 \uC804\uCC28 \uBC1C\uACAC!"
 --- !u!114 &1727196688
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using UnityEngine;
 
@@ -61,6 +62,8 @@ public class BallisticManager : MonoBehaviour
     [SerializeField] private float minThicknessM = 0.01f;
 
     [Header("Shell Info")]
+    [SerializeField] private float lifeTimeAfterRicochet = 3f;
+    [SerializeField] private int maxRicochet = 2;
     [SerializeField] private float aiReactionRadius = 40.0f;
     [SerializeField] private float radiusAt1Kg = 6.0f;
     [SerializeField] private int raysAt1Kg = 120;
@@ -72,6 +75,11 @@ public class BallisticManager : MonoBehaviour
     private Vector3 fuzeOrigin;
     [SerializeField] private float fuzeOriginNudge = 0.1f;
     private bool isInitialized = false;
+    private float lifeTime = 0f;
+
+    public static event Action OnEnemyPenetrated;
+    public static event Action OnEnemyRicocheted;   
+    public static event Action OnEnemyNoPenetration; 
 
     public int Id => id;
 
@@ -128,7 +136,7 @@ public class BallisticManager : MonoBehaviour
         pen = shell.penetrationPower;
         radius = (shell.caliber * 0.001f) * 0.5f;
         velocity = dir * shell.muzzleVelocity;
-
+        lifeTime = shell.lifeTime;
         float invMass = 1.0f / Mathf.Max(1e-6f, shell.projectileMass);
         float r = Mathf.Max(1e-6f, shell.caliber * 0.001f) * 0.5f;
         refArea = Mathf.PI * r * r * shell.refAreaScale;
@@ -142,7 +150,7 @@ public class BallisticManager : MonoBehaviour
 
         float dt = Time.fixedDeltaTime;
         flightTime += dt;
-        if (flightTime > shell.lifeTime)
+        if (flightTime > lifeTime)
         {
             PoolManager.Instance.Return(gameObject);
             return;
@@ -266,19 +274,21 @@ public class BallisticManager : MonoBehaviour
 
     private bool HandleArmorHit(RaycastHit hit, Vector3 segDir, float cosToNormal, float angleToNormal, ArmorManager zone)
     {
-        CameraController cam = hit.collider.transform.root.GetComponentInChildren<CameraController>();
-        if (cam != null)
+        if (hit.collider.transform.root.CompareTag("Player")) 
         {
             float speedRatio = Mathf.Clamp01(speed / shell.muzzleVelocity);
             float massRatio = Mathf.Clamp01(shell.projectileMass);
             float intensity = speedRatio * massRatio;
-            cam.TriggerHitShake(segDir, intensity);
+            CameraController.cameraInstance?.TriggerHitShake(segDir, intensity);
+           
         }
-
+          
         float ricTh = zone.GetRicochetThresholdDeg(shell.baseRicochetAngleDeg);
         if (shell.canRicochet && angleToNormal >= ricTh)
         {
             HandleRicochet(hit, segDir);
+            if (isPlayerShell) OnEnemyRicocheted?.Invoke();
+            
             return false;
         }
 
@@ -296,7 +306,7 @@ public class BallisticManager : MonoBehaviour
         {
             float penLeft = penMm - effectiveMm;
             Debug.Log($"[PEN] zone={zone.zoneName}, original pen ={pen:0}, effective pen={penMm:0}, original armor ={baseArmorMm:0}, eff={effectiveMm:0} angleN={angleToNormal:0}");
-
+            if (isPlayerShell) OnEnemyPenetrated?.Invoke();
             if (shell.canExplode)
                 TryArmFuzeAfterPen(effectiveMm, hit.point, segDir);
 
@@ -304,6 +314,7 @@ public class BallisticManager : MonoBehaviour
         }
 
         Debug.Log($"[NO PEN] zone={zone.zoneName}, original pen ={pen:0}, effective pen={penMm:0} eff={effectiveMm:0} angleN={angleToNormal:0}");
+        if (isPlayerShell) OnEnemyNoPenetration?.Invoke();
         if (shell.type == AmmoType.HE) ExplodeNow();
         else PoolManager.Instance.Return(gameObject);
         return false;
@@ -326,14 +337,18 @@ public class BallisticManager : MonoBehaviour
 
     private void HandleRicochet(RaycastHit hit, Vector3 dirN)
     {
-        shellSoundController.PlayRicochet(hit.point);
+        if (ricochetChance >= maxRicochet) { PoolManager.Instance.Return(gameObject); return; }
+
+        lifeTime = flightTime + lifeTimeAfterRicochet;
+
+        if(isPlayerShell) shellSoundController.PlayRicochet(hit.point);
 
         Vector3 recochetAngle = Vector3.Reflect(dirN, hit.normal).normalized;
         Vector3 axis = Vector3.Cross(hit.normal, recochetAngle);
         axis.Normalize();
 
         float maxRecochetAngle = Mathf.Lerp(0.0f, 6.0f, Mathf.Clamp01(shell.randomRicochetAngle));
-        float angle = Random.Range(-maxRecochetAngle, maxRecochetAngle);
+        float angle = UnityEngine.Random.Range(-maxRecochetAngle, maxRecochetAngle);
         recochetAngle = (Quaternion.AngleAxis(angle, axis) * recochetAngle).normalized;
 
         float aterRicochetSpeed = speed * shell.afterRicochetEnergyPercent;
@@ -341,6 +356,7 @@ public class BallisticManager : MonoBehaviour
         pos = hit.point + hit.normal * exit;
         transform.position = pos;
         ricochetChance++;
+        
     }
 
     private bool HandleArmorPenetration(RaycastHit hit, Vector3 segDir, float penBefore, float penLeft)
@@ -525,7 +541,7 @@ public class BallisticManager : MonoBehaviour
 
     private void HandleGroundHit(RaycastHit hit, Vector3 dirN, float angleToNormal)
     {
-        if (shell.canRicochet && angleToNormal >= shell.baseRicochetAngleDeg && ricochetChance < 2)
+        if (shell.canRicochet && angleToNormal >= shell.baseRicochetAngleDeg)
         {
             HandleRicochet(hit, dirN);
             return;

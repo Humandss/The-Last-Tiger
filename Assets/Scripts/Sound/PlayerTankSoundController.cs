@@ -1,6 +1,9 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Audio;
+using System;
+using UnityEngine.Experimental.GlobalIllumination;
 
 public class PlayerTankSoundController : SoundController
 {
@@ -50,10 +53,20 @@ public class PlayerTankSoundController : SoundController
     [SerializeField] private AudioMixerSnapshot radioSnapshot;
     [SerializeField] private float transitionTime = 0.05f;
 
-    [Header("Voice Clips")]
-    [SerializeField] private AudioClip fireCrewClip;
-    [SerializeField] private AudioClip reloadCrewClip;
-    [SerializeField] private AudioClip targetDownCrewClip;
+    [Header("Crew Commander")]
+    [SerializeField] private AudioClip[] loadAP;
+    [SerializeField] private AudioClip[] loadHE;
+    [SerializeField] private AudioClip[] enemyInSightCrewClip;
+
+    [Header("Crew Loader")]
+    [SerializeField] private AudioClip[] reloadCrewClip;
+
+    [Header("Crew Gunner")]
+    [SerializeField] private AudioClip[] targetDownCrewClip;
+    [SerializeField] private AudioClip[] fireCrewClip;
+    [SerializeField] private AudioClip[] tankPenetrationCrewClip;
+    [SerializeField] private AudioClip[] tankNonePenetrationCrewClip;
+    [SerializeField] private AudioClip[] tankRicochetCrewClip;
 
     [Header("Crew Subtitles")]
     [SerializeField] private bool useCrewSubtitles = true;
@@ -95,13 +108,32 @@ public class PlayerTankSoundController : SoundController
     private Coroutine crossfadeRoutine;
 
     private ModuleDamageController engineModule;
+    private readonly HashSet<string> busySpeakers = new HashSet<string>();
     private bool engineDestroyed = false;
 
     public void PlayReload() => PlayEffectSounds(reloadClips, reloadVolume);
-    public void PlayFireCrewVoice() => PlayCrewVoiceWithRadio(fireCrewClip, 1f, CrewSubtitleCue.Fire);
-    public void PlayReloadCrewVoice() => PlayCrewVoiceWithRadio(reloadCrewClip, 1f, CrewSubtitleCue.Reload);
-    public void PlayTargetDown() => PlayCrewVoiceWithRadio(targetDownCrewClip, 1f, CrewSubtitleCue.TargetDown);
+    public void PlayFireCrewVoice() => PlayCrewVoicesWithRadio(fireCrewClip, 1f, CrewSubtitleCue.Fire);
+    public void PlayReloadCrewVoice() => PlayCrewVoicesWithRadio(reloadCrewClip, 1f, CrewSubtitleCue.Reload);
+    public void PlayTargetDown() => PlayCrewVoicesWithRadio(targetDownCrewClip, 1f, CrewSubtitleCue.TargetDown);
+    public void PlayAPLoad() => PlayCrewVoicesWithRadio(loadAP, flyByVolume, CrewSubtitleCue.LoadAP);
+    public void PlayHELoad() => PlayCrewVoicesWithRadio(loadHE, flyByVolume, CrewSubtitleCue.LoadHE);
+    public void PlayPenetratedCrewVoice()=> PlayCrewVoicesWithRadio(tankPenetrationCrewClip, 1f, CrewSubtitleCue.Penetrated);
+    public void PlayNonePenetratedCrewVoice() => PlayCrewVoicesWithRadio(tankNonePenetrationCrewClip, 1f, CrewSubtitleCue.NoPenetration);
+    public void PlayRicochetCrewVoice() => PlayCrewVoicesWithRadio(tankRicochetCrewClip, 1f, CrewSubtitleCue.Ricocheted);
+    public void PlayInSightCrewVoice() =>  PlayCrewVoicesWithRadio(enemyInSightCrewClip, 1f, CrewSubtitleCue.EnemyInSight);
 
+    private void OnEnable()
+    {
+        BallisticManager.OnEnemyPenetrated += PlayPenetratedCrewVoice;
+        BallisticManager.OnEnemyNoPenetration += PlayNonePenetratedCrewVoice;
+        BallisticManager.OnEnemyRicocheted += PlayRicochetCrewVoice;
+    }
+    private void OnDisable()
+    {
+        BallisticManager.OnEnemyPenetrated -= PlayPenetratedCrewVoice;
+        BallisticManager.OnEnemyNoPenetration -= PlayNonePenetratedCrewVoice;
+        BallisticManager.OnEnemyRicocheted -= PlayRicochetCrewVoice;
+    }
     protected override void Awake()
     {
         base.Awake();
@@ -552,22 +584,51 @@ public class PlayerTankSoundController : SoundController
         StartCoroutine(PlayCrewVoiceWithRadioRoutine(clip, voiceVolume, 0f, cue));
     }
 
-    public void PlayCrewVoiceWithRadio(AudioClip[] clips, float voiceVolume = 1f)
+    public void PlayCrewVoicesWithRadio(AudioClip[] clips, float voiceVolume, CrewSubtitleCue cue)
     {
+        string speaker = GetSpeaker(cue);
+        if (speaker != null && busySpeakers.Contains(speaker)) return;
         AudioClip clip = GetRandomClip(clips);
         if (clip == null) return;
-        StartCoroutine(PlayCrewVoiceWithRadioRoutine(clip, voiceVolume, 0f, CrewSubtitleCue.None));
+        StartCoroutine(PlayCrewVoiceWithRadioRoutine(clip, voiceVolume, 0f, cue, speaker));
+    }
+
+    private static string GetSpeaker(CrewSubtitleCue cue)
+    {
+        switch (cue)
+        {
+            case CrewSubtitleCue.Fire:
+            case CrewSubtitleCue.Penetrated:
+            case CrewSubtitleCue.NoPenetration:
+            case CrewSubtitleCue.Ricocheted:
+            case CrewSubtitleCue.TargetDown:
+                return "gunner";
+            case CrewSubtitleCue.LoadAP:
+            case CrewSubtitleCue.LoadHE:
+            case CrewSubtitleCue.EnemyInSight:
+            case CrewSubtitleCue.CommanderReady:
+                return "commander";
+            case CrewSubtitleCue.Reload:
+            case CrewSubtitleCue.LoaderReady:
+                return "loader";
+            case CrewSubtitleCue.DriverReady:
+                return "driver";
+            default:
+                return null;
+        }
     }
 
     private static AudioClip GetRandomClip(AudioClip[] clips)
     {
         if (clips == null || clips.Length == 0) return null;
-        return clips[Random.Range(0, clips.Length)];
+        return clips[UnityEngine.Random.Range(0, clips.Length)];
     }
 
-    private IEnumerator PlayCrewVoiceWithRadioRoutine(AudioClip voiceClip, float voiceVolume, float extraGapAfter, CrewSubtitleCue cue)
+    private IEnumerator PlayCrewVoiceWithRadioRoutine(AudioClip voiceClip, float voiceVolume, float extraGapAfter, CrewSubtitleCue cue, string speaker = null)
     {
         if (voiceClip == null) yield break;
+
+        if (speaker != null) busySpeakers.Add(speaker);
 
         if (radioSnapshot != null)
             radioSnapshot.TransitionTo(transitionTime);
@@ -603,6 +664,8 @@ public class PlayerTankSoundController : SoundController
 
         if (extraGapAfter > 0f)
             yield return new WaitForSeconds(extraGapAfter);
+
+        if (speaker != null) busySpeakers.Remove(speaker);
     }
 
     private void ShowSubtitle(CrewSubtitleCue cue, float duration)
