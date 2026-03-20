@@ -1,9 +1,12 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class PlayerCrewManager : TankCrewManagerBase
 {
+
+    private PlayerTankSoundController soundController;
 
     private readonly Dictionary<ModuleType, ModuleType> playerAssignments = new Dictionary<ModuleType, ModuleType>();
     private Coroutine playerSwapRoutine;
@@ -40,6 +43,10 @@ public class PlayerCrewManager : TankCrewManagerBase
     public ModuleType MovingCrewType => movingCrewType;
     public ModuleType MovingTargetSeat => movingTargetSeat;
 
+    private void Awake()
+    {
+        soundController = GetComponent<PlayerTankSoundController>();
+    }
     protected override void Start()
     {
         base.Start();
@@ -410,9 +417,26 @@ public class PlayerCrewManager : TankCrewManagerBase
             default: return seatType.ToString();
         }
     }
+    private void GetCrewDeadState(ModuleDamageController who, ModuleState next)
+    {
+        if(who.Type != ModuleType.Driver && who.Type != ModuleType.Gunner &&
+            who.Type != ModuleType.MachineGunner && who.Type != ModuleType.Loader ) return;
+
+        if (next == ModuleState.Destroyed) 
+        {
+            if (who.Type == ModuleType.Driver) soundController.PlayDriverDeadCrewVoice();
+            else if (who.Type == ModuleType.MachineGunner) soundController.PlayMGDeadCrewVoice();
+            else if (who.Type == ModuleType.Gunner) soundController.PlayGunnerDeadCrewVoice();
+            else if (who.Type == ModuleType.Loader) soundController.PlayLoaderDeadCrewVoice();
+            else return;
+        }
+
+
+    }
     public override void OnCrewStateChanged(ModuleDamageController who, ModuleState prev, ModuleState next)
     {
         HandlePlayerCrewStateChanged(who, next);
+        GetCrewDeadState(who, next);
     }
     public override bool IsLoaderAvailable()
     {

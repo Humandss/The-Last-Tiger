@@ -15,7 +15,11 @@ public enum CrewSubtitleCue
     Penetrated,
     NoPenetration,
     Ricocheted,
-    EnemyInSight
+    EnemyInSight,
+    DriverDead,
+    MGDead,
+    GunnerDead,
+    LoaderDead
 }
 
 public class CrewSubtitleManager : MonoBehaviour
@@ -44,6 +48,10 @@ public class CrewSubtitleManager : MonoBehaviour
     [SerializeField] private string noPenetrationTextKr = "비관통!";
     [SerializeField] private string ricochetedTextKr = "도탄!";
     [SerializeField] private string enemyInSightTextKr = "적 전차 발견!";
+    [SerializeField] private string driverDeadTextKr = "조종수 사망!";
+    [SerializeField] private string mgDeadTextKr = "전방 사수 사망!";
+    [SerializeField] private string gunnerDeadTextKr = "포수 사망!";
+    [SerializeField] private string loaderDeadTextKr = "장전수 사망!";
 
     private void Awake()
     {
@@ -124,7 +132,22 @@ public class CrewSubtitleManager : MonoBehaviour
                 speaker = Fallback(commanderLabelKr, "전차장");
                 line = Fallback(enemyInSightTextKr, "적 전차 발견!");
                 return true;
-
+            case CrewSubtitleCue.GunnerDead:
+                speaker = Fallback(commanderLabelKr, "전차장");
+                line = Fallback(gunnerDeadTextKr, "포수 사망!");
+                return true;
+            case CrewSubtitleCue.DriverDead:
+                speaker = Fallback(commanderLabelKr, "전차장");
+                line = Fallback(driverDeadTextKr, "조종수 사망!");
+                return true;
+            case CrewSubtitleCue.MGDead:
+                speaker = Fallback(commanderLabelKr, "전차장");
+                line = Fallback(mgDeadTextKr, "전방 사수 사망!!");
+                return true;
+            case CrewSubtitleCue.LoaderDead:
+                speaker = Fallback(commanderLabelKr, "전차장");
+                line = Fallback(loaderDeadTextKr, "장전수 사망!");
+                return true;
             default:
                 return false;
         }

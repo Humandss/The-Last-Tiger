@@ -57,6 +57,10 @@ public class PlayerTankSoundController : SoundController
     [SerializeField] private AudioClip[] loadAP;
     [SerializeField] private AudioClip[] loadHE;
     [SerializeField] private AudioClip[] enemyInSightCrewClip;
+    [SerializeField] private AudioClip[] mgDeadCrewClip;
+    [SerializeField] private AudioClip[] driverDeadCrewClip;
+    [SerializeField] private AudioClip[] gunnerDeadCrewClip;
+    [SerializeField] private AudioClip[] loaderDeadCrewClip;
 
     [Header("Crew Loader")]
     [SerializeField] private AudioClip[] reloadCrewClip;
@@ -121,6 +125,10 @@ public class PlayerTankSoundController : SoundController
     public void PlayNonePenetratedCrewVoice() => PlayCrewVoicesWithRadio(tankNonePenetrationCrewClip, 1f, CrewSubtitleCue.NoPenetration);
     public void PlayRicochetCrewVoice() => PlayCrewVoicesWithRadio(tankRicochetCrewClip, 1f, CrewSubtitleCue.Ricocheted);
     public void PlayInSightCrewVoice() =>  PlayCrewVoicesWithRadio(enemyInSightCrewClip, 1f, CrewSubtitleCue.EnemyInSight);
+    public void PlayDriverDeadCrewVoice() => PlayCrewVoicesWithRadio(driverDeadCrewClip, 1f, CrewSubtitleCue.DriverDead);
+    public void PlayMGDeadCrewVoice() => PlayCrewVoicesWithRadio(mgDeadCrewClip, 1f, CrewSubtitleCue.MGDead);
+    public void PlayGunnerDeadCrewVoice() => PlayCrewVoicesWithRadio(gunnerDeadCrewClip, 1f, CrewSubtitleCue.GunnerDead);
+    public void PlayLoaderDeadCrewVoice() => PlayCrewVoicesWithRadio(loaderDeadCrewClip, 1f, CrewSubtitleCue.LoaderDead);
 
     private void OnEnable()
     {
