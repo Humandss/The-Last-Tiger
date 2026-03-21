@@ -1,9 +1,12 @@
+using System;
 using UnityEngine;
 using UnityEngine.AI;
 
 public class TankAIController : MonoBehaviour
 {
     public enum State { Patrol, Combat, Retreat }
+
+    public static event Action OnEnemyTankDestroyed;
 
     [Header("Refs")]
     [SerializeField] private TankAIDriver driver;
@@ -68,6 +71,14 @@ public class TankAIController : MonoBehaviour
     private int lastNearbyShellId = -1;
     private float lastNearbyShellReactTime = -999f;
 
+    private void OnEnable()
+    {
+        ModuleManager.OnTankDestroyed += Die;
+    }
+    private void OnDisable()
+    {
+        ModuleManager.OnTankDestroyed -= Die;
+    }
     private void Awake()
     {
         if (player == null)
@@ -518,6 +529,8 @@ public class TankAIController : MonoBehaviour
         enabled = false;
         driver.SetDriverDead();
         gunner.SetGunnerDead();
+        SetCommanderDead(true);
+        OnEnemyTankDestroyed?.Invoke();
         Debug.LogWarning($"[TankAI] {gameObject.name} dead -> AI stopped");
     }
 

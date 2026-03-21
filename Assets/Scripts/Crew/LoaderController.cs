@@ -90,9 +90,9 @@ public class LoaderController : MonoBehaviour, ITankLoader
         if (!isAI && soundController != null)
         {
             soundController.PlayReload();
-            if (type == AmmoType.AP) soundController.PlayAPLoad();
-            else if (type == AmmoType.HE) soundController.PlayHELoad();
-            else return;
+            //if (type == AmmoType.AP) soundController.PlayAPLoad();
+           // else if (type == AmmoType.HE) soundController.PlayHELoad();
+          //  else return;
              
         }
             
@@ -135,7 +135,7 @@ public class LoaderController : MonoBehaviour, ITankLoader
         isLoaded = true;
 
         Debug.Log($"[Loader] Reload complete {shellType}");
-        if(!isAI) soundController.PlayReloadCrewVoice();
+        if(!isAI && !loaderDead) soundController.PlayReloadCrewVoice();
         co = null;
     }
 

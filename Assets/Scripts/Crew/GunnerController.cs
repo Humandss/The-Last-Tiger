@@ -298,7 +298,7 @@ public class GunnerController : TankGunner, ITankGunner
             return;
         }
 
-        playerSoundController.PlayFireCrewVoice();
+        if(!IsGunnerDead()) playerSoundController.PlayFireCrewVoice();
         Invoke(nameof(OnFire), 1.3f);
 
     }

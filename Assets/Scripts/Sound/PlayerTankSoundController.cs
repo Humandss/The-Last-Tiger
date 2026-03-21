@@ -61,6 +61,7 @@ public class PlayerTankSoundController : SoundController
     [SerializeField] private AudioClip[] driverDeadCrewClip;
     [SerializeField] private AudioClip[] gunnerDeadCrewClip;
     [SerializeField] private AudioClip[] loaderDeadCrewClip;
+    [SerializeField] private AudioClip[] tankDestroyedCrewClip;
 
     [Header("Crew Loader")]
     [SerializeField] private AudioClip[] reloadCrewClip;
@@ -118,7 +119,7 @@ public class PlayerTankSoundController : SoundController
     public void PlayReload() => PlayEffectSounds(reloadClips, reloadVolume);
     public void PlayFireCrewVoice() => PlayCrewVoicesWithRadio(fireCrewClip, 1f, CrewSubtitleCue.Fire);
     public void PlayReloadCrewVoice() => PlayCrewVoicesWithRadio(reloadCrewClip, 1f, CrewSubtitleCue.Reload);
-    public void PlayTargetDown() => PlayCrewVoicesWithRadio(targetDownCrewClip, 1f, CrewSubtitleCue.TargetDown);
+    public void PlayTargetDown() => PlayCrewVoicesWithRadio(targetDownCrewClip, 1f, CrewSubtitleCue.TargetTankDown);
     public void PlayAPLoad() => PlayCrewVoicesWithRadio(loadAP, flyByVolume, CrewSubtitleCue.LoadAP);
     public void PlayHELoad() => PlayCrewVoicesWithRadio(loadHE, flyByVolume, CrewSubtitleCue.LoadHE);
     public void PlayPenetratedCrewVoice()=> PlayCrewVoicesWithRadio(tankPenetrationCrewClip, 1f, CrewSubtitleCue.Penetrated);
@@ -129,18 +130,20 @@ public class PlayerTankSoundController : SoundController
     public void PlayMGDeadCrewVoice() => PlayCrewVoicesWithRadio(mgDeadCrewClip, 1f, CrewSubtitleCue.MGDead);
     public void PlayGunnerDeadCrewVoice() => PlayCrewVoicesWithRadio(gunnerDeadCrewClip, 1f, CrewSubtitleCue.GunnerDead);
     public void PlayLoaderDeadCrewVoice() => PlayCrewVoicesWithRadio(loaderDeadCrewClip, 1f, CrewSubtitleCue.LoaderDead);
-
+    public void PlayEnemyTankDestroyed() => PlayCrewVoicesWithRadio(tankDestroyedCrewClip, 1f, CrewSubtitleCue.TargetTankDown);
     private void OnEnable()
     {
         BallisticManager.OnEnemyPenetrated += PlayPenetratedCrewVoice;
         BallisticManager.OnEnemyNoPenetration += PlayNonePenetratedCrewVoice;
         BallisticManager.OnEnemyRicocheted += PlayRicochetCrewVoice;
+        TankAIController.OnEnemyTankDestroyed += PlayEnemyTankDestroyed;
     }
     private void OnDisable()
     {
         BallisticManager.OnEnemyPenetrated -= PlayPenetratedCrewVoice;
         BallisticManager.OnEnemyNoPenetration -= PlayNonePenetratedCrewVoice;
         BallisticManager.OnEnemyRicocheted -= PlayRicochetCrewVoice;
+        TankAIController.OnEnemyTankDestroyed -= PlayEnemyTankDestroyed;
     }
     protected override void Awake()
     {
@@ -609,7 +612,7 @@ public class PlayerTankSoundController : SoundController
             case CrewSubtitleCue.Penetrated:
             case CrewSubtitleCue.NoPenetration:
             case CrewSubtitleCue.Ricocheted:
-            case CrewSubtitleCue.TargetDown:
+            case CrewSubtitleCue.TargetTankDown:
                 return "gunner";
             case CrewSubtitleCue.LoadAP:
             case CrewSubtitleCue.LoadHE:

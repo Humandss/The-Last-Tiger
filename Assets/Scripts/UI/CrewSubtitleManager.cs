@@ -11,7 +11,7 @@ public enum CrewSubtitleCue
     LoadHE,
     Fire,
     Reload,
-    TargetDown,
+    TargetTankDown,
     Penetrated,
     NoPenetration,
     Ricocheted,
@@ -43,7 +43,7 @@ public class CrewSubtitleManager : MonoBehaviour
     [SerializeField] private string loadHETextKr = "고폭탄 장전!";
     [SerializeField] private string fireTextKr = "사격!";
     [SerializeField] private string reloadTextKr = "재장전 완료!";
-    [SerializeField] private string targetDownTextKr = "목표 격파!";
+    [SerializeField] private string targetTankDownTextKr = "적 전차 격파!";
     [SerializeField] private string penetratedTextKr = "관통!";
     [SerializeField] private string noPenetrationTextKr = "비관통!";
     [SerializeField] private string ricochetedTextKr = "도탄!";
@@ -112,9 +112,9 @@ public class CrewSubtitleManager : MonoBehaviour
                 speaker = Fallback(loaderLabelKr, "장전수");
                 line = Fallback(reloadTextKr, "재장전 완료!");
                 return true;
-            case CrewSubtitleCue.TargetDown:
+            case CrewSubtitleCue.TargetTankDown:
                 speaker = Fallback(commanderLabelKr, "지휘관");
-                line = Fallback(targetDownTextKr, "목표 격파!");
+                line = Fallback(targetTankDownTextKr, "적 전차 격파!");
                 return true;
             case CrewSubtitleCue.Penetrated:
                 speaker = Fallback(gunnerLabelKr, "포수");

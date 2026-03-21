@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -30,7 +31,6 @@ public class AmmoRackEffects : TankEffectsManager
     [SerializeField] private float destroyBuffer = 0.5f;
 
     [Header("Death")]
-    [SerializeField] private UnityEvent onTankDestroyed; 
     [SerializeField] private float deathDelay = 0.3f;
 
     private GameObject fireInstance;
@@ -69,17 +69,13 @@ public class AmmoRackEffects : TankEffectsManager
         if (ammoEventTriggered) return;
         ammoEventTriggered = true;
 
-        float r = Random.value;
-        if (r < ammoExplosionChance)
-        {
-            TriggerAmmoExplosion();
-        }
-        else
-        {
-            SpawnFire();
-        }
+        float r = UnityEngine.Random.value;
 
-        Invoke(nameof(TriggerDeath), deathDelay);
+        if (r < ammoExplosionChance) TriggerAmmoExplosion();
+        else SpawnFire();
+
+        moduleMgr.NotifyAmmoExplosion();
+       
     }
     private void TriggerAmmoExplosion()
     {
@@ -114,12 +110,7 @@ public class AmmoRackEffects : TankEffectsManager
         soundController.PlayAmmoExplosion();
         Debug.LogWarning("[AMMO] Explosion!");
     }
-    private void TriggerDeath()
-    {
-        Debug.LogWarning($"[AMMO] {gameObject.name} 전차 사망!");
-        onTankDestroyed?.Invoke();
-    }
-  
+
 
     private void SpawnSmoke()
     {
@@ -190,7 +181,7 @@ public class AmmoRackEffects : TankEffectsManager
         {
             soundController.PlayAmmoPop();
 
-            float t = Random.Range(popMinInterval, popMaxInterval);
+            float t = UnityEngine.Random.Range(popMinInterval, popMaxInterval);
             yield return new WaitForSeconds(t);
         }
 

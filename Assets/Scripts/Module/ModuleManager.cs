@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
@@ -10,8 +11,7 @@ public class ModuleManager : MonoBehaviour
     [SerializeField] private bool includeInactive = true;
     [SerializeField] private List<ModuleDamageController> modules = new();
     private List<ModuleDamageController> aModules = new();
-
-
+    private List<ModuleDamageController> aCrew = new();
 
     [Header("HUD")]
     [SerializeField] private DebugHudChannel hudChannel = DebugHudChannel.Enemy;
@@ -20,6 +20,15 @@ public class ModuleManager : MonoBehaviour
 
 
     private TankFireEffects[] fireEffects;
+
+    public static event Action OnTankDestroyed;
+    private bool tankDestroyedFired = false;
+
+    public void NotifyAmmoExplosion() => FireTankDestroyed();
+
+    public void NotifyCrewDepleted() => FireTankDestroyed();
+
+    public void NotifyCommanderDead() => FireTankDestroyed();
 
     public bool IsOnFire
     {
@@ -40,6 +49,7 @@ public class ModuleManager : MonoBehaviour
 
     public ModuleDamageController GetCrew(ModuleType type) => GetCrewModule(type);
 
+
     private void Awake()
     {
         fireEffects = GetComponentsInChildren<TankFireEffects>(true);
@@ -57,7 +67,8 @@ public class ModuleManager : MonoBehaviour
         // 각 모듈이 자기 매니저를 등록
         for (int i = 0; i < modules.Count; i++)
         {
-            if (modules[i]) modules[i].BindManager(this);
+            if (!modules[i]) continue;
+            modules[i].BindManager(this);
         }
         Debug.Log($"obj : {gameObject.name}, total module : {modules.Count}");
     }
@@ -79,6 +90,27 @@ public class ModuleManager : MonoBehaviour
         return aModules;
     }
 
+    private IReadOnlyList<ModuleDamageController> GetAliveCrewModules()
+    {
+        aCrew.Clear();
+        for (int i = 0; i < modules.Count; i++)
+        {
+            var m = modules[i];
+            if (!m) continue;
+            if (m.State == ModuleState.Destroyed) continue; // 파괴된 거 제외
+
+            // 크루 타입만 포함
+            if (m.Type != ModuleType.Driver &&
+                m.Type != ModuleType.MachineGunner &&
+                m.Type != ModuleType.Gunner &&
+                m.Type != ModuleType.Loader &&
+                m.Type != ModuleType.Commander) continue;
+
+
+            aCrew.Add(m);
+        }
+        return aCrew;
+    }
     /// <summary>
     /// 모듈이 피해/파괴 이벤트를 낼 때 호출
     /// </summary>
@@ -131,6 +163,13 @@ public class ModuleManager : MonoBehaviour
         return sb.ToString();
     }
 
+    private void FireTankDestroyed()
+    {
+        if (tankDestroyedFired) return;
+        tankDestroyedFired = true;
+        OnTankDestroyed?.Invoke();
+    }
+
     private ModuleDamageController GetCrewModule(ModuleType type)
     {
         for (int i = 0; i < modules.Count; i++)
@@ -139,5 +178,10 @@ public class ModuleManager : MonoBehaviour
                 return modules[i];
         }
         return null;
+    }
+
+    public int GetAliveCrewCount()
+    {
+        return GetAliveCrewModules().Count;
     }
 }

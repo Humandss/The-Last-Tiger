@@ -120,6 +120,8 @@ public class EnemyCrewManager : TankCrewManagerBase
 
     public override void OnCrewStateChanged(ModuleDamageController who, ModuleState prev, ModuleState next)
     {
+        base.OnCrewStateChanged(who, prev, next);
+
         if (next == ModuleState.Destroyed)
         {
             if (who == gunnerModule && !gunnerSwapPending)

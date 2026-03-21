@@ -98,11 +98,16 @@ public abstract class TankCrewManagerBase : MonoBehaviour
             || type == ModuleType.MachineGunner;
     }
 
-    public abstract void OnCrewStateChanged(ModuleDamageController who, ModuleState prev, ModuleState next);
+    public virtual void OnCrewStateChanged(ModuleDamageController who, ModuleState prev, ModuleState next)
+    {
+        if(moduleManager.GetAliveCrewCount() < 2) moduleManager.NotifyCrewDepleted();
+
+    }
 
     public abstract void ApplyInitialStates();
     public abstract bool IsGunnerAvailable();
     public abstract bool IsDriverAvailable();
     public abstract bool IsLoaderAvailable();
 
+    
 }

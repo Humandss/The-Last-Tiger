@@ -435,6 +435,11 @@ public class PlayerCrewManager : TankCrewManagerBase
     }
     public override void OnCrewStateChanged(ModuleDamageController who, ModuleState prev, ModuleState next)
     {
+        base.OnCrewStateChanged(who, prev, next);
+
+        if (who.Type == ModuleType.Commander)
+            moduleManager.NotifyCommanderDead();
+
         HandlePlayerCrewStateChanged(who, next);
         GetCrewDeadState(who, next);
     }

@@ -4356,7 +4356,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!195 &336159478
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -5212,7 +5212,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &414415416
 Transform:
   m_ObjectHideFlags: 0
@@ -7554,21 +7554,6 @@ MonoBehaviour:
   popStartDelay: 0.1
   fadeOutSeconds: 2.5
   destroyBuffer: 0.5
-  onTankDestroyed:
-    m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 414415422}
-        m_TargetAssemblyTypeName: TankAIController, Assembly-CSharp
-        m_MethodName: Die
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
   deathDelay: 0.3
 --- !u!114 &600274567
 MonoBehaviour:
@@ -10843,21 +10828,6 @@ MonoBehaviour:
   popStartDelay: 0.1
   fadeOutSeconds: 2.5
   destroyBuffer: 0.5
-  onTankDestroyed:
-    m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 336159484}
-        m_TargetAssemblyTypeName: TankAIController, Assembly-CSharp
-        m_MethodName: Die
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
   deathDelay: 0.3
 --- !u!114 &889998168
 MonoBehaviour:
@@ -13825,9 +13795,6 @@ MonoBehaviour:
   popStartDelay: 0.1
   fadeOutSeconds: 2.5
   destroyBuffer: 0.5
-  onTankDestroyed:
-    m_PersistentCalls:
-      m_Calls: []
   deathDelay: 0.3
 --- !u!114 &959147074
 MonoBehaviour:
@@ -18194,9 +18161,6 @@ MonoBehaviour:
   popStartDelay: 0.1
   fadeOutSeconds: 2.5
   destroyBuffer: 0.5
-  onTankDestroyed:
-    m_PersistentCalls:
-      m_Calls: []
   deathDelay: 0.3
 --- !u!114 &1438332392
 MonoBehaviour:
@@ -19742,9 +19706,6 @@ MonoBehaviour:
   popStartDelay: 0.1
   fadeOutSeconds: 2.5
   destroyBuffer: 0.5
-  onTankDestroyed:
-    m_PersistentCalls:
-      m_Calls: []
   deathDelay: 0.3
 --- !u!114 &1567205752
 MonoBehaviour:
@@ -20721,9 +20682,6 @@ MonoBehaviour:
   popStartDelay: 0.1
   fadeOutSeconds: 2.5
   destroyBuffer: 0.5
-  onTankDestroyed:
-    m_PersistentCalls:
-      m_Calls: []
   deathDelay: 0.3
 --- !u!114 &1629556572
 MonoBehaviour:
@@ -21446,7 +21404,7 @@ MonoBehaviour:
   - {fileID: 8300000, guid: e508b0105e606a747bd407204a0c0f1e, type: 3}
   - {fileID: 8300000, guid: 520da14f048e1a746ae9d71294cd36d9, type: 3}
   enemyInSightCrewClip:
-  - {fileID: 8300000, guid: 2f6087e4f8d32da49bd417e15bb0b63b, type: 3}
+  - {fileID: 8300000, guid: 36fff51658c270c468ec038aedfb12cc, type: 3}
   - {fileID: 8300000, guid: 3cc7892d46903704eb3a401a26e941f8, type: 3}
   mgDeadCrewClip:
   - {fileID: 8300000, guid: 65c0dfd61e8571542a02ccae53ecf2cf, type: 3}
@@ -21460,6 +21418,11 @@ MonoBehaviour:
   loaderDeadCrewClip:
   - {fileID: 8300000, guid: b04c8925dc86b72478f278d9b64a266f, type: 3}
   - {fileID: 8300000, guid: 6286a3c798cc0de48ae0b986f2de6075, type: 3}
+  tankDestroyedCrewClip:
+  - {fileID: 8300000, guid: 1bf3b370645354c418c362edbecac7e1, type: 3}
+  - {fileID: 8300000, guid: 6416477233ee6254780163b0d445ee65, type: 3}
+  - {fileID: 8300000, guid: 038e866cfa3831b4a93cc5eaa6d8ca11, type: 3}
+  - {fileID: 8300000, guid: 5a3df72b812cdca4eb2c99f5c17b08e7, type: 3}
   reloadCrewClip:
   - {fileID: 8300000, guid: 997dac61a54038246b3ffcbfc6ef782b, type: 3}
   - {fileID: 8300000, guid: 4707abbd0c86d2942a333cd4460c9cca, type: 3}
@@ -22879,7 +22842,7 @@ MonoBehaviour:
   loadHETextKr: "\uACE0\uD3ED\uD0C4 \uC7A5\uC804!"
   fireTextKr: "\uC0AC\uACA9!"
   reloadTextKr: "\uC7AC\uC7A5\uC804 \uC644\uB8CC!"
-  targetDownTextKr: "\uBAA9\uD45C \uACA9\uD30C!"
+  targetTankDownTextKr: "\uC801 \uC804\uCC28 \uACA9\uD30C!"
   penetratedTextKr: "\uAD00\uD1B5!"
   noPenetrationTextKr: "\uBE44\uAD00\uD1B5!"
   ricochetedTextKr: "\uB3C4\uD0C4!"
@@ -25584,21 +25547,6 @@ MonoBehaviour:
   popStartDelay: 0.1
   fadeOutSeconds: 2.5
   destroyBuffer: 0.5
-  onTankDestroyed:
-    m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 336159484}
-        m_TargetAssemblyTypeName: TankAIController, Assembly-CSharp
-        m_MethodName: Die
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
   deathDelay: 0.3
 --- !u!114 &1924356237
 MonoBehaviour:
