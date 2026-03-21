@@ -22629,13 +22629,13 @@ GameObject:
   - component: {fileID: 1727196683}
   - component: {fileID: 1727196682}
   - component: {fileID: 1727196681}
-  - component: {fileID: 1727196680}
-  - component: {fileID: 1727196685}
-  - component: {fileID: 1727196686}
-  - component: {fileID: 1727196687}
-  - component: {fileID: 1727196688}
   - component: {fileID: 1727196690}
   - component: {fileID: 1727196689}
+  - component: {fileID: 1727196685}
+  - component: {fileID: 1727196688}
+  - component: {fileID: 1727196680}
+  - component: {fileID: 1727196686}
+  - component: {fileID: 1727196687}
   m_Layer: 5
   m_Name: Canvas
   m_TagString: Untagged
@@ -22901,7 +22901,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   cameraController: {fileID: 729043131}
-  sortingOrder: 9997
+  sortingOrder: -100
   fadeSpeed: 10
   maxOverlayAlpha: 1
   lensSizeRatio: 1

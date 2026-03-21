@@ -90,9 +90,9 @@ public class LoaderController : MonoBehaviour, ITankLoader
         if (!isAI && soundController != null)
         {
             soundController.PlayReload();
-            //if (type == AmmoType.AP) soundController.PlayAPLoad();
-           // else if (type == AmmoType.HE) soundController.PlayHELoad();
-          //  else return;
+            if (type == AmmoType.AP) soundController.PlayAPLoad();
+            else if (type == AmmoType.HE) soundController.PlayHELoad();
+            else return;
              
         }
             

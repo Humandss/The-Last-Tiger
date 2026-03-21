@@ -311,7 +311,7 @@ public class GunnerController : TankGunner, ITankGunner
         fireController.FireProjectile(shotDir, loadedAmmo);
         soundController.PlayGunFireClips();
         loaderFunc.IsShot();
-        loaderFunc.LoadDefault();
+        //loaderFunc.LoadDefault();
     }
 
     public void StartTracking()

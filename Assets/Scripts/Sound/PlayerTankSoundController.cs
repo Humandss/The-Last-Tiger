@@ -612,12 +612,12 @@ public class PlayerTankSoundController : SoundController
             case CrewSubtitleCue.Penetrated:
             case CrewSubtitleCue.NoPenetration:
             case CrewSubtitleCue.Ricocheted:
-            case CrewSubtitleCue.TargetTankDown:
+            case CrewSubtitleCue.EnemyInSight:
                 return "gunner";
             case CrewSubtitleCue.LoadAP:
             case CrewSubtitleCue.LoadHE:
-            case CrewSubtitleCue.EnemyInSight:
             case CrewSubtitleCue.CommanderReady:
+            case CrewSubtitleCue.TargetTankDown:
                 return "commander";
             case CrewSubtitleCue.Reload:
             case CrewSubtitleCue.LoaderReady:
