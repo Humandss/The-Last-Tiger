@@ -21,6 +21,9 @@ public class CrewSubtitleOverlay : MonoBehaviour
     [SerializeField] private float moveSpeed    = 8f;
     [SerializeField] private int   maxEntries   = 4;
 
+    [Header("Queue")]
+    [SerializeField] private float queueGapSeconds = 0.3f;   // 메시지 사이 간격
+
     private class SubtitleEntry
     {
         public GameObject   go;
@@ -31,8 +34,16 @@ public class CrewSubtitleOverlay : MonoBehaviour
         public float        targetY;
     }
 
-    private Transform       canvasRoot;
-    private List<SubtitleEntry> entries = new List<SubtitleEntry>();
+    private struct QueuedLine
+    {
+        public string speaker, line;
+        public float  duration;
+    }
+
+    private Transform           canvasRoot;
+    private List<SubtitleEntry> entries   = new List<SubtitleEntry>();
+    private Queue<QueuedLine>   lineQueue = new Queue<QueuedLine>();
+    private float               nextShowTime = 0f;
 
     // ─────────────────────────────────────────────
     public static CrewSubtitleOverlay GetOrCreate()
@@ -55,20 +66,24 @@ public class CrewSubtitleOverlay : MonoBehaviour
     }
 
     // ─────────────────────────────────────────────
+    // 외부에서 호출 — 큐에 넣고 순서대로 출력
     public void ShowLine(string speaker, string line, float duration)
     {
         if (string.IsNullOrWhiteSpace(line)) return;
+        lineQueue.Enqueue(new QueuedLine { speaker = speaker, line = line, duration = duration });
+    }
+
+    // 실제 화면에 추가
+    private void DisplayLine(string speaker, string line, float duration)
+    {
         if (canvasRoot == null) BuildCanvas();
 
-        // 오래된 항목 초과 시 가장 오래된 것 제거
         if (entries.Count >= maxEntries)
             RemoveEntry(entries[0]);
 
-        // 기존 항목들 위로 올리기
         for (int i = 0; i < entries.Count; i++)
             entries[i].targetY += lineHeight;
 
-        // 새 항목 추가
         SubtitleEntry e = CreateEntry();
         string hex = ColorUtility.ToHtmlStringRGB(speakerColor);
         e.text.text    = $"<color=#{hex}>{speaker}:</color> {line}";
@@ -77,11 +92,21 @@ public class CrewSubtitleOverlay : MonoBehaviour
         e.cg.alpha     = 0f;
         e.visibleUntil = Time.unscaledTime + Mathf.Max(0.25f, duration);
         entries.Add(e);
+
+        // 다음 메시지는 이 메시지가 끝난 후 + 간격
+        nextShowTime = e.visibleUntil + queueGapSeconds;
     }
 
     // ─────────────────────────────────────────────
     private void Update()
     {
+        // 큐에서 순서대로 꺼내 표시
+        if (lineQueue.Count > 0 && Time.unscaledTime >= nextShowTime)
+        {
+            var q = lineQueue.Dequeue();
+            DisplayLine(q.speaker, q.line, q.duration);
+        }
+
         for (int i = entries.Count - 1; i >= 0; i--)
         {
             SubtitleEntry e = entries[i];

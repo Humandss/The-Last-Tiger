@@ -116,6 +116,11 @@ public class PlayerTankSoundController : SoundController
     private readonly HashSet<string> busySpeakers = new HashSet<string>();
     private bool engineDestroyed = false;
 
+    // 화자별 음성 큐 — busy 중 들어온 요청을 순서대로 재생
+    private struct QueuedVoice { public AudioClip clip; public float volume; public CrewSubtitleCue cue; public string speaker; }
+    private readonly Dictionary<string, Queue<QueuedVoice>> voiceQueues = new Dictionary<string, Queue<QueuedVoice>>();
+    private readonly Dictionary<string, Coroutine> voiceQueueRoutines = new Dictionary<string, Coroutine>();
+
     public void PlayReload() => PlayEffectSounds(reloadClips, reloadVolume);
     public void PlayFireCrewVoice() => PlayCrewVoicesWithRadio(fireCrewClip, 1f, CrewSubtitleCue.Fire);
     public void PlayReloadCrewVoice() => PlayCrewVoicesWithRadio(reloadCrewClip, 1f, CrewSubtitleCue.Reload);
@@ -597,11 +602,44 @@ public class PlayerTankSoundController : SoundController
 
     public void PlayCrewVoicesWithRadio(AudioClip[] clips, float voiceVolume, CrewSubtitleCue cue)
     {
-        string speaker = GetSpeaker(cue);
-        if (speaker != null && busySpeakers.Contains(speaker)) return;
         AudioClip clip = GetRandomClip(clips);
         if (clip == null) return;
-        StartCoroutine(PlayCrewVoiceWithRadioRoutine(clip, voiceVolume, 0f, cue, speaker));
+
+        string speaker = GetSpeaker(cue);
+
+        // speaker가 없으면 즉시 재생 (기존 동작 유지)
+        if (speaker == null)
+        {
+            StartCoroutine(PlayCrewVoiceWithRadioRoutine(clip, voiceVolume, 0f, cue, null));
+            return;
+        }
+
+        // 화자별 큐에 넣고 순서대로 처리
+        if (!voiceQueues.ContainsKey(speaker))
+            voiceQueues[speaker] = new Queue<QueuedVoice>();
+
+        voiceQueues[speaker].Enqueue(new QueuedVoice { clip = clip, volume = voiceVolume, cue = cue, speaker = speaker });
+
+        // 이미 처리 중이면 큐에 쌓기만 함
+        if (voiceQueueRoutines.ContainsKey(speaker) && voiceQueueRoutines[speaker] != null)
+            return;
+
+        voiceQueueRoutines[speaker] = StartCoroutine(ProcessVoiceQueue(speaker));
+    }
+
+    private IEnumerator ProcessVoiceQueue(string speaker)
+    {
+        if (!voiceQueues.ContainsKey(speaker)) yield break;
+
+        var queue = voiceQueues[speaker];
+        while (queue.Count > 0)
+        {
+            var entry = queue.Dequeue();
+            yield return PlayCrewVoiceWithRadioRoutine(entry.clip, entry.volume, 0f, entry.cue, entry.speaker);
+        }
+
+        if (voiceQueueRoutines.ContainsKey(speaker))
+            voiceQueueRoutines[speaker] = null;
     }
 
     private static string GetSpeaker(CrewSubtitleCue cue)
@@ -618,6 +656,10 @@ public class PlayerTankSoundController : SoundController
             case CrewSubtitleCue.LoadHE:
             case CrewSubtitleCue.CommanderReady:
             case CrewSubtitleCue.TargetTankDown:
+            case CrewSubtitleCue.DriverDead:
+            case CrewSubtitleCue.GunnerDead:
+            case CrewSubtitleCue.LoaderDead:
+            case CrewSubtitleCue.MGDead:
                 return "commander";
             case CrewSubtitleCue.Reload:
             case CrewSubtitleCue.LoaderReady:
