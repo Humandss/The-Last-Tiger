@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 822d9ab5f8243e940af0ad9f009b79b5, type: 3}
+  m_Name: br471
+  m_EditorClassIdentifier: 
+  shellName: BR 471
+  type: 1
+  caliber: 122
+  projectileMass: 25
+  muzzleVelocity: 920
+  penVelocityExponent: 1.5
+  minPenScale: 0.25
+  dragCoeff: 0.3
+  refAreaScale: 1
+  penetrationPower: 205
+  canExplode: 1
+  fuzeDelay: 0.0001
+  fuzeSensitivity: 19
+  tntMass: 246
+  canRicochet: 1
+  baseRicochetAngleDeg: 24
+  afterRicochetEnergyPercent: 0.62
+  randomRicochetAngle: 0.28
+  lifeTime: 10

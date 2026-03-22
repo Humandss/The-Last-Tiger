@@ -66,6 +66,7 @@ public class ZoomScopeOverlay : MonoBehaviour
 
         Canvas canvas = root.GetComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+        canvas.overrideSorting = true;
         canvas.sortingOrder = sortingOrder;
 
         CanvasScaler scaler = root.GetComponent<CanvasScaler>();

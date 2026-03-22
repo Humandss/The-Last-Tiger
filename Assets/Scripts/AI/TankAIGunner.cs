@@ -25,14 +25,14 @@ public class TankAIGunner : TankGunner
 
         if (!isAiming) return;
 
-        // Æ÷Å¾ Yaw Á¶ÁØ
+        // ï¿½ï¿½Å¾ Yaw ï¿½ï¿½ï¿½ï¿½
         AimAtWorldPoint(aimTargetPos);
 
         shell = Shell;
         if (shell != null)
             ApplyFcsToWorldPoint();
 
-        //Æ÷½Å ±¸µ¿
+        //ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         DriveGunPitchToTarget();
     }
 
@@ -43,26 +43,33 @@ public class TankAIGunner : TankGunner
         isAiming = true;
     }
 
-    // Á¶ÁØ ¿Ï·á ¿©ºÎ 
+    // ì¡°ì¤€ ì™„ë£Œ íŒì • â€” Yaw + Pitch ë‘˜ ë‹¤ í™•ì¸
     public bool IsAimed(float thresholdDeg = 2f)
     {
+        // Yaw (ìˆ˜í‰) ì²´í¬
         Vector3 toTarget = (aimTargetPos - turretYaw.position);
         toTarget.y = 0f;
-        float angle = Vector3.Angle(turretYaw.forward, toTarget);
-        return angle < thresholdDeg;
+        if (toTarget.sqrMagnitude < 0.0001f) return false;
+        float yawError = Vector3.Angle(turretYaw.forward, toTarget);
+        if (yawError >= thresholdDeg) return false;
+
+        // Pitch (ì•™ê°) ì²´í¬ â€” í˜„ì¬ ê°ë„ê°€ ëª©í‘œì— ì¶©ë¶„íˆ ê°€ê¹Œìš´ì§€
+        float curPitch  = NormalizeAngle(gunPitch.localEulerAngles.x);
+        float pitchError = Mathf.Abs(Mathf.DeltaAngle(curPitch, pitchTargetLocalX));
+        return pitchError < thresholdDeg;
     }
 
     public override void Fire()
     {
         if (!CanFire)
         {
-            Debug.Log("[AIGunner]»ç°İ ºÒ°¡");
+            Debug.Log("[AIGunner]ï¿½ï¿½ï¿½ ï¿½Ò°ï¿½");
             return;
         }
 
         if (!loaderFunc.GetIsLoaded() || loaderFunc.GetIsLoading())
         {
-            Debug.Log("[AIGunner] ÀåÀü ¾ÈµÊ");
+            Debug.Log("[AIGunner] ï¿½ï¿½ï¿½ï¿½ ï¿½Èµï¿½");
             return;
         }
     
@@ -72,12 +79,12 @@ public class TankAIGunner : TankGunner
         soundController.PlayGunFireClips();
 
         loaderFunc.IsShot();
-        loaderFunc.LoadDefault(); // ¹ß»ç ÈÄ ÀÚµ¿ ÀçÀåÀü
+        loaderFunc.LoadDefault(); // ï¿½ß»ï¿½ ï¿½ï¿½ ï¿½Úµï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     }
 
     private void UpdateRange()
     {
-        // Å¸°Ù±îÁö ¼öÆò °Å¸®¸¦ ÀÚµ¿À¸·Î »ç°Å¸®·Î ¼³Á¤
+        // Å¸ï¿½Ù±ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Å¸ï¿½ï¿½ï¿½ ï¿½Úµï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Å¸ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         Vector3 flat = Vector3.ProjectOnPlane(
             aimTargetPos - gunPitch.position, Vector3.up);
         rangeMeters = Mathf.Clamp(flat.magnitude, 5f, 5000f);
@@ -86,7 +93,7 @@ public class TankAIGunner : TankGunner
     {
         if (shell == null) return;
 
-        // ¼öÆò °Å¸®¸¦ »ç°Å¸®·Î ÀÚµ¿ ¼³Á¤
+        // ï¿½ï¿½ï¿½ï¿½ ï¿½Å¸ï¿½ï¿½ï¿½ ï¿½ï¿½Å¸ï¿½ï¿½ï¿½ ï¿½Úµï¿½ ï¿½ï¿½ï¿½ï¿½
         rangeMeters = Vector3.ProjectOnPlane(
             aimTargetPos - gunPitch.position, Vector3.up).magnitude;
         rangeMeters = Mathf.Clamp(rangeMeters, 5f, 5000f);

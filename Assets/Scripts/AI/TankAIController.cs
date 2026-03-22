@@ -71,13 +71,20 @@ public class TankAIController : MonoBehaviour
     private int lastNearbyShellId = -1;
     private float lastNearbyShellReactTime = -999f;
 
+    private ModuleManager _moduleManager;
+
     private void OnEnable()
     {
-        ModuleManager.OnTankDestroyed += Die;
+        _moduleManager = GetComponent<ModuleManager>();
+        if (_moduleManager != null)
+            _moduleManager.OnTankDestroyed += Die;  // 자기 탱크 이벤트만 구독
+        else
+            Debug.LogWarning($"[TankAI] {name}: ModuleManager 없음");
     }
     private void OnDisable()
     {
-        ModuleManager.OnTankDestroyed -= Die;
+        if (_moduleManager != null)
+            _moduleManager.OnTankDestroyed -= Die;
     }
     private void Awake()
     {
@@ -264,12 +271,16 @@ public class TankAIController : MonoBehaviour
         float dist = toPlayer.magnitude;
 
         float effectiveRange = profile.detectionRange * (isCommanderDead ? commanderDeadRangeMul : 1f);
-        if (dist > effectiveRange) return false;
+        if (dist > effectiveRange)
+        {
+            Debug.Log($"[TankAI] {name} too far: dist={dist:0.0} range={effectiveRange:0.0}");
+            return false;
+        }
 
         if (Physics.Raycast(eyePos, toPlayer.normalized, out var hit, dist, occluderMask))
         {
             Debug.DrawLine(eyePos, hit.point, Color.red);
-            Debug.Log($"[TankAI] Blocked by {hit.collider.gameObject.name}");
+            Debug.Log($"[TankAI] {name} Blocked by {hit.collider.gameObject.name}");
             return false;
         }
 
@@ -285,6 +296,7 @@ public class TankAIController : MonoBehaviour
         Transform facingTransform = turret != null ? turret : transform;
         float angle = Vector3.Angle(facingTransform.forward, toPlayer);
         float effectiveFov = profile.fieldOfView * (isCommanderDead ? commanderDeadFovMul : 1f);
+        Debug.Log($"[TankAI] {name} FOV check: angle={angle:0.0} fov={effectiveFov:0.0} result={angle < effectiveFov * 0.5f}");
         return angle < effectiveFov * 0.5f;
     }
 
