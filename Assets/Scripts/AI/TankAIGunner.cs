@@ -10,6 +10,9 @@ public class TankAIGunner : TankGunner
 
     private ShellData Shell => loaderFunc.GetLoadedShell();
 
+    [Header("FCS Activation")]
+    [SerializeField] private float fcsActivateYawDeg = 15f; // 이 각도 이내일 때만 피치 FCS 계산
+
     private Vector3 aimTargetPos;
     private bool isAiming = false;
 
@@ -25,14 +28,22 @@ public class TankAIGunner : TankGunner
 
         if (!isAiming) return;
 
-        // ��ž Yaw ����
+        // Yaw 회전
         AimAtWorldPoint(aimTargetPos);
 
+        // Yaw가 충분히 정렬됐을 때만 FCS 피치 계산
+        // 회전 중 엉뚱한 앙각이 계산되는 것을 방지
+        Vector3 toTarget = aimTargetPos - turretYaw.position;
+        toTarget.y = 0f;
+        float yawError = toTarget.sqrMagnitude > 0.0001f
+            ? Vector3.Angle(turretYaw.forward, toTarget)
+            : 180f;
+
         shell = Shell;
-        if (shell != null)
+        if (shell != null && yawError < fcsActivateYawDeg)
             ApplyFcsToWorldPoint();
 
-        //���� ����
+        // 피치 구동
         DriveGunPitchToTarget();
     }
 

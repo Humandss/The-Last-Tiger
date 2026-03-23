@@ -6,7 +6,7 @@ public class TankAIController : MonoBehaviour
 {
     public enum State { Patrol, Combat, Retreat }
 
-    public static event Action OnEnemyTankDestroyed;
+    public event Action OnEnemyTankDestroyed;
 
     [Header("Refs")]
     [SerializeField] private TankAIDriver driver;
@@ -296,7 +296,7 @@ public class TankAIController : MonoBehaviour
         Transform facingTransform = turret != null ? turret : transform;
         float angle = Vector3.Angle(facingTransform.forward, toPlayer);
         float effectiveFov = profile.fieldOfView * (isCommanderDead ? commanderDeadFovMul : 1f);
-        Debug.Log($"[TankAI] {name} FOV check: angle={angle:0.0} fov={effectiveFov:0.0} result={angle < effectiveFov * 0.5f}");
+        //Debug.Log($"[TankAI] {name} FOV check: angle={angle:0.0} fov={effectiveFov:0.0} result={angle < effectiveFov * 0.5f}");
         return angle < effectiveFov * 0.5f;
     }
 
@@ -542,6 +542,8 @@ public class TankAIController : MonoBehaviour
         driver.SetDriverDead();
         gunner.SetGunnerDead();
         SetCommanderDead(true);
+        int subs = OnEnemyTankDestroyed?.GetInvocationList().Length ?? 0;
+        Debug.Log($"[TankAI] {gameObject.name} Die() → 구독자={subs}");
         OnEnemyTankDestroyed?.Invoke();
         Debug.LogWarning($"[TankAI] {gameObject.name} dead -> AI stopped");
     }

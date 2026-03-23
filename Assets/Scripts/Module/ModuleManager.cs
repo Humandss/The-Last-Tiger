@@ -167,6 +167,8 @@ public class ModuleManager : MonoBehaviour
     {
         if (tankDestroyedFired) return;
         tankDestroyedFired = true;
+        int listenerCount = OnTankDestroyed?.GetInvocationList().Length ?? 0;
+        Debug.Log($"[ModuleManager] FireTankDestroyed: {gameObject.name}, 구독자={listenerCount}");
         OnTankDestroyed?.Invoke();
     }
 

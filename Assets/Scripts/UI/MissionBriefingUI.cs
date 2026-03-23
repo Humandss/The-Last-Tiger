@@ -20,6 +20,7 @@ public class MissionBriefingUI : MonoBehaviour
     // ── 데이터 ───────────────────────────────────────────
     [Header("데이터")]
     [SerializeField] private MissionBriefingData data;
+    public MissionBriefingData Data => data;
     [SerializeField] private float _nextY = 10f;
     // ── 타이밍 ──────────────────────────────────────────
     [Header("타이밍 (초)")]
@@ -34,14 +35,14 @@ public class MissionBriefingUI : MonoBehaviour
 
     // ── 스타일 ──────────────────────────────────────────
     [Header("스타일")]
-    [SerializeField] private Font  customFont;                                              // null → 내장 폰트
+    [SerializeField] private Font  customFont;                                              
     [SerializeField] private Color bgColor          = new Color(0.04f, 0.04f, 0.06f, 0.93f);
     [SerializeField] private Color accentColor      = new Color(0.85f, 0.72f, 0.20f, 1f);
     [SerializeField] private Color headerDimColor   = new Color(0.55f, 0.55f, 0.55f, 1f);
     [SerializeField] private Color bodyColor        = new Color(0.88f, 0.88f, 0.88f, 1f);
     [SerializeField] private Color objectiveColor   = new Color(0.95f, 0.95f, 0.90f, 1f);
     [SerializeField] private Color remarkSpeakerCol = new Color(0.30f, 0.85f, 0.70f, 1f);
-    [SerializeField] private int   baseFontSize     = 20;
+    [SerializeField] private int   baseFontSize     = 30;
     [SerializeField] [Range(0f, 0.4f)] private float scanlineAlpha = 0.12f;  // 0 = 스캔라인 없음
 
     // ── 입력 차단 ────────────────────────────────────────
@@ -131,7 +132,7 @@ public class MissionBriefingUI : MonoBehaviour
         // ④ 임무 목표
         yield return ShowSection("[ 임무 ]",
             BuildNumberedList(data ? data.objectives : new string[0]),
-            objectiveColor, typewriter: false, linePause: objectiveStagger);
+            objectiveColor, typewriter: false, linePause: objectiveStagger, lineSpacing: 18f);
         yield return new WaitForSecondsRealtime(sectionPause);
 
         // ⑤ 전차장 발언
@@ -207,7 +208,7 @@ public class MissionBriefingUI : MonoBehaviour
 
     // ── ③④ 섹션 텍스트 ───────────────────────────────────
     private IEnumerator ShowSection(string title, string[] lines, Color lineColor,
-                                    bool typewriter, float linePause)
+                                    bool typewriter, float linePause, float lineSpacing = 38f)
     {
         float startY = NextY();
         var cgTitle = AddLabel(title, accentColor, baseFontSize - 1,
@@ -233,7 +234,7 @@ public class MissionBriefingUI : MonoBehaviour
                 yield return FadeInCg(cgLine, 0.3f);
             }
             yield return new WaitForSecondsRealtime(linePause);
-            _nextY -= 38f;
+            _nextY -= lineSpacing;
         }
     }
 

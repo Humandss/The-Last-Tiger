@@ -55,6 +55,26 @@ public class MissionBriefingData : ScriptableObject
     [Header("버튼")]
     public string startButtonText = "출격";
 
+    // ── 씬 전환 카드 ──────────────────────────────────────
+    [Header("씬 전환 카드 (좌하단)")]
+    public string transitionDate      = "1944년 7월 12일";
+    public string transitionLocation  = "벨라루스, 민스크 근방";
+    public string transitionCommander = "Unknown";
+
+    // ── 인게임 작전 지령 ──────────────────────────────────
+    [Header("인게임 작전 지령 (게임 시작 시 표시)")]
+    public string orderTitle   = "작전 지령";
+    [TextArea(4, 12)]
+    public string orderBody    =
+        "[상황]\n" +
+        "현재 잔존 아군 기갑 부대 재정비 및 후퇴중\n" +
+        "제5기갑정찰대대 보고 — 북서 방면 적 T-34 선봉대 포착. 이동 중.\n" +
+        "\n" +
+        "[목표]\n" +
+        "선제 기습으로 적 선봉 기갑 부대 격멸.\n" +
+        "격멸 완료 후 추가 명령 대기하라.";
+    public string orderConfirm = "명령 수령";
+
     // ── 배경 이미지 ───────────────────────────────────────
     [Header("배경 이미지 (선택)")]
     public Sprite backgroundSprite;

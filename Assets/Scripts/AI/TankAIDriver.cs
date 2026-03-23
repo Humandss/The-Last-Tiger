@@ -146,7 +146,11 @@ public class TankAIDriver : MonoBehaviour
     {
         if (agent == null || !agent.enabled || !agent.isOnNavMesh)
             return false;
+        if (agent.pathPending)
+            return false;
+        if (!agent.hasPath)
+            return false;
 
-        return !agent.pathPending && agent.remainingDistance < arrivalRadius;
+        return agent.remainingDistance < arrivalRadius;
     }
 }

@@ -432,6 +432,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gameSceneName: SampleScene
   blackFadeDuration: 0.6
+  cardLineInterval: 1
+  cardHoldDuration: 2.8
+  cardFadeOutDuration: 1
+  skipOnAnyKey: 1
+  cardFontSize: 22
+  cardPadLeft: 72
+  cardPadBottom: 80
+  cardLineHeight: 34
+  loadingLabel: Loading
+  loadingDotsInterval: 0.4
+  loadingFontSize: 25
 --- !u!114 &1045791706
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -445,7 +456,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   data: {fileID: 11400000, guid: d34f2a0b32c0bf84bb89baad3fef6081, type: 2}
-  _nextY: 100
+  _nextY: 120
   overlayFadeIn: 1
   overlayFadeOut: 0.8
   headerStagger: 0.55

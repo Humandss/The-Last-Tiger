@@ -227,7 +227,7 @@ MonoBehaviour:
   minThicknessM: 0.01
   lifeTimeAfterRicochet: 3
   maxRicochet: 2
-  aiReactionRadius: 40
+  aiReactionRadius: 100
   radiusAt1Kg: 6
   raysAt1Kg: 120
   baseFragDamage: 120

@@ -78,6 +78,8 @@ public class PlayerTankSoundController : SoundController
     [SerializeField] private CrewSubtitleManager subtitleManager;
 
     [Header("Startup Sequence")]
+    private readonly Dictionary<TankAIController, Action> enemyDestroyedHandlers = new();
+
     [SerializeField] private AudioClip commanderReadyClip;
     [SerializeField] private AudioClip driverReadyClip;
     [SerializeField] private AudioClip gunnerReadyClip;
@@ -121,35 +123,79 @@ public class PlayerTankSoundController : SoundController
     private readonly Dictionary<string, Queue<QueuedVoice>> voiceQueues = new Dictionary<string, Queue<QueuedVoice>>();
     private readonly Dictionary<string, Coroutine> voiceQueueRoutines = new Dictionary<string, Coroutine>();
 
+    // 같은 프레임에 우선순위가 높은 큐가 오면 낮은 큐를 억제
+    private readonly HashSet<CrewSubtitleCue> suppressedCues = new HashSet<CrewSubtitleCue>();
+
+    // 관통/비관통/도탄 보고 쿨다운
+    [Header("Hit Report Cooldown")]
+    [SerializeField] private float hitReportCooldown = 1f;
+    private float _hitReportLastTime = -999f;
+
     public void PlayReload() => PlayEffectSounds(reloadClips, reloadVolume);
     public void PlayFireCrewVoice() => PlayCrewVoicesWithRadio(fireCrewClip, 1f, CrewSubtitleCue.Fire);
     public void PlayReloadCrewVoice() => PlayCrewVoicesWithRadio(reloadCrewClip, 1f, CrewSubtitleCue.Reload);
     public void PlayTargetDown() => PlayCrewVoicesWithRadio(targetDownCrewClip, 1f, CrewSubtitleCue.TargetTankDown);
     public void PlayAPLoad() => PlayCrewVoicesWithRadio(loadAP, flyByVolume, CrewSubtitleCue.LoadAP);
     public void PlayHELoad() => PlayCrewVoicesWithRadio(loadHE, flyByVolume, CrewSubtitleCue.LoadHE);
-    public void PlayPenetratedCrewVoice()=> PlayCrewVoicesWithRadio(tankPenetrationCrewClip, 1f, CrewSubtitleCue.Penetrated);
-    public void PlayNonePenetratedCrewVoice() => PlayCrewVoicesWithRadio(tankNonePenetrationCrewClip, 1f, CrewSubtitleCue.NoPenetration);
-    public void PlayRicochetCrewVoice() => PlayCrewVoicesWithRadio(tankRicochetCrewClip, 1f, CrewSubtitleCue.Ricocheted);
+    // 관통 음성은 1프레임 지연 — 같은 프레임에 격파 보고가 오면 suppress됨
+    public void PlayPenetratedCrewVoice()      { if (!HitReportReady()) return; StartCoroutine(DelayedCrewVoice(tankPenetrationCrewClip, 1f, CrewSubtitleCue.Penetrated)); }
+    public void PlayNonePenetratedCrewVoice()  { if (!HitReportReady()) return; PlayCrewVoicesWithRadio(tankNonePenetrationCrewClip, 1f, CrewSubtitleCue.NoPenetration); }
+    public void PlayRicochetCrewVoice()        { if (!HitReportReady()) return; PlayCrewVoicesWithRadio(tankRicochetCrewClip, 1f, CrewSubtitleCue.Ricocheted); }
+    private bool HitReportReady() { if (Time.time - _hitReportLastTime < hitReportCooldown) return false; _hitReportLastTime = Time.time; return true; }
     public void PlayInSightCrewVoice() =>  PlayCrewVoicesWithRadio(enemyInSightCrewClip, 1f, CrewSubtitleCue.EnemyInSight);
     public void PlayDriverDeadCrewVoice() => PlayCrewVoicesWithRadio(driverDeadCrewClip, 1f, CrewSubtitleCue.DriverDead);
     public void PlayMGDeadCrewVoice() => PlayCrewVoicesWithRadio(mgDeadCrewClip, 1f, CrewSubtitleCue.MGDead);
     public void PlayGunnerDeadCrewVoice() => PlayCrewVoicesWithRadio(gunnerDeadCrewClip, 1f, CrewSubtitleCue.GunnerDead);
     public void PlayLoaderDeadCrewVoice() => PlayCrewVoicesWithRadio(loaderDeadCrewClip, 1f, CrewSubtitleCue.LoaderDead);
-    public void PlayEnemyTankDestroyed() => PlayCrewVoicesWithRadio(tankDestroyedCrewClip, 1f, CrewSubtitleCue.TargetTankDown);
+    public void PlayEnemyTankDestroyed()
+    {
+        // 격파 보고가 오면 같은 프레임의 관통 음성을 억제
+        StartCoroutine(SuppressCueTemporarily(CrewSubtitleCue.Penetrated));
+        PlayCrewVoicesWithRadio(tankDestroyedCrewClip, 1f, CrewSubtitleCue.TargetTankDown);
+    }
     private void OnEnable()
     {
         BallisticManager.OnEnemyPenetrated += PlayPenetratedCrewVoice;
         BallisticManager.OnEnemyNoPenetration += PlayNonePenetratedCrewVoice;
         BallisticManager.OnEnemyRicocheted += PlayRicochetCrewVoice;
-        TankAIController.OnEnemyTankDestroyed += PlayEnemyTankDestroyed;
+        SubscribeEnemyDestroyedVoices();
     }
     private void OnDisable()
     {
         BallisticManager.OnEnemyPenetrated -= PlayPenetratedCrewVoice;
         BallisticManager.OnEnemyNoPenetration -= PlayNonePenetratedCrewVoice;
         BallisticManager.OnEnemyRicocheted -= PlayRicochetCrewVoice;
-        TankAIController.OnEnemyTankDestroyed -= PlayEnemyTankDestroyed;
+        UnsubscribeEnemyDestroyedVoices();
     }
+
+    private void SubscribeEnemyDestroyedVoices()
+    {
+        var enemyTanks = FindObjectsOfType<TankAIController>();
+        for (int i = 0; i < enemyTanks.Length; i++)
+        {
+            var tank = enemyTanks[i];
+            if (tank == null || enemyDestroyedHandlers.ContainsKey(tank))
+                continue;
+
+            Action handler = PlayEnemyTankDestroyed;
+            enemyDestroyedHandlers.Add(tank, handler);
+            tank.OnEnemyTankDestroyed += handler;
+        }
+    }
+
+    private void UnsubscribeEnemyDestroyedVoices()
+    {
+        foreach (var pair in enemyDestroyedHandlers)
+        {
+            if (pair.Key == null)
+                continue;
+
+            pair.Key.OnEnemyTankDestroyed -= pair.Value;
+        }
+
+        enemyDestroyedHandlers.Clear();
+    }
+
     protected override void Awake()
     {
         base.Awake();
@@ -223,7 +269,7 @@ public class PlayerTankSoundController : SoundController
     {
         float waitBeforeFade = Mathf.Max(0f, startDelay - startIdlePrerollTime);
         if (waitBeforeFade > 0f)
-            yield return new WaitForSeconds(waitBeforeFade);
+            yield return new WaitForSecondsRealtime(waitBeforeFade);
 
         float overlapDuration = Mathf.Max(0.01f, startDelay - waitBeforeFade);
         float fadeDuration = Mathf.Max(startToIdleFadeTime, overlapDuration);
@@ -354,7 +400,7 @@ public class PlayerTankSoundController : SoundController
         float t = 0f;
         while (t < duration)
         {
-            t += Time.deltaTime;
+            t += Time.unscaledDeltaTime;
             activeEngineLoop.volume = Mathf.Clamp01(t / duration);
             yield return null;
         }
@@ -576,6 +622,9 @@ public class PlayerTankSoundController : SoundController
 
     private IEnumerator PlayStartupSequence()
     {
+        // 게임이 일시정지 중이면(작전 지령 등) 해제될 때까지 대기
+        yield return new WaitUntil(() => Time.timeScale > 0f);
+
         yield return PlayAndWait(commanderReadyClip, CrewSubtitleCue.CommanderReady);
         yield return PlayAndWait(driverReadyClip, CrewSubtitleCue.DriverReady);
         yield return PlayAndWait(gunnerReadyClip, CrewSubtitleCue.GunnerReady);
@@ -640,6 +689,23 @@ public class PlayerTankSoundController : SoundController
 
         if (voiceQueueRoutines.ContainsKey(speaker))
             voiceQueueRoutines[speaker] = null;
+    }
+
+    // 1프레임 후 재생 — suppress 되어 있으면 스킵
+    private IEnumerator DelayedCrewVoice(AudioClip[] clips, float volume, CrewSubtitleCue cue)
+    {
+        yield return null;
+        if (suppressedCues.Contains(cue)) yield break;
+        PlayCrewVoicesWithRadio(clips, volume, cue);
+    }
+
+    // cue를 2프레임 동안 억제 후 자동 해제
+    private IEnumerator SuppressCueTemporarily(CrewSubtitleCue cue)
+    {
+        suppressedCues.Add(cue);
+        yield return null;
+        yield return null;
+        suppressedCues.Remove(cue);
     }
 
     private static string GetSpeaker(CrewSubtitleCue cue)

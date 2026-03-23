@@ -257,7 +257,9 @@ MonoBehaviour:
   penCostPerMeter: 80
   speedLossPerCost: 0.002
   minThicknessM: 0.01
-  aiReactionRadius: 40
+  lifeTimeAfterRicochet: 3
+  maxRicochet: 2
+  aiReactionRadius: 100
   radiusAt1Kg: 6
   raysAt1Kg: 120
   baseFragDamage: 120
@@ -600,3 +602,4 @@ MonoBehaviour:
   hitVolume: 7
   ricochetVolume: 2
   explosionVolume: 1
+  fireVolume: 1
