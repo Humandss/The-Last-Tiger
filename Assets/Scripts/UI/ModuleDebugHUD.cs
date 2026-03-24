@@ -11,7 +11,7 @@ public class ModuleDebugHUD : MonoBehaviour
     public static ModuleDebugHUD Instance { get; private set; }
 
     [Header("Display")]
-    [SerializeField] private bool show = true;
+    [field: SerializeField] public bool show = true;
     [SerializeField] private float keepAliveSeconds = 2.0f;
     [SerializeField] private Vector2 enemyGuiPos = new Vector2(12f, 12f);
     [SerializeField] private float playerLeft = 12f;

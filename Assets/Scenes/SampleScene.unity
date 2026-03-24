@@ -16163,6 +16163,65 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!1 &1793711621
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1793711623}
+  - component: {fileID: 1793711622}
+  m_Layer: 0
+  m_Name: MissionUI
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1793711622
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1793711621}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 657b0282a80b8474dab8011ae0d2b4ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  data: {fileID: 11400000, guid: d34f2a0b32c0bf84bb89baad3fef6081, type: 2}
+  showDelay: 1.5
+  overlayFadeIn: 0.7
+  headerStagger: 0.45
+  bodyFadeIn: 0.35
+  bodyLinePause: 0.3
+  buttonFadeIn: 0.5
+  typewriterSpeed: 0.04
+  customFont: {fileID: 0}
+  bgColor: {r: 0.04, g: 0.04, b: 0.06, a: 0.93}
+  accentColor: {r: 0.85, g: 0.72, b: 0.2, a: 1}
+  headerDimColor: {r: 0.55, g: 0.55, b: 0.55, a: 1}
+  bodyColor: {r: 0.88, g: 0.88, b: 0.88, a: 1}
+  baseFontSize: 28
+  scanlineAlpha: 0.12
+--- !u!4 &1793711623
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1793711621}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1187.1013, y: -3.4650574, z: 988.3515}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1795560756
 GameObject:
   m_ObjectHideFlags: 0
@@ -16713,7 +16772,6 @@ GameObject:
   - component: {fileID: 1870781293}
   - component: {fileID: 1870781292}
   - component: {fileID: 1870781295}
-  - component: {fileID: 1870781296}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -16767,33 +16825,6 @@ MonoBehaviour:
   showKillCounter: 1
   killCounterColor: {r: 0.85, g: 0.72, b: 0.2, a: 1}
   killCounterSize: 26
---- !u!114 &1870781296
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1870781291}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 657b0282a80b8474dab8011ae0d2b4ff, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  data: {fileID: 11400000, guid: d34f2a0b32c0bf84bb89baad3fef6081, type: 2}
-  showDelay: 1.1
-  overlayFadeIn: 0.7
-  headerStagger: 0.45
-  bodyFadeIn: 0.35
-  bodyLinePause: 0.3
-  buttonFadeIn: 0.5
-  typewriterSpeed: 0.04
-  customFont: {fileID: 0}
-  bgColor: {r: 0.04, g: 0.04, b: 0.06, a: 0.93}
-  accentColor: {r: 0.85, g: 0.72, b: 0.2, a: 1}
-  headerDimColor: {r: 0.55, g: 0.55, b: 0.55, a: 1}
-  bodyColor: {r: 0.88, g: 0.88, b: 0.88, a: 1}
-  baseFontSize: 28
-  scanlineAlpha: 0.12
 --- !u!1 &1872468028
 GameObject:
   m_ObjectHideFlags: 0
@@ -25568,3 +25599,4 @@ SceneRoots:
   - {fileID: 1637352772}
   - {fileID: 1870781293}
   - {fileID: 1566102485}
+  - {fileID: 1793711623}

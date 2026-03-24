@@ -53,6 +53,7 @@ public class MissionOrderUI : MonoBehaviour
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible   = true;
         Time.timeScale   = 0f;
+        if (ModuleDebugHUD.Instance != null) ModuleDebugHUD.Instance.show = false;
         BuildCanvas();
         _rootCg.alpha = 0f;
     }
@@ -99,6 +100,7 @@ public class MissionOrderUI : MonoBehaviour
     private IEnumerator HideAndResume()
     {
         yield return FadeCg(_rootCg, 1f, 0f, 0.4f);
+        if (ModuleDebugHUD.Instance != null) ModuleDebugHUD.Instance.show = true;
         Time.timeScale = 1f;
         Destroy(gameObject);
     }

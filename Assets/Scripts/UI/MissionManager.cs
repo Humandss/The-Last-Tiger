@@ -2,10 +2,11 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using System;
 
 /// <summary>
 /// 미션 진행을 관리합니다.
-/// Phase 1 : 추적 중인 적 탱크를 모두 격파 (TankAIController.enabled == false 감지)
+/// Phase 1 : 지정된 적 탱크를 모두 격파
 /// Phase 2 : 긴급 지령 팝업 표시
 /// </summary>
 public class MissionManager : MonoBehaviour
@@ -24,62 +25,67 @@ public class MissionManager : MonoBehaviour
     [SerializeField] private Color killCounterColor = new Color(0.85f, 0.72f, 0.20f, 1f);
     [SerializeField] private int   killCounterSize  = 26;
 
+    [Header("Startup Sequence")]
+    private readonly Dictionary<TankAIController, Action> enemyDestroyedHandlers = new();
+
     private int  _targetCount;
     private int  _killed;
     private bool _phase1Done;
     private Text _counterText;
 
-    // 인덱스 기반 카운팅 — tank 파괴(null) 후에도 누락 없이 감지
-    private bool[] _tankCounted;
-
-    // ─────────────────────────────────────────────────────
     private void Start()
     {
-        if (enemyTanks == null || enemyTanks.Length == 0)
-            enemyTanks = FindObjectsOfType<TankAIController>();
-
-        // 중복 제거 및 null 제거
-        var valid = new List<TankAIController>();
-        var seen  = new HashSet<TankAIController>();
-        foreach (var t in enemyTanks)
-            if (t != null && seen.Add(t)) valid.Add(t);
-        enemyTanks = valid.ToArray();
-
-        _targetCount  = enemyTanks.Length;
-        _tankCounted  = new bool[_targetCount];
+        SubscribeEnemyDestroyedCount();
+        _targetCount = enemyDestroyedHandlers.Count;
         Debug.Log($"[MissionManager] 추적 대상 {_targetCount}대");
-
         if (showKillCounter) BuildKillCounterHUD();
         RefreshCounter();
     }
 
-    // ── 폴링 방식 격파 감지 ───────────────────────────────
-    // null  = GameObject 파괴됨 = 격파 확정
-    // !enabled = Die() 직후 = 격파 확정
-    private void Update()
+    private void OnDestroy()
     {
-        if (_phase1Done || _tankCounted == null) return;
+        UnSubscribeEnemyDestroyedCount();
+    }
 
+    private void SubscribeEnemyDestroyedCount()
+    {
+        var enemyTanks = FindObjectsOfType<TankAIController>();
         for (int i = 0; i < enemyTanks.Length; i++)
         {
-            if (_tankCounted[i]) continue;
+            var tank = enemyTanks[i];
+            if (tank == null || enemyDestroyedHandlers.ContainsKey(tank))
+                continue;
 
-            var tank   = enemyTanks[i];
-            bool isDead = tank == null || !tank.enabled;   // 파괴됐거나 Die() 호출됨
-            if (!isDead) continue;
+            Action handler = OnEnemyKilled;
+            enemyDestroyedHandlers.Add(tank, handler);
+            tank.OnEnemyTankDestroyed += handler;
+            Debug.Log($"subscribe type : {tank.gameObject.name}");
+        }
+    }
+    private void UnSubscribeEnemyDestroyedCount()
+    {
+        foreach (var pair in enemyDestroyedHandlers)
+        {
+            if (pair.Key == null)
+                continue;
 
-            _tankCounted[i] = true;
-            _killed++;
-            RefreshCounter();
-            string tankName = tank != null ? tank.name : $"Tank[{i}]";
-            Debug.Log($"[MissionManager] 격파 {_killed}/{_targetCount}: {tankName}");
+            pair.Key.OnEnemyTankDestroyed -= pair.Value;
+        }
+        enemyDestroyedHandlers.Clear();
+    }
+    // ── static 이벤트 콜백 ────────────────────────────────
+    private void OnEnemyKilled()
+    {
+        Debug.LogWarning($"Enemy Tank Destroyed");
+        if (_phase1Done) return;
 
-            if (_killed >= _targetCount)
-            {
-                _phase1Done = true;
-                StartCoroutine(TriggerEmergencyOrder());
-                break;
-            }
+        _killed++;
+        RefreshCounter();
+
+        if (_killed >= _targetCount)
+        {
+            _phase1Done = true;
+            StartCoroutine(TriggerEmergencyOrder());
         }
     }
 

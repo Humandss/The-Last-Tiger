@@ -21,7 +21,7 @@ public class ModuleManager : MonoBehaviour
 
     private TankFireEffects[] fireEffects;
 
-    public event Action OnTankDestroyed;   // static 제거 — 자기 탱크에만 발동
+    public event Action OnTankDestroyed;   
     private bool tankDestroyedFired = false;
 
     public void NotifyAmmoExplosion() => FireTankDestroyed();

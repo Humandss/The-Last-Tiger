@@ -71,20 +71,20 @@ public class TankAIController : MonoBehaviour
     private int lastNearbyShellId = -1;
     private float lastNearbyShellReactTime = -999f;
 
-    private ModuleManager _moduleManager;
+    private ModuleManager moduleManager;
 
     private void OnEnable()
     {
-        _moduleManager = GetComponent<ModuleManager>();
-        if (_moduleManager != null)
-            _moduleManager.OnTankDestroyed += Die;  // 자기 탱크 이벤트만 구독
+        moduleManager = GetComponent<ModuleManager>();
+        if (moduleManager != null)
+            moduleManager.OnTankDestroyed += Die;  
         else
             Debug.LogWarning($"[TankAI] {name}: ModuleManager 없음");
     }
     private void OnDisable()
     {
-        if (_moduleManager != null)
-            _moduleManager.OnTankDestroyed -= Die;
+        if (moduleManager != null)
+            moduleManager.OnTankDestroyed -= Die;
     }
     private void Awake()
     {
@@ -538,13 +538,11 @@ public class TankAIController : MonoBehaviour
 
     public void Die()
     {
-        enabled = false;
+        OnEnemyTankDestroyed?.Invoke();
         driver.SetDriverDead();
         gunner.SetGunnerDead();
         SetCommanderDead(true);
-        int subs = OnEnemyTankDestroyed?.GetInvocationList().Length ?? 0;
-        Debug.Log($"[TankAI] {gameObject.name} Die() → 구독자={subs}");
-        OnEnemyTankDestroyed?.Invoke();
+        enabled = false;
         Debug.LogWarning($"[TankAI] {gameObject.name} dead -> AI stopped");
     }
 
