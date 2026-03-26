@@ -275,6 +275,7 @@ public class CameraController : MonoBehaviour
 
     public bool IsZooming => isZooming;
     public Camera Cam => commanderCam;
+    public float BaseFov => baseFov; // WreckFireManager 줌 배율 계산용
 
     // 0: no zoom, 1: strongest zoom stage
     public float ZoomAmount01
