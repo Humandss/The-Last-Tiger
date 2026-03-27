@@ -104,7 +104,6 @@ public class TankAIGunner : TankGunner
     {
         if (shell == null) return;
 
-        // ���� �Ÿ��� ��Ÿ��� �ڵ� ����
         rangeMeters = Vector3.ProjectOnPlane(
             aimTargetPos - gunPitch.position, Vector3.up).magnitude;
         rangeMeters = Mathf.Clamp(rangeMeters, 5f, 5000f);

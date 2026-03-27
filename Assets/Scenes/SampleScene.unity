@@ -2103,6 +2103,11 @@ PrefabInstance:
       objectReference: {fileID: 233089133}
     - target: {fileID: 1552317482492427507, guid: 39c76de7b13f93049902793148a9eda2,
         type: 3}
+      propertyPath: allowAimYawThreshold
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 1552317482492427507, guid: 39c76de7b13f93049902793148a9eda2,
+        type: 3}
       propertyPath: impactReactionRadius
       value: 600
       objectReference: {fileID: 0}
@@ -2134,7 +2139,7 @@ PrefabInstance:
     - target: {fileID: 5491432210558896199, guid: 39c76de7b13f93049902793148a9eda2,
         type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5782689652270859089, guid: 39c76de7b13f93049902793148a9eda2,
         type: 3}
@@ -6486,6 +6491,7 @@ GameObject:
   m_Component:
   - component: {fileID: 821579443}
   - component: {fileID: 821579442}
+  - component: {fileID: 821579444}
   m_Layer: 0
   m_Name: PoolManager
   m_TagString: Untagged
@@ -6521,6 +6527,21 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &821579444
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 821579441}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3380d95b05eb5934c9c69e06252827ed, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxConcurrentFires: 8
+  baseCullDistance: 300
+  evalInterval: 1
 --- !u!1 &822029517
 GameObject:
   m_ObjectHideFlags: 0
@@ -11421,6 +11442,11 @@ PrefabInstance:
       objectReference: {fileID: 1470157467}
     - target: {fileID: 1552317482492427507, guid: 39c76de7b13f93049902793148a9eda2,
         type: 3}
+      propertyPath: allowAimYawThreshold
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 1552317482492427507, guid: 39c76de7b13f93049902793148a9eda2,
+        type: 3}
       propertyPath: impactReactionRadius
       value: 600
       objectReference: {fileID: 0}
@@ -11452,7 +11478,7 @@ PrefabInstance:
     - target: {fileID: 5491432210558896199, guid: 39c76de7b13f93049902793148a9eda2,
         type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5782689652270859089, guid: 39c76de7b13f93049902793148a9eda2,
         type: 3}
@@ -16430,6 +16456,11 @@ PrefabInstance:
       objectReference: {fileID: 1830977389}
     - target: {fileID: 1552317482492427507, guid: 39c76de7b13f93049902793148a9eda2,
         type: 3}
+      propertyPath: allowAimYawThreshold
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 1552317482492427507, guid: 39c76de7b13f93049902793148a9eda2,
+        type: 3}
       propertyPath: impactReactionRadius
       value: 600
       objectReference: {fileID: 0}
@@ -21230,6 +21261,11 @@ PrefabInstance:
       objectReference: {fileID: 4461073012815141700}
     - target: {fileID: 1552317482492427507, guid: 39c76de7b13f93049902793148a9eda2,
         type: 3}
+      propertyPath: allowAimYawThreshold
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 1552317482492427507, guid: 39c76de7b13f93049902793148a9eda2,
+        type: 3}
       propertyPath: impactReactionRadius
       value: 600
       objectReference: {fileID: 0}
@@ -21256,7 +21292,7 @@ PrefabInstance:
     - target: {fileID: 5491432210558896199, guid: 39c76de7b13f93049902793148a9eda2,
         type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5782689652270859089, guid: 39c76de7b13f93049902793148a9eda2,
         type: 3}
@@ -22302,6 +22338,7 @@ MonoBehaviour:
   retreatDistance: 40
   snipingDuration: 5
   advanceDuration: 3
+  allowAimYawThreshold: 1.5
 --- !u!1 &5772952525546349862
 GameObject:
   m_ObjectHideFlags: 0

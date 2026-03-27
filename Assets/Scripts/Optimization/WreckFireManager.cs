@@ -5,7 +5,6 @@ using UnityEngine;
 /// <summary>
 /// 파괴된 탱크 잔해에서 발생하는 화재/연기 이펙트를 중앙에서 관리.
 /// - VFX Budget: 동시 활성 이펙트 수 하드캡
-/// - Frustum Culling: 카메라 시야 밖 이펙트 emission off
 /// - Distance Culling: 일정 거리 초과 이펙트 emission off
 /// - Zoom 연동: 줌 배율에 따라 컬링 거리 동적 조정
 /// </summary>
@@ -26,7 +25,6 @@ public class WreckFireManager : MonoBehaviour
     // ── 내부 상태 ──────────────────────────────────────────
     private float currentCullDistance;
     private Camera mainCam;
-    private readonly Plane[] frustumPlanes = new Plane[6]; // 매 프레임 재사용, 할당 없음
     private bool prevIsZooming;
 
     private readonly List<FireEntry> activeFires = new List<FireEntry>();
@@ -128,27 +126,14 @@ public class WreckFireManager : MonoBehaviour
         // 줌 배율 반영한 컬링 거리 갱신
         UpdateCullDistance();
 
-        // 프러스텀 평면 계산 (6개, 재할당 없음)
-        if (mainCam != null)
-            GeometryUtility.CalculateFrustumPlanes(mainCam, frustumPlanes);
-
         Vector3 playerPos = mainCam != null ? mainCam.transform.position : Vector3.zero;
 
         for (int i = 0; i < activeFires.Count; i++)
         {
             FireEntry entry = activeFires[i];
 
-            // 거리 체크
-            float dist         = Vector3.Distance(playerPos, entry.anchor.position);
-            bool withinDistance = dist <= currentCullDistance;
-
-            // 프러스텀 체크 (카메라 시야 안에 있는지)
-            bool inFrustum = mainCam == null ||
-                             GeometryUtility.TestPlanesAABB(frustumPlanes,
-                                 new Bounds(entry.anchor.position, Vector3.one * 2f));
-
-            // 둘 다 통과해야 emission on
-            SetEmission(entry, withinDistance && inFrustum);
+            float dist = Vector3.Distance(playerPos, entry.anchor.position);
+            SetEmission(entry, dist <= currentCullDistance);
         }
     }
 

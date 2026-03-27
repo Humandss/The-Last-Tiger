@@ -130,7 +130,6 @@ public class AmmoRackEffects : TankEffectsManager
             smokeInstance.transform.SetParent(t, worldPositionStays: true);
 
         WreckFireManager.Instance?.Register(smokeInstance, t);
-
         //Debug.Log($"[FIRE] AmmoRack Finish -> smoke spawned on {gameObject.name}");
     }
   
@@ -208,8 +207,6 @@ public class AmmoRackEffects : TankEffectsManager
         if (followParent)
             fireInstance.transform.SetParent(t, worldPositionStays: true);
 
-        WreckFireManager.Instance?.Register(fireInstance, t);
-
         Invoke(nameof(SpawnSmoke), 2.5f);
 
         Debug.Log($"[FIRE] Ammo destroyed -> fire spawned on {gameObject.name}");
@@ -222,14 +219,12 @@ public class AmmoRackEffects : TankEffectsManager
 
         if (fireInstance)
         {
-            WreckFireManager.Instance?.Unregister(fireInstance);
             StopVfxSlow(fireInstance);
             fireInstance = null;
         }
 
         if (smokeInstance)
         {
-            WreckFireManager.Instance?.Unregister(smokeInstance);
             StopVfxSlow(smokeInstance);
             smokeInstance = null;
         }

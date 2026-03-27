@@ -45,7 +45,7 @@ public class TankAIController : MonoBehaviour
     [Header("Combat Phase")]
     [SerializeField] private float snipingDuration = 5f;
     [SerializeField] private float advanceDuration = 3f;
-
+    [SerializeField] private float allowAimYawThreshold = 1.5f;
     private enum RetreatPhase { Reversing, Fleeing }
     private enum CombatPhase { Sniping, Advancing }
 
@@ -552,7 +552,7 @@ public class TankAIController : MonoBehaviour
         Debug.Log($"[TankAI] Commander dead={dead} -> detection penalty {(dead ? "on" : "off")}");
     }
 
-    private bool IsTurretAimed() => gunner.IsAimed(5f);
+    private bool IsTurretAimed() => gunner.IsAimed(allowAimYawThreshold);
 
     private void Shoot() => gunner.Fire();
 }
