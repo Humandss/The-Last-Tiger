@@ -129,7 +129,7 @@ public class AmmoRackEffects : TankEffectsManager
         if (followParent)
             smokeInstance.transform.SetParent(t, worldPositionStays: true);
 
-        WreckFireManager.Instance?.Register(smokeInstance, t);
+        WreckEffectManager.Instance?.Register(smokeInstance, t);
         //Debug.Log($"[FIRE] AmmoRack Finish -> smoke spawned on {gameObject.name}");
     }
   

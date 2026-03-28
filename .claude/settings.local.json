@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(find C:UsersBaboDocumentsGitHubThe-Last-TigerAssetsScripts -iname *turret* -type f)",
-      "Bash(wc -l /c/Users/Babo/Documents/GitHub/The-Last-Tiger/Assets/Scripts/Module/Effects/*.cs /c/Users/Babo/Documents/GitHub/The-Last-Tiger/Assets/Scripts/Optimization/PoolManager.cs /c/Users/Babo/Documents/GitHub/The-Last-Tiger/Assets/Scripts/Module/TurretBlowOff.cs)"
+      "Bash(wc -l /c/Users/Babo/Documents/GitHub/The-Last-Tiger/Assets/Scripts/Module/Effects/*.cs /c/Users/Babo/Documents/GitHub/The-Last-Tiger/Assets/Scripts/Optimization/PoolManager.cs /c/Users/Babo/Documents/GitHub/The-Last-Tiger/Assets/Scripts/Module/TurretBlowOff.cs)",
+      "Bash(find /c/Users/Babo/Documents/GitHub/The-Last-Tiger -name *Audio* -type f)"
     ]
   }
 }

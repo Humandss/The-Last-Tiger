@@ -4,13 +4,13 @@ using UnityEngine;
 
 /// <summary>
 /// 파괴된 탱크 잔해에서 발생하는 화재/연기 이펙트를 중앙에서 관리.
-/// - VFX Budget: 동시 활성 이펙트 수 하드캡
+/// - VFX Budget: 동시 활성 이펙트 수 하드캡, 초과 시 가장 오래된 것부터 강제 회수
 /// - Distance Culling: 일정 거리 초과 이펙트 emission off
 /// - Zoom 연동: 줌 배율에 따라 컬링 거리 동적 조정
 /// </summary>
-public class WreckFireManager : MonoBehaviour
+public class WreckEffectManager : MonoBehaviour
 {
-    public static WreckFireManager Instance { get; private set; }
+    public static WreckEffectManager Instance { get; private set; }
 
     [Header("Budget")]
     [Tooltip("동시에 활성화할 수 있는 최대 화재/연기 이펙트 수")]
@@ -23,22 +23,22 @@ public class WreckFireManager : MonoBehaviour
     [SerializeField] private float evalInterval = 1f;
 
     // ── 내부 상태 ──────────────────────────────────────────
+
     private float currentCullDistance;
     private Camera mainCam;
     private bool prevIsZooming;
 
     private readonly List<FireEntry> activeFires = new List<FireEntry>();
 
-    // ── 관리 단위 ──────────────────────────────────────────
     private class FireEntry
     {
         public GameObject vfx;
-        public Transform  anchor;      // 잔해 위치 추적용
-        public float      spawnTime;   // 오래된 것 판별용
-        public bool       isEmitting;  // 현재 emission 상태
+        public Transform  anchor;     // 잔해 위치 추적용
+        public bool       isEmitting; // 현재 emission 상태
     }
 
     // ── 초기화 ─────────────────────────────────────────────
+
     private void Awake()
     {
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }
@@ -57,6 +57,7 @@ public class WreckFireManager : MonoBehaviour
     }
 
     // ── 줌 변경 감지 (즉시 재평가) ─────────────────────────
+
     private void Update()
     {
         if (CameraController.cameraInstance == null) return;
@@ -65,10 +66,11 @@ public class WreckFireManager : MonoBehaviour
         if (isZooming == prevIsZooming) return;
 
         prevIsZooming = isZooming;
-        EvaluateAll(); // 줌 상태 바뀌면 즉시 재평가
+        EvaluateAll();
     }
 
     // ── 주기적 평가 루프 ───────────────────────────────────
+
     private IEnumerator EvalLoop()
     {
         var wait = new WaitForSeconds(evalInterval);
@@ -92,11 +94,10 @@ public class WreckFireManager : MonoBehaviour
         {
             vfx        = vfx,
             anchor     = anchor,
-            spawnTime  = Time.time,
             isEmitting = true
         });
 
-        // 예산 초과 시 가장 먼 것 강제 회수
+        // 버젯 초과 시 가장 먼저 스폰된 이펙트 강제 회수
         if (activeFires.Count > maxConcurrentFires)
             Evict();
     }
@@ -114,16 +115,13 @@ public class WreckFireManager : MonoBehaviour
 
     private void EvaluateAll()
     {
-        // 카메라 참조 갱신
         if (mainCam == null && CameraController.cameraInstance != null)
             mainCam = CameraController.cameraInstance.Cam;
 
-        // null 참조 정리 (탱크 오브젝트가 씬에서 제거된 경우)
         activeFires.RemoveAll(e => e.vfx == null || e.anchor == null);
 
         if (activeFires.Count == 0) return;
 
-        // 줌 배율 반영한 컬링 거리 갱신
         UpdateCullDistance();
 
         Vector3 playerPos = mainCam != null ? mainCam.transform.position : Vector3.zero;
@@ -131,16 +129,11 @@ public class WreckFireManager : MonoBehaviour
         for (int i = 0; i < activeFires.Count; i++)
         {
             FireEntry entry = activeFires[i];
-
             float dist = Vector3.Distance(playerPos, entry.anchor.position);
             SetEmission(entry, dist <= currentCullDistance);
         }
     }
 
-    /// <summary>
-    /// 줌 배율에 따라 컬링 거리 동적 조정.
-    /// 줌 4x → cullDistance * 4, 줌 8x → cullDistance * 8
-    /// </summary>
     private void UpdateCullDistance()
     {
         if (mainCam == null ||
@@ -151,33 +144,16 @@ public class WreckFireManager : MonoBehaviour
             return;
         }
 
-        // CameraController.BaseFov / 현재 FOV = 현재 줌 배율
-        // CameraController에 public float BaseFov => baseFov; 프로퍼티 추가 필요
         float zoomMag = Mathf.Max(1f, CameraController.cameraInstance.BaseFov
                                       / Mathf.Max(1f, mainCam.fieldOfView));
 
         currentCullDistance = baseCullDistance * zoomMag;
     }
 
-    /// <summary>
-    /// 예산 초과 시 플레이어에서 가장 먼 이펙트 강제 회수.
-    /// </summary>
     private void Evict()
     {
-        Vector3 playerPos = mainCam != null ? mainCam.transform.position : Vector3.zero;
-
-        int   farthestIdx  = 0;
-        float farthestDist = -1f;
-
-        for (int i = 0; i < activeFires.Count; i++)
-        {
-            if (activeFires[i].anchor == null) continue;
-            float dist = Vector3.Distance(playerPos, activeFires[i].anchor.position);
-            if (dist > farthestDist) { farthestDist = dist; farthestIdx = i; }
-        }
-
-        FireEntry evicted = activeFires[farthestIdx];
-        activeFires.RemoveAt(farthestIdx);
+        FireEntry evicted = activeFires[0];
+        activeFires.RemoveAt(0);
 
         if (evicted.vfx != null)
         {
@@ -186,9 +162,6 @@ public class WreckFireManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// emission on/off. 상태가 바뀔 때만 GetComponentsInChildren 호출.
-    /// </summary>
     private void SetEmission(FireEntry entry, bool enable)
     {
         if (entry.isEmitting == enable) return;

@@ -26,7 +26,7 @@ public class ShellSoundController : MonoBehaviour
     {
         if (clips == null || clips.Length == 0) return;
         AudioClip clip = clips[Random.Range(0, clips.Length)];
-        AudioSource.PlayClipAtPoint(clip, pos, volume);
+        PoolManager.Instance.PlaySound(clip, pos, volume);
     }
 
 

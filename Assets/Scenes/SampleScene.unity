@@ -6512,6 +6512,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   isExpandable: 1
+  soundPoolInitialSize: 16
+  soundPoolMaxSize: 32
 --- !u!4 &821579443
 Transform:
   m_ObjectHideFlags: 0
@@ -6539,7 +6541,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3380d95b05eb5934c9c69e06252827ed, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxConcurrentFires: 8
+  maxConcurrentFires: 20
   baseCullDistance: 300
   evalInterval: 1
 --- !u!1 &822029517

@@ -73,7 +73,7 @@ public class TankFireEffects : TankEffectsManager
 
         if (fireInstance)
         {
-            WreckFireManager.Instance?.Unregister(fireInstance);
+            WreckEffectManager.Instance?.Unregister(fireInstance);
             fireInstance.transform.SetParent(null);
             PoolManager.Instance.Return(fireInstance);
         }
@@ -105,7 +105,7 @@ public class TankFireEffects : TankEffectsManager
         if (followParent)
             fireInstance.transform.SetParent(t, worldPositionStays: true);
 
-        WreckFireManager.Instance?.Register(fireInstance, t);
+        WreckEffectManager.Instance?.Register(fireInstance, t);
 
         soundController?.PlayFire();
     }
