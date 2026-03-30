@@ -2139,7 +2139,7 @@ PrefabInstance:
     - target: {fileID: 5491432210558896199, guid: 39c76de7b13f93049902793148a9eda2,
         type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5782689652270859089, guid: 39c76de7b13f93049902793148a9eda2,
         type: 3}
@@ -8674,6 +8674,37 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1019400285}
   m_CullTransparentMesh: 1
+--- !u!1 &1053322128
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1053322129}
+  m_Layer: 0
+  m_Name: WayPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1053322129
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1053322128}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 359, y: 9.763572, z: 261}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1071474706
 GameObject:
   m_ObjectHideFlags: 0
@@ -11480,7 +11511,7 @@ PrefabInstance:
     - target: {fileID: 5491432210558896199, guid: 39c76de7b13f93049902793148a9eda2,
         type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5782689652270859089, guid: 39c76de7b13f93049902793148a9eda2,
         type: 3}
@@ -12339,10 +12370,11 @@ Transform:
   m_GameObject: {fileID: 1566102484}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1227.486, y: 0, z: 1009.29865}
+  m_LocalPosition: {x: 438, y: 0, z: 517}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 1793711623}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1567205748
@@ -16243,12 +16275,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1793711621}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1187.1013, y: -3.4650574, z: 988.3515}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 749.1013, y: -3.4650574, z: 471.3515}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 1566102485}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1795560756
 GameObject:
@@ -16855,6 +16887,15 @@ MonoBehaviour:
   enemyTanks: []
   emergencyOrderDelay: 3
   emergencyData: {fileID: 11400000, guid: 0d1145a9211745c40b613674ddc7c483, type: 2}
+  reinforcementPrefab:
+  - {fileID: 5491432210558896199, guid: 39c76de7b13f93049902793148a9eda2, type: 3}
+  spawnPoints:
+  - {fileID: 1566102485}
+  reinforcementCount: 6
+  spawnSpacing: 8
+  missionCompleteData: {fileID: 11400000, guid: 5bf503e6e6d32494f87facfae6ad7611,
+    type: 2}
+  missionCompleteDelay: 2
   showKillCounter: 1
   killCounterColor: {r: 0.85, g: 0.72, b: 0.2, a: 1}
   killCounterSize: 26
@@ -21294,7 +21335,7 @@ PrefabInstance:
     - target: {fileID: 5491432210558896199, guid: 39c76de7b13f93049902793148a9eda2,
         type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5782689652270859089, guid: 39c76de7b13f93049902793148a9eda2,
         type: 3}
@@ -25638,4 +25679,4 @@ SceneRoots:
   - {fileID: 1637352772}
   - {fileID: 1870781293}
   - {fileID: 1566102485}
-  - {fileID: 1793711623}
+  - {fileID: 1053322129}

@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -58,6 +59,8 @@ public class MissionOrderUI : MonoBehaviour
         _rootCg.alpha = 0f;
     }
 
+    public event Action OnConfirmed;
+
     /// <summary>런타임에 데이터를 주입합니다. Start() 호출 이전에 사용하세요.</summary>
     public void SetData(MissionBriefingData d) => data = d;
 
@@ -102,6 +105,7 @@ public class MissionOrderUI : MonoBehaviour
         yield return FadeCg(_rootCg, 1f, 0f, 0.4f);
         if (ModuleDebugHUD.Instance != null) ModuleDebugHUD.Instance.show = true;
         Time.timeScale = 1f;
+        OnConfirmed?.Invoke();
         Destroy(gameObject);
     }
 

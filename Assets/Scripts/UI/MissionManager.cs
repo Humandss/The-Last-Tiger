@@ -8,6 +8,8 @@ using System;
 /// 미션 진행을 관리합니다.
 /// Phase 1 : 지정된 적 탱크를 모두 격파
 /// Phase 2 : 긴급 지령 팝업 표시
+/// Phase 3 : 증원 스폰 + 증원 격파 카운트
+/// Phase 4 : 작전 완료 보고서 표시
 /// </summary>
 public class MissionManager : MonoBehaviour
 {
@@ -17,79 +19,101 @@ public class MissionManager : MonoBehaviour
     [SerializeField] private float emergencyOrderDelay = 3f;
 
     [Header("Phase 2 — 긴급 지령")]
-    [Tooltip("Assets/ 우클릭 → Create → Mission → Briefing Data 로 생성")]
     [SerializeField] private MissionBriefingData emergencyData;
+
+    [Header("Phase 3 — 증원 스폰")]
+    [SerializeField] private GameObject[] reinforcementPrefab;
+    [SerializeField] private Transform[]  spawnPoints;
+    [SerializeField] private int          reinforcementCount = 6;
+    [SerializeField] private float        spawnSpacing       = 30f;
+
+    [Header("Phase 4 — 작전 완료 보고서")]
+    [SerializeField] private MissionBriefingData missionCompleteData;
+    [SerializeField] private float missionCompleteDelay = 3f;
 
     [Header("킬 카운터 HUD")]
     [SerializeField] private bool  showKillCounter  = true;
     [SerializeField] private Color killCounterColor = new Color(0.85f, 0.72f, 0.20f, 1f);
     [SerializeField] private int   killCounterSize  = 26;
 
-    [Header("Startup Sequence")]
+    // ── 내부 상태 ────────────────────────────────────────
     private readonly Dictionary<TankAIController, Action> enemyDestroyedHandlers = new();
 
-    private int  _targetCount;
-    private int  _killed;
+    private int  _p1Target;
+    private int  _p1Killed;
     private bool _phase1Done;
+
+    private int  _p3Target;
+    private int  _p3Killed;
+    private bool _phase3Done;
+
     private Text _counterText;
 
+    // ── 초기화 ───────────────────────────────────────────
     private void Start()
     {
-        SubscribeEnemyDestroyedCount();
-        _targetCount = enemyDestroyedHandlers.Count;
-        Debug.Log($"[MissionManager] 추적 대상 {_targetCount}대");
+        SubscribeEnemies();
+        _p1Target = enemyDestroyedHandlers.Count;
+        Debug.Log($"[MissionManager] Phase1 추적 대상 {_p1Target}대");
         if (showKillCounter) BuildKillCounterHUD();
         RefreshCounter();
     }
 
     private void OnDestroy()
     {
-        UnSubscribeEnemyDestroyedCount();
+        UnsubscribeAll();
     }
 
-    private void SubscribeEnemyDestroyedCount()
+    // ── 이벤트 구독 ──────────────────────────────────────
+    private void SubscribeEnemies()
     {
-        var enemyTanks = FindObjectsOfType<TankAIController>();
-        for (int i = 0; i < enemyTanks.Length; i++)
+        var tanks = FindObjectsOfType<TankAIController>();
+        foreach (var tank in tanks)
         {
-            var tank = enemyTanks[i];
-            if (tank == null || enemyDestroyedHandlers.ContainsKey(tank))
-                continue;
-
-            Action handler = OnEnemyKilled;
+            if (tank == null || enemyDestroyedHandlers.ContainsKey(tank)) continue;
+            Action handler = OnPhase1EnemyKilled;
             enemyDestroyedHandlers.Add(tank, handler);
             tank.OnEnemyTankDestroyed += handler;
-            Debug.Log($"subscribe type : {tank.gameObject.name}");
         }
     }
-    private void UnSubscribeEnemyDestroyedCount()
+
+    private void SubscribeReinforcements(TankAIController[] tanks)
+    {
+        foreach (var tank in tanks)
+        {
+            if (tank == null || enemyDestroyedHandlers.ContainsKey(tank)) continue;
+            Action handler = OnPhase3EnemyKilled;
+            enemyDestroyedHandlers.Add(tank, handler);
+            tank.OnEnemyTankDestroyed += handler;
+        }
+    }
+
+    private void UnsubscribeAll()
     {
         foreach (var pair in enemyDestroyedHandlers)
         {
-            if (pair.Key == null)
-                continue;
-
-            pair.Key.OnEnemyTankDestroyed -= pair.Value;
+            if (pair.Key != null)
+                pair.Key.OnEnemyTankDestroyed -= pair.Value;
         }
         enemyDestroyedHandlers.Clear();
     }
-    // ── static 이벤트 콜백 ────────────────────────────────
-    private void OnEnemyKilled()
+
+    // ── Phase 1 콜백 ─────────────────────────────────────
+    private void OnPhase1EnemyKilled()
     {
-        Debug.LogWarning($"Enemy Tank Destroyed");
         if (_phase1Done) return;
 
-        _killed++;
+        _p1Killed++;
         RefreshCounter();
 
-        if (_killed >= _targetCount)
+        if (_p1Killed >= _p1Target)
         {
             _phase1Done = true;
             StartCoroutine(TriggerEmergencyOrder());
         }
     }
 
-    // ── 긴급 지령 팝업 ────────────────────────────────────
+    // ── Phase 2 — 긴급 지령 팝업 ─────────────────────────
     private IEnumerator TriggerEmergencyOrder()
     {
         if (_counterText != null)
@@ -99,13 +123,106 @@ public class MissionManager : MonoBehaviour
 
         if (emergencyData == null)
         {
-            Debug.LogWarning("[MissionManager] emergencyData 가 비어있습니다. Inspector 에서 할당하세요.");
+            Debug.LogWarning("[MissionManager] emergencyData 가 비어있습니다.");
             yield break;
         }
 
         var go = new GameObject("EmergencyOrderUI");
         var ui = go.AddComponent<MissionOrderUI>();
         ui.SetData(emergencyData);
+        ui.OnConfirmed += SpawnReinforcements;
+    }
+
+    // ── Phase 3 — 증원 스폰 ──────────────────────────────
+    private void SpawnReinforcements()
+    {
+        if (reinforcementPrefab == null || reinforcementPrefab.Length == 0)
+        {
+            Debug.LogWarning("[MissionManager] reinforcementPrefab 이 비어있습니다.");
+            return;
+        }
+        if (spawnPoints == null || spawnPoints.Length == 0)
+        {
+            Debug.LogWarning("[MissionManager] spawnPoints 가 비어있습니다.");
+            return;
+        }
+
+        var spawnedTanks = new List<TankAIController>();
+
+        if (spawnPoints.Length == 1)
+        {
+            Transform origin   = spawnPoints[0];
+            float totalWidth   = (reinforcementCount - 1) * spawnSpacing;
+            Vector3 start      = origin.position - origin.right * (totalWidth * 0.5f);
+
+            for (int i = 0; i < reinforcementCount; i++)
+            {
+                Vector3 pos        = start + origin.right * (i * spawnSpacing);
+                GameObject prefab  = reinforcementPrefab[i % reinforcementPrefab.Length];
+                if (prefab == null) continue;
+
+                var go  = Instantiate(prefab, pos, origin.rotation * Quaternion.Euler(0f, 225f, 0f));
+                var ai  = go.GetComponent<TankAIController>();
+                if (ai != null) spawnedTanks.Add(ai);
+            }
+        }
+        else
+        {
+            for (int i = 0; i < spawnPoints.Length; i++)
+            {
+                if (spawnPoints[i] == null) continue;
+                GameObject prefab = reinforcementPrefab[i % reinforcementPrefab.Length];
+                if (prefab == null) continue;
+
+                var go = Instantiate(prefab, spawnPoints[i].position, spawnPoints[i].rotation);
+                var ai = go.GetComponent<TankAIController>();
+                if (ai != null) spawnedTanks.Add(ai);
+            }
+        }
+
+        _p3Target = spawnedTanks.Count;
+        _p3Killed = 0;
+
+        SubscribeReinforcements(spawnedTanks.ToArray());
+
+        if (_counterText != null) _counterText.gameObject.SetActive(true);
+        RefreshCounter();
+
+        Debug.Log($"[MissionManager] 증원 {_p3Target}대 스폰 완료");
+    }
+
+    // ── Phase 3 콜백 ─────────────────────────────────────
+    private void OnPhase3EnemyKilled()
+    {
+        if (_phase3Done) return;
+
+        _p3Killed++;
+        RefreshCounter();
+
+        if (_p3Killed >= _p3Target)
+        {
+            _phase3Done = true;
+            StartCoroutine(TriggerMissionComplete());
+        }
+    }
+
+    // ── Phase 4 — 작전 완료 보고서 ───────────────────────
+    private IEnumerator TriggerMissionComplete()
+    {
+        if (_counterText != null)
+            _counterText.gameObject.SetActive(false);
+
+        yield return new WaitForSeconds(missionCompleteDelay);
+
+        if (missionCompleteData == null)
+        {
+            Debug.LogWarning("[MissionManager] missionCompleteData 가 비어있습니다.");
+            yield break;
+        }
+
+        var go = new GameObject("MissionCompleteUI");
+        var ui = go.AddComponent<MissionOrderUI>();
+        ui.SetData(missionCompleteData);
     }
 
     // ── 킬 카운터 HUD ────────────────────────────────────
@@ -146,6 +263,10 @@ public class MissionManager : MonoBehaviour
     private void RefreshCounter()
     {
         if (_counterText == null) return;
-        _counterText.text = $"◆ 격파  {_killed} / {_targetCount}";
+
+        if (!_phase1Done)
+            _counterText.text = $"◆ 격파  {_p1Killed} / {_p1Target}";
+        else
+            _counterText.text = $"◆ 격파  {_p3Killed} / {_p3Target}";
     }
 }

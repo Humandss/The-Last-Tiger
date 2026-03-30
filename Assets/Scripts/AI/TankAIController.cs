@@ -89,7 +89,13 @@ public class TankAIController : MonoBehaviour
     private void Awake()
     {
         if (player == null)
-            Debug.LogWarning("[TankAI] Player object missing.");
+        {
+            var playerGo = GameObject.FindWithTag("Player");
+            if (playerGo != null)
+                player = playerGo.transform;
+            else
+                Debug.LogWarning("[TankAI] Player object missing.");
+        }
 
         if (crewManager != null && profile != null)
             crewManager.SetSwapDelay(profile.crewSwapDelay);
