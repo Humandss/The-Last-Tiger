@@ -3032,14 +3032,13 @@ GameObject:
   - component: {fileID: 6751714437304063405}
   - component: {fileID: 6673708618160038884}
   - component: {fileID: 6149786660335212185}
-  - component: {fileID: 5164852796480724498}
   m_Layer: 10
   m_Name: IS-2 1944
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &3992133602491520243
 Transform:
   m_ObjectHideFlags: 0
@@ -3058,6 +3057,7 @@ Transform:
   - {fileID: 6741929386106187436}
   - {fileID: 7250644047703224681}
   - {fileID: 954712310200370430}
+  - {fileID: 475226323434863388}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
 --- !u!114 &1029540851548165558
@@ -3170,6 +3170,7 @@ MonoBehaviour:
   retreatDistance: 40
   snipingDuration: 5
   advanceDuration: 3
+  allowAimYawThreshold: 0.2
 --- !u!114 &62453426837567829
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3183,7 +3184,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   driver: {fileID: 6673708618160038884}
-  agent: {fileID: 5164852796480724498}
+  agent: {fileID: 0}
+  wreckObstacle: {fileID: 0}
   arrivalRadius: 1.5
   angleToMove: 25
   pivotThreshold: 60
@@ -3201,8 +3203,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   turretYaw: {fileID: 2658086325595409242}
   gunPitch: {fileID: 338960719813529966}
-  yawSpeedDeg: 3
-  pitchSpeedDeg: 2
+  yawSpeedDeg: 6
+  pitchSpeedDeg: 3
   pitchLimits: {x: -3, y: 20}
   fcsSolveMaxTime: 8
   fcsDt: 0.01
@@ -3218,6 +3220,7 @@ MonoBehaviour:
   maxGunDispersionPenalty: 2.2
   gunHpRatio: 1
   gunnerMul: 1
+  fcsActivateYawDeg: 15
 --- !u!114 &4809936140762490995
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3269,7 +3272,7 @@ Rigidbody:
   m_IsKinematic: 1
   m_Interpolate: 0
   m_Constraints: 0
-  m_CollisionDetection: 0
+  m_CollisionDetection: 2
 --- !u!82 &8454932911442325446
 AudioSource:
   m_ObjectHideFlags: 0
@@ -3516,10 +3519,10 @@ MonoBehaviour:
   isAI: 1
   hull: {fileID: 8339484888166722863}
   rb: {fileID: 5195915635171693122}
-  fwdMaxSpeed: 6
-  bckMaxSpeed: 2
+  fwdMaxSpeed: 5
+  bckMaxSpeed: 1.7
   turnSpeedDeg: 6
-  pivotSpeedDeg: 6
+  pivotSpeedDeg: 18
   axisSharpness: 10
   speedAccel: 0.2
   brakeAccel: 2
@@ -3556,28 +3559,6 @@ MonoBehaviour:
   loaderController: {fileID: 2516454100071688905}
   swapDelay: 5
   aiController: {fileID: 5769228785220289700}
---- !u!195 &5164852796480724498
-NavMeshAgent:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8176546671022141468}
-  m_Enabled: 1
-  m_AgentTypeID: -1372625422
-  m_Radius: 0.5
-  m_Speed: 0
-  m_Acceleration: 8
-  avoidancePriority: 50
-  m_AngularSpeed: 0
-  m_StoppingDistance: 1.5
-  m_AutoTraverseOffMeshLink: 1
-  m_AutoBraking: 1
-  m_AutoRepath: 1
-  m_Height: 2
-  m_BaseOffset: -0.2
-  m_WalkableMask: 4294967295
-  m_ObstacleAvoidanceType: 4
 --- !u!1 &8247817059336397267
 GameObject:
   m_ObjectHideFlags: 0
@@ -3682,6 +3663,77 @@ Transform:
   - {fileID: 5450652884870624080}
   m_Father: {fileID: 2658086325595409242}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &8500105537194281333
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 475226323434863388}
+  - component: {fileID: 1276126816927654824}
+  - component: {fileID: 233533784138653019}
+  m_Layer: 10
+  m_Name: ai
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &475226323434863388
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8500105537194281333}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.54, y: 0, z: -0.02}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 3992133602491520243}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!195 &1276126816927654824
+NavMeshAgent:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8500105537194281333}
+  m_Enabled: 1
+  m_AgentTypeID: -1372625422
+  m_Radius: 5
+  m_Speed: 6
+  m_Acceleration: 0
+  avoidancePriority: 50
+  m_AngularSpeed: 0
+  m_StoppingDistance: 1.5
+  m_AutoTraverseOffMeshLink: 1
+  m_AutoBraking: 0
+  m_AutoRepath: 1
+  m_Height: 2
+  m_BaseOffset: -0.2
+  m_WalkableMask: 4294967295
+  m_ObstacleAvoidanceType: 4
+--- !u!208 &233533784138653019
+NavMeshObstacle:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8500105537194281333}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Shape: 1
+  m_Extents: {x: 1.25, y: 1.25, z: 4}
+  m_MoveThreshold: 0.1
+  m_Carve: 0
+  m_CarveOnlyStationary: 1
+  m_Center: {x: -0.3, y: 1.35, z: 0}
+  m_TimeToStationary: 0.5
 --- !u!1 &8534084140474355220
 GameObject:
   m_ObjectHideFlags: 0

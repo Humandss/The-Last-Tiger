@@ -69,8 +69,22 @@ public class CrewSubtitleOverlay : MonoBehaviour
     // 외부에서 호출 — 큐에 넣고 순서대로 출력
     public void ShowLine(string speaker, string line, float duration)
     {
+        if (_silenced) return; // 탄약고 폭발 후 차단
         if (string.IsNullOrWhiteSpace(line)) return;
         lineQueue.Enqueue(new QueuedLine { speaker = speaker, line = line, duration = duration });
+    }
+
+    /// <summary>
+    /// 탄약고 폭발 등으로 모든 자막을 즉시 제거하고 이후 출력도 차단합니다.
+    /// </summary>
+    private bool _silenced = false;
+
+    public void SilenceAll()
+    {
+        _silenced = true;
+        lineQueue.Clear();
+        for (int i = entries.Count - 1; i >= 0; i--)
+            RemoveEntry(entries[i]);
     }
 
     // 실제 화면에 추가

@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -8,13 +7,13 @@ public class TankAIDriver : MonoBehaviour
     [Header("Refs")]
     [SerializeField] private DriverController driver;
     [SerializeField] private NavMeshAgent agent;
+    [SerializeField] private NavMeshObstacle wreckObstacle; // 격파 시에만 사용
 
     [Header("Settings")]
     [SerializeField] private float arrivalRadius = 1.5f;
     [SerializeField] private float angleToMove = 25f;
     [SerializeField] private float pivotThreshold = 60f;
 
-    private Vector3 destination;
     private bool hasDestination = false;
     private bool driverDead = false;
     private bool isReversing = false;
@@ -93,6 +92,9 @@ public class TankAIDriver : MonoBehaviour
         isReversing = true;
         hasDestination = false;
 
+        if (agent != null && agent.enabled)
+            agent.isStopped = false;
+
         Vector3 dir = transform.position - awayFrom;
         dir.y = 0f;
         reverseDir = dir.sqrMagnitude > 1e-4f ? dir.normalized : -transform.forward;
@@ -101,7 +103,6 @@ public class TankAIDriver : MonoBehaviour
     public void SetDestination(Vector3 dest)
     {
         isReversing = false;
-        destination = dest;
         hasDestination = true;
 
         if (agent == null || !agent.enabled)
@@ -109,6 +110,8 @@ public class TankAIDriver : MonoBehaviour
             hasDestination = false;
             return;
         }
+
+        agent.isStopped = false;
 
         if (!agent.isOnNavMesh)
         {
@@ -132,14 +135,24 @@ public class TankAIDriver : MonoBehaviour
         isReversing = false;
         hasDestination = false;
         driver.SetInput(0f, 0f, 0f);
+
+        // Agent를 끄지 않고 isStopped=true로 유지
+        // → RVO(로컬 회피)에 정지 장애물로 계속 참여함
+        if (agent != null && agent.enabled && agent.isOnNavMesh)
+            agent.isStopped = true;
     }
 
     public void SetDriverDead()
     {
         driverDead = true;
+        driver.SetInput(0f, 0f, 0f);
+
+        // 격파 시: Agent 비활성 → NavMeshObstacle(carving)으로 교체
         if (agent != null)
             agent.enabled = false;
-        Stop();
+
+        if (wreckObstacle != null)
+            wreckObstacle.enabled = true;
     }
 
     public bool IsArrived()

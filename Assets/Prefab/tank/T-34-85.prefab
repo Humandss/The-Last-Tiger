@@ -689,6 +689,7 @@ GameObject:
   - component: {fileID: 7841405004846078306}
   - component: {fileID: 1138440378896423724}
   - component: {fileID: 5772447677367177468}
+  - component: {fileID: -7140083113442918149}
   m_Layer: 0
   m_Name: T-34-85
   m_TagString: Untagged
@@ -822,6 +823,7 @@ MonoBehaviour:
   retreatDistance: 40
   snipingDuration: 5
   advanceDuration: 3
+  allowAimYawThreshold: 0.2
 --- !u!114 &8700164645835412823
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -837,10 +839,10 @@ MonoBehaviour:
   isAI: 1
   hull: {fileID: 5672315823156579371}
   rb: {fileID: 1898167225628763723}
-  fwdMaxSpeed: 6
-  bckMaxSpeed: 2
+  fwdMaxSpeed: 10.5
+  bckMaxSpeed: 1.9
   turnSpeedDeg: 7
-  pivotSpeedDeg: 7
+  pivotSpeedDeg: 30
   axisSharpness: 10
   speedAccel: 0.35
   brakeAccel: 2
@@ -874,8 +876,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   turretYaw: {fileID: 6120867689811526510}
   gunPitch: {fileID: 7766179265024169021}
-  yawSpeedDeg: 3
-  pitchSpeedDeg: 2
+  yawSpeedDeg: 20
+  pitchSpeedDeg: 5
   pitchLimits: {x: -5, y: 20}
   fcsSolveMaxTime: 8
   fcsDt: 0.01
@@ -891,6 +893,7 @@ MonoBehaviour:
   maxGunDispersionPenalty: 2.2
   gunHpRatio: 1
   gunnerMul: 1
+  fcsActivateYawDeg: 15
 --- !u!114 &3182384915500562119
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -905,6 +908,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   driver: {fileID: 8700164645835412823}
   agent: {fileID: 1170340897444751847}
+  wreckObstacle: {fileID: -7140083113442918149}
   arrivalRadius: 1.5
   angleToMove: 25
   pivotThreshold: 60
@@ -959,7 +963,7 @@ Rigidbody:
   m_IsKinematic: 1
   m_Interpolate: 0
   m_Constraints: 0
-  m_CollisionDetection: 0
+  m_CollisionDetection: 2
 --- !u!195 &1170340897444751847
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -969,7 +973,7 @@ NavMeshAgent:
   m_GameObject: {fileID: 798876601553340897}
   m_Enabled: 1
   m_AgentTypeID: -1372625422
-  m_Radius: 0.5
+  m_Radius: 4.5
   m_Speed: 6
   m_Acceleration: 0
   avoidancePriority: 50
@@ -1230,6 +1234,22 @@ MonoBehaviour:
   loaderController: {fileID: 4749965625580061461}
   swapDelay: 5
   aiController: {fileID: 4896514646657892958}
+--- !u!208 &-7140083113442918149
+NavMeshObstacle:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 798876601553340897}
+  m_Enabled: 0
+  serializedVersion: 3
+  m_Shape: 1
+  m_Extents: {x: 2, y: 1, z: 3.75}
+  m_MoveThreshold: 0.1
+  m_Carve: 0
+  m_CarveOnlyStationary: 1
+  m_Center: {x: 0, y: 1, z: 0.6}
+  m_TimeToStationary: 0.5
 --- !u!1 &837891589116313172
 GameObject:
   m_ObjectHideFlags: 0

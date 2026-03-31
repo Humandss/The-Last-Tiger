@@ -153,6 +153,29 @@ public class PlayerTankSoundController : SoundController
         StartCoroutine(SuppressCueTemporarily(CrewSubtitleCue.Penetrated));
         PlayCrewVoicesWithRadio(tankDestroyedCrewClip, 1f, CrewSubtitleCue.TargetTankDown);
     }
+
+    private bool _crewSilenced = false;
+
+    /// <summary>
+    /// 탄약고 폭발 등으로 모든 크루 무전음을 즉시 차단합니다.
+    /// </summary>
+    public void SilenceCrewVoices()
+    {
+        _crewSilenced = true;
+
+        // 진행 중인 큐 코루틴 전부 중단
+        foreach (var kvp in voiceQueueRoutines)
+            if (kvp.Value != null) StopCoroutine(kvp.Value);
+        voiceQueueRoutines.Clear();
+
+        // 대기 중인 음성 큐 비우기
+        foreach (var q in voiceQueues.Values) q.Clear();
+        busySpeakers.Clear();
+
+        // 현재 재생 중인 라디오 즉시 정지
+        if (radioSource != null) radioSource.Stop();
+    }
+
     private void OnEnable()
     {
         BallisticManager.OnEnemyPenetrated += PlayPenetratedCrewVoice;
@@ -651,6 +674,8 @@ public class PlayerTankSoundController : SoundController
 
     public void PlayCrewVoicesWithRadio(AudioClip[] clips, float voiceVolume, CrewSubtitleCue cue)
     {
+        if (_crewSilenced) return; // 탄약고 폭발 후 차단
+
         AudioClip clip = GetRandomClip(clips);
         if (clip == null) return;
 

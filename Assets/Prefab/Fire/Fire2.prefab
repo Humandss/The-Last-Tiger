@@ -4998,6 +4998,7 @@ GameObject:
   - component: {fileID: 6339718591333329395}
   - component: {fileID: 560586769512968495}
   - component: {fileID: 5822053090773991147}
+  - component: {fileID: -6773741901161322106}
   m_Layer: 0
   m_Name: Fire2
   m_TagString: Untagged
@@ -9831,6 +9832,22 @@ ParticleSystemRenderer:
   m_MeshWeighting2: 1
   m_MeshWeighting3: 1
   m_MaskInteraction: 0
+--- !u!114 &-6773741901161322106
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3494904463166963530}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 537bcf2d02d2df047a0b38a673e97d62, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  inertiaStrength: 0.6
+  maxForce: 12
+  smoothing: 4
+  verticalDamp: 0.3
 --- !u!1 &4045769798250773456
 GameObject:
   m_ObjectHideFlags: 0

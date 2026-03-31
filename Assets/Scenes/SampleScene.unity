@@ -8140,7 +8140,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 82ef0a38c1949b24696b2ff6dce038b1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  turretRoot: {fileID: 3974867960145884146}
+  turretRoot: {fileID: 711577501}
   groundMask:
     serializedVersion: 2
     m_Bits: 256
@@ -12370,7 +12370,7 @@ Transform:
   m_GameObject: {fileID: 1566102484}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 438, y: 0, z: 517}
+  m_LocalPosition: {x: 474, y: 0, z: 1168}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -12424,7 +12424,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 82ef0a38c1949b24696b2ff6dce038b1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  turretRoot: {fileID: 3974867960145884146}
+  turretRoot: {fileID: 711577501}
   groundMask:
     serializedVersion: 2
     m_Bits: 256
@@ -13733,6 +13733,7 @@ GameObject:
   - component: {fileID: 1644377959}
   - component: {fileID: 1644377964}
   - component: {fileID: 1644377965}
+  - component: {fileID: 1644377966}
   m_Layer: 10
   m_Name: Panzer_VI_E
   m_TagString: Player
@@ -13754,8 +13755,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   turretYaw: {fileID: 3974867960145884146}
   gunPitch: {fileID: 792932911802802576}
-  yawSpeedDeg: 3
-  pitchSpeedDeg: 2
+  yawSpeedDeg: 6
+  pitchSpeedDeg: 4
   pitchLimits: {x: -8, y: 20}
   fcsSolveMaxTime: 8
   fcsDt: 0.01
@@ -13879,10 +13880,10 @@ MonoBehaviour:
   isAI: 0
   hull: {fileID: 1644377949}
   rb: {fileID: 1644377954}
-  fwdMaxSpeed: 6
-  bckMaxSpeed: 2
+  fwdMaxSpeed: 5.5
+  bckMaxSpeed: 1.8
   turnSpeedDeg: 7
-  pivotSpeedDeg: 7
+  pivotSpeedDeg: 14
   axisSharpness: 10
   speedAccel: 0.35
   brakeAccel: 2
@@ -14527,6 +14528,21 @@ MonoBehaviour:
   loaderController: {fileID: 1644377950}
   swapDelay: 5
   suppressionDuration: 10
+--- !u!114 &1644377966
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1644377947}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 92acc689df8624240acf11a397d8b770, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  briefingSceneName: BriefingScene
+  fadeDelay: 1.5
+  fadeDuration: 1.2
 --- !u!1 &1644851859
 GameObject:
   m_ObjectHideFlags: 0
@@ -16888,11 +16904,16 @@ MonoBehaviour:
   emergencyOrderDelay: 3
   emergencyData: {fileID: 11400000, guid: 0d1145a9211745c40b613674ddc7c483, type: 2}
   reinforcementPrefab:
-  - {fileID: 5491432210558896199, guid: 39c76de7b13f93049902793148a9eda2, type: 3}
+  - {fileID: 798876601553340897, guid: a4b2e9e9e2299a840bb74560c4085299, type: 3}
+  - {fileID: 8176546671022141468, guid: ddc1c5c943720794187a891c585b792b, type: 3}
+  - {fileID: 798876601553340897, guid: a4b2e9e9e2299a840bb74560c4085299, type: 3}
+  - {fileID: 798876601553340897, guid: a4b2e9e9e2299a840bb74560c4085299, type: 3}
+  - {fileID: 8176546671022141468, guid: ddc1c5c943720794187a891c585b792b, type: 3}
+  - {fileID: 798876601553340897, guid: a4b2e9e9e2299a840bb74560c4085299, type: 3}
   spawnPoints:
   - {fileID: 1566102485}
   reinforcementCount: 6
-  spawnSpacing: 8
+  spawnSpacing: 30
   missionCompleteData: {fileID: 11400000, guid: 5bf503e6e6d32494f87facfae6ad7611,
     type: 2}
   missionCompleteDelay: 2
@@ -18274,6 +18295,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   driver: {fileID: 6673708618073130862}
   agent: {fileID: 5164852796527786648}
+  wreckObstacle: {fileID: 0}
   arrivalRadius: 1.5
   angleToMove: 25
   pivotThreshold: 60

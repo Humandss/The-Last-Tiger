@@ -75,7 +75,10 @@ public class AmmoRackEffects : TankEffectsManager
         else SpawnFire();
 
         moduleMgr.NotifyAmmoExplosion();
-       
+
+        // 탄약고 폭발 즉시 모든 크루 무전음 + 자막 차단
+        moduleMgr.GetComponent<PlayerTankSoundController>()?.SilenceCrewVoices();
+        CrewSubtitleOverlay.Instance?.SilenceAll();
     }
     private void TriggerAmmoExplosion()
     {
