@@ -3512,6 +3512,37 @@ MonoBehaviour:
   ricochetBonusDeg: 0
   drawGizmo: 0
   gizmoColor: {r: 0, g: 1, b: 1, a: 0.25}
+--- !u!1 &5185743470659125433
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 722942079481242832}
+  m_Layer: 10
+  m_Name: Left Exhaust Point
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &722942079481242832
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5185743470659125433}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.465, y: 1.098, z: -2.692}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 5782689652270859089}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &5262448223818967421
 GameObject:
   m_ObjectHideFlags: 0
@@ -3650,6 +3681,7 @@ GameObject:
   - component: {fileID: 6887127952022824344}
   - component: {fileID: 2206948858404334872}
   - component: {fileID: 4601580023070131863}
+  - component: {fileID: 3562889007647398947}
   m_Layer: 10
   m_Name: 'T-34-76 '
   m_TagString: Untagged
@@ -3675,6 +3707,8 @@ Transform:
   - {fileID: 3141526142583632171}
   - {fileID: 7643889401392790825}
   - {fileID: 8660818769833904210}
+  - {fileID: 722942079481242832}
+  - {fileID: 3097890618430232470}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
 --- !u!114 &3339480217569890412
@@ -3744,6 +3778,7 @@ MonoBehaviour:
   arrivalRadius: 1.5
   angleToMove: 25
   pivotThreshold: 60
+  speedMultiplier: 1
 --- !u!114 &849874195274670494
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3849,7 +3884,7 @@ MonoBehaviour:
   turret: {fileID: 4769846915282591382}
   profile: {fileID: 11400000, guid: 577f0c081abba764f8712d1707183f6b, type: 2}
   player: {fileID: 0}
-  crewManager: {fileID: 0}
+  crewManager: {fileID: 2206948858404334872}
   waypoints: []
   patrolWaitTime: 0.1
   loopWaypoints: 0
@@ -3869,6 +3904,7 @@ MonoBehaviour:
   snipingDuration: 5
   advanceDuration: 3
   allowAimYawThreshold: 0.2
+  patrolSpeedMul: 0.4
 --- !u!114 &1390846418441994358
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4214,6 +4250,41 @@ NavMeshObstacle:
   m_CarveOnlyStationary: 1
   m_Center: {x: 0, y: 1.2, z: 0}
   m_TimeToStationary: 0.5
+--- !u!114 &3562889007647398947
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5491432210558896199}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d594eb8b967e1334cb65407fbf3b678d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  exhaustPrefab: {fileID: 1193206252530958, guid: 8ac57215f58f2f64fb8d6de621bf7021,
+    type: 3}
+  exhaustPoints:
+  - {fileID: 722942079481242832}
+  - {fileID: 3097890618430232470}
+  driverController: {fileID: 849874195274670494}
+  moduleManager: {fileID: 3339480217569890412}
+  idleEmissionRate: 12
+  idleColor: {r: 0.8, g: 0.8, b: 0.8, a: 0.35}
+  idleStartSize: 1
+  idleStartSpeed: 0.6
+  throttleEmissionRate: 18
+  throttleColor: {r: 0.4, g: 0.4, b: 0.4, a: 0.6}
+  throttleStartSize: 3
+  throttleStartSpeed: 1.4
+  damagedEmissionRate: 24
+  damagedColor: {r: 0.1, g: 0.1, b: 0.1, a: 0.8}
+  damagedStartSize: 0.9
+  damagedStartSpeed: 1.8
+  colorLerpSpeed: 3
+  emissionLerpSpeed: 6
+  sizeLerpSpeed: 3
+  throttleThreshold: 0.15
 --- !u!1 &5513810072534890598
 GameObject:
   m_ObjectHideFlags: 0
@@ -4903,6 +4974,37 @@ MonoBehaviour:
   ricochetBonusDeg: 0
   drawGizmo: 0
   gizmoColor: {r: 0, g: 1, b: 1, a: 0.25}
+--- !u!1 &7153764322304570359
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3097890618430232470}
+  m_Layer: 10
+  m_Name: Right Exhaust Point
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3097890618430232470
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7153764322304570359}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.413, y: 1.082, z: -2.685}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 5782689652270859089}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &7208266274203628035
 GameObject:
   m_ObjectHideFlags: 0

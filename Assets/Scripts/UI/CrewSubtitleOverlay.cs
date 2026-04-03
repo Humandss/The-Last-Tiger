@@ -63,6 +63,19 @@ public class CrewSubtitleOverlay : MonoBehaviour
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
         BuildCanvas();
+        UnityEngine.SceneManagement.SceneManager.sceneLoaded += OnSceneLoaded;
+    }
+
+    private void OnDestroy()
+    {
+        UnityEngine.SceneManagement.SceneManager.sceneLoaded -= OnSceneLoaded;
+    }
+
+    private void OnSceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
+    {
+        // 씬 전환 시 차단 플래그 초기화
+        _silenced = false;
+        lineQueue.Clear();
     }
 
     // ─────────────────────────────────────────────

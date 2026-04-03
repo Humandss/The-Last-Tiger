@@ -108,6 +108,7 @@ public class TankAIController : MonoBehaviour
         }
 
         isActive = true;
+        driver.SetSpeedMultiplier(patrolSpeedMul);
         GoToWaypoint(0);
     }
 
@@ -478,13 +479,21 @@ public class TankAIController : MonoBehaviour
         return false;
     }
 
+    [Header("Speed")]
+    [SerializeField, Range(0f, 1f)] private float patrolSpeedMul = 0.75f;
+
     private void ChangeState(State next)
     {
         Debug.Log($"[TankAI] {currentState} -> {next}");
         currentState = next;
 
-        if (next == State.Combat)
+        if (next == State.Patrol)
         {
+            driver.SetSpeedMultiplier(patrolSpeedMul);
+        }
+        else if (next == State.Combat)
+        {
+            driver.SetSpeedMultiplier(1f);
             (loader as ITankLoader).Load(AmmoType.AP);
             combatPhase = CombatPhase.Sniping;
             phaseTimer = snipingDuration;
@@ -492,6 +501,7 @@ public class TankAIController : MonoBehaviour
         }
         else if (next == State.Retreat)
         {
+            driver.SetSpeedMultiplier(1f);
             retreatPhase = RetreatPhase.Reversing;
             reverseTimer = reverseTime;
             hasRetreatDestination = false;

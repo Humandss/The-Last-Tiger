@@ -1355,6 +1355,37 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 154142173}
   m_CullTransparentMesh: 1
+--- !u!1 &160353713
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 160353714}
+  m_Layer: 10
+  m_Name: Right Exhaust Point
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &160353714
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 160353713}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.381, y: 0.435, z: -3.828}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1644377949}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &162549647
 GameObject:
   m_ObjectHideFlags: 0
@@ -5886,6 +5917,37 @@ Transform:
   - {fileID: 3974867960145884146}
   - {fileID: 635153562}
   m_Father: {fileID: 152308380}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &725951666
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 725951667}
+  m_Layer: 10
+  m_Name: Left Exhaust Point
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &725951667
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 725951666}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.398, y: 0.418, z: -3.78}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1644377949}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &729043129
 GameObject:
@@ -13734,6 +13796,7 @@ GameObject:
   - component: {fileID: 1644377964}
   - component: {fileID: 1644377965}
   - component: {fileID: 1644377966}
+  - component: {fileID: 1644377967}
   m_Layer: 10
   m_Name: Panzer_VI_E
   m_TagString: Player
@@ -13805,6 +13868,8 @@ Transform:
   - {fileID: 1324072338}
   - {fileID: 1141647345}
   - {fileID: 630393308}
+  - {fileID: 725951667}
+  - {fileID: 160353714}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1644377950
@@ -14543,6 +14608,41 @@ MonoBehaviour:
   briefingSceneName: BriefingScene
   fadeDelay: 1.5
   fadeDuration: 1.2
+--- !u!114 &1644377967
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1644377947}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d594eb8b967e1334cb65407fbf3b678d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  exhaustPrefab: {fileID: 1193206252530958, guid: 8ac57215f58f2f64fb8d6de621bf7021,
+    type: 3}
+  exhaustPoints:
+  - {fileID: 725951667}
+  - {fileID: 160353714}
+  driverController: {fileID: 1644377952}
+  moduleManager: {fileID: 1644377955}
+  idleEmissionRate: 12
+  idleColor: {r: 0.8, g: 0.8, b: 0.8, a: 0.35}
+  idleStartSize: 1
+  idleStartSpeed: 0.6
+  throttleEmissionRate: 18
+  throttleColor: {r: 0.4, g: 0.4, b: 0.4, a: 0.6}
+  throttleStartSize: 3
+  throttleStartSpeed: 1.4
+  damagedEmissionRate: 24
+  damagedColor: {r: 0.1, g: 0.1, b: 0.1, a: 0.8}
+  damagedStartSize: 0
+  damagedStartSpeed: 1.8
+  colorLerpSpeed: 3
+  emissionLerpSpeed: 6
+  sizeLerpSpeed: 3
+  throttleThreshold: 0.15
 --- !u!1 &1644851859
 GameObject:
   m_ObjectHideFlags: 0
@@ -18299,6 +18399,7 @@ MonoBehaviour:
   arrivalRadius: 1.5
   angleToMove: 25
   pivotThreshold: 60
+  speedMultiplier: 1
 --- !u!23 &81196704096854159
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -22404,6 +22505,7 @@ MonoBehaviour:
   snipingDuration: 5
   advanceDuration: 3
   allowAimYawThreshold: 1.5
+  patrolSpeedMul: 0.75
 --- !u!1 &5772952525546349862
 GameObject:
   m_ObjectHideFlags: 0

@@ -14,6 +14,9 @@ public class TankAIDriver : MonoBehaviour
     [SerializeField] private float angleToMove = 25f;
     [SerializeField] private float pivotThreshold = 60f;
 
+    [Header("Speed Multiplier")]
+    [SerializeField, Range(0f, 1f)] private float speedMultiplier = 1f;
+
     private bool hasDestination = false;
     private bool driverDead = false;
     private bool isReversing = false;
@@ -64,13 +67,13 @@ public class TankAIDriver : MonoBehaviour
         }
         else if (absAngle > angleToMove)
         {
-            throttle = 0.5f;
+            throttle = 0.5f * speedMultiplier;
             steer = Mathf.Clamp(angle / 45f, -1f, 1f);
             pivot = 0f;
         }
         else
         {
-            throttle = 1f;
+            throttle = 1f * speedMultiplier;
             steer = Mathf.Clamp(angle / 45f, -1f, 1f);
             pivot = 0f;
         }
@@ -154,6 +157,8 @@ public class TankAIDriver : MonoBehaviour
         if (wreckObstacle != null)
             wreckObstacle.enabled = true;
     }
+
+    public void SetSpeedMultiplier(float mul) => speedMultiplier = Mathf.Clamp01(mul);
 
     public bool IsArrived()
     {

@@ -690,6 +690,7 @@ GameObject:
   - component: {fileID: 1138440378896423724}
   - component: {fileID: 5772447677367177468}
   - component: {fileID: -7140083113442918149}
+  - component: {fileID: 6980155058024129384}
   m_Layer: 0
   m_Name: T-34-85
   m_TagString: Untagged
@@ -1250,6 +1251,41 @@ NavMeshObstacle:
   m_CarveOnlyStationary: 1
   m_Center: {x: 0, y: 1, z: 0.6}
   m_TimeToStationary: 0.5
+--- !u!114 &6980155058024129384
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 798876601553340897}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d594eb8b967e1334cb65407fbf3b678d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  exhaustPrefab: {fileID: 1193206252530958, guid: 8ac57215f58f2f64fb8d6de621bf7021,
+    type: 3}
+  exhaustPoints:
+  - {fileID: 5840660711103133090}
+  - {fileID: 8250411713187590967}
+  driverController: {fileID: 8700164645835412823}
+  moduleManager: {fileID: 1964988993947170077}
+  idleEmissionRate: 10
+  idleColor: {r: 0.8, g: 0.8, b: 0.8, a: 0.35}
+  idleStartSize: 1
+  idleStartSpeed: 0.6
+  throttleEmissionRate: 18
+  throttleColor: {r: 0.4, g: 0.4, b: 0.4, a: 0.6}
+  throttleStartSize: 3
+  throttleStartSpeed: 1.4
+  damagedEmissionRate: 24
+  damagedColor: {r: 0.1, g: 0.1, b: 0.1, a: 0.8}
+  damagedStartSize: 0.9
+  damagedStartSpeed: 1.8
+  colorLerpSpeed: 3
+  emissionLerpSpeed: 6
+  sizeLerpSpeed: 3
+  throttleThreshold: 0.15
 --- !u!1 &837891589116313172
 GameObject:
   m_ObjectHideFlags: 0
@@ -3511,6 +3547,8 @@ Transform:
   - {fileID: 6782023709120104533}
   - {fileID: 4167132661648962908}
   - {fileID: 8456364345983662131}
+  - {fileID: 8250411713187590967}
+  - {fileID: 5840660711103133090}
   m_Father: {fileID: 4674044262786224552}
   m_LocalEulerAnglesHint: {x: 0, y: 270, z: 0}
 --- !u!1 &5105559080091354481
@@ -4379,6 +4417,37 @@ MonoBehaviour:
   ricochetBonusDeg: 0
   drawGizmo: 0
   gizmoColor: {r: 0, g: 1, b: 1, a: 0.25}
+--- !u!1 &6523952485405119404
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5840660711103133090}
+  m_Layer: 10
+  m_Name: Right Exhaust Point
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5840660711103133090
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6523952485405119404}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 3.253, y: 1.312, z: 0.571}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 5672315823156579371}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &6567449247439840287
 GameObject:
   m_ObjectHideFlags: 0
@@ -5275,6 +5344,37 @@ MonoBehaviour:
   ricochetBonusDeg: 0
   drawGizmo: 0
   gizmoColor: {r: 0, g: 1, b: 1, a: 0.25}
+--- !u!1 &7684739735091627245
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8250411713187590967}
+  m_Layer: 10
+  m_Name: Left Exhaust Point
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8250411713187590967
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7684739735091627245}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 3.291, y: 1.328, z: -0.542}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 5672315823156579371}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &7753747939027859928
 GameObject:
   m_ObjectHideFlags: 0
