@@ -825,6 +825,7 @@ MonoBehaviour:
   snipingDuration: 5
   advanceDuration: 3
   allowAimYawThreshold: 0.2
+  patrolSpeedMul: 0.75
 --- !u!114 &8700164645835412823
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -913,6 +914,7 @@ MonoBehaviour:
   arrivalRadius: 1.5
   angleToMove: 25
   pivotThreshold: 60
+  speedMultiplier: 1
 --- !u!114 &170782852195059760
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4441,13 +4443,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6523952485405119404}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0.6427876, y: 0, z: 0, w: 0.7660445}
   m_LocalPosition: {x: 3.253, y: 1.312, z: 0.571}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 5672315823156579371}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: -80, y: 0, z: 0}
 --- !u!1 &6567449247439840287
 GameObject:
   m_ObjectHideFlags: 0
@@ -5368,13 +5370,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7684739735091627245}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0.6427876, y: 0, z: 0, w: 0.7660445}
   m_LocalPosition: {x: 3.291, y: 1.328, z: -0.542}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 5672315823156579371}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: -80, y: 0, z: 0}
 --- !u!1 &7753747939027859928
 GameObject:
   m_ObjectHideFlags: 0

@@ -1728,6 +1728,37 @@ Transform:
   - {fileID: 2823254819821726033}
   m_Father: {fileID: 1684761192579234170}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &5169166047565894484
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4891250592704388945}
+  m_Layer: 10
+  m_Name: Right Exhaust Point
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4891250592704388945
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5169166047565894484}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.7071068, y: 0, z: 0, w: 0.7071068}
+  m_LocalPosition: {x: 0.107, y: 1.556, z: -2.807}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 3992133602491520243}
+  m_LocalEulerAnglesHint: {x: -90, y: 0, z: 0}
 --- !u!1 &5208749422845667423
 GameObject:
   m_ObjectHideFlags: 0
@@ -3009,6 +3040,37 @@ Transform:
   - {fileID: 2658086325595409242}
   m_Father: {fileID: 930611126782108770}
   m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
+--- !u!1 &8119611741109043195
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5843341686695960461}
+  m_Layer: 10
+  m_Name: Left Exhaust Point
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5843341686695960461
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8119611741109043195}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.7071068, y: 0, z: 0, w: 0.7071068}
+  m_LocalPosition: {x: -1.697998, y: 1.532, z: -2.882952}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 3992133602491520243}
+  m_LocalEulerAnglesHint: {x: -90, y: 0, z: 0}
 --- !u!1 &8176546671022141468
 GameObject:
   m_ObjectHideFlags: 0
@@ -3032,6 +3094,7 @@ GameObject:
   - component: {fileID: 6751714437304063405}
   - component: {fileID: 6673708618160038884}
   - component: {fileID: 6149786660335212185}
+  - component: {fileID: 8882642949343432075}
   m_Layer: 10
   m_Name: IS-2 1944
   m_TagString: Untagged
@@ -3058,6 +3121,8 @@ Transform:
   - {fileID: 7250644047703224681}
   - {fileID: 954712310200370430}
   - {fileID: 475226323434863388}
+  - {fileID: 5843341686695960461}
+  - {fileID: 4891250592704388945}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
 --- !u!114 &1029540851548165558
@@ -3088,7 +3153,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   isAI: 1
   soundController: {fileID: 0}
-  reloadTime: 5
+  reloadTime: 20
   loaderDead: 0
   loaderTaskBlocked: 0
   reloadTimeMul: 1
@@ -3171,6 +3236,7 @@ MonoBehaviour:
   snipingDuration: 5
   advanceDuration: 3
   allowAimYawThreshold: 0.2
+  patrolSpeedMul: 0.75
 --- !u!114 &62453426837567829
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3189,6 +3255,7 @@ MonoBehaviour:
   arrivalRadius: 1.5
   angleToMove: 25
   pivotThreshold: 60
+  speedMultiplier: 1
 --- !u!114 &4770314829472340566
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3559,6 +3626,40 @@ MonoBehaviour:
   loaderController: {fileID: 2516454100071688905}
   swapDelay: 5
   aiController: {fileID: 5769228785220289700}
+--- !u!114 &8882642949343432075
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8176546671022141468}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d594eb8b967e1334cb65407fbf3b678d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  exhaustPrefab: {fileID: 0}
+  exhaustPoints:
+  - {fileID: 5843341686695960461}
+  - {fileID: 4891250592704388945}
+  driverController: {fileID: 6673708618160038884}
+  moduleManager: {fileID: 1953442939629426032}
+  idleEmissionRate: 12
+  idleColor: {r: 0.8, g: 0.8, b: 0.8, a: 0.35}
+  idleStartSize: 1
+  idleStartSpeed: 0.6
+  throttleEmissionRate: 18
+  throttleColor: {r: 0.4, g: 0.4, b: 0.4, a: 0.6}
+  throttleStartSize: 3
+  throttleStartSpeed: 1.4
+  damagedEmissionRate: 24
+  damagedColor: {r: 0.1, g: 0.1, b: 0.1, a: 0.8}
+  damagedStartSize: 0.9
+  damagedStartSpeed: 1.8
+  colorLerpSpeed: 3
+  emissionLerpSpeed: 6
+  sizeLerpSpeed: 3
+  throttleThreshold: 0.15
 --- !u!1 &8247817059336397267
 GameObject:
   m_ObjectHideFlags: 0

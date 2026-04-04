@@ -5278,12 +5278,12 @@ Transform:
   m_GameObject: {fileID: 635153561}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.497, y: 3.07694, z: -0.6837523}
+  m_LocalPosition: {x: -0.497, y: 1.305, z: -0.611}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1762431796}
-  m_Father: {fileID: 711577501}
+  m_Father: {fileID: 3974867960145884146}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &635153563
 MonoBehaviour:
@@ -5915,7 +5915,6 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 3974867960145884146}
-  - {fileID: 635153562}
   m_Father: {fileID: 152308380}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &725951666
@@ -17004,15 +17003,10 @@ MonoBehaviour:
   emergencyOrderDelay: 3
   emergencyData: {fileID: 11400000, guid: 0d1145a9211745c40b613674ddc7c483, type: 2}
   reinforcementPrefab:
-  - {fileID: 798876601553340897, guid: a4b2e9e9e2299a840bb74560c4085299, type: 3}
   - {fileID: 8176546671022141468, guid: ddc1c5c943720794187a891c585b792b, type: 3}
-  - {fileID: 798876601553340897, guid: a4b2e9e9e2299a840bb74560c4085299, type: 3}
-  - {fileID: 798876601553340897, guid: a4b2e9e9e2299a840bb74560c4085299, type: 3}
-  - {fileID: 8176546671022141468, guid: ddc1c5c943720794187a891c585b792b, type: 3}
-  - {fileID: 798876601553340897, guid: a4b2e9e9e2299a840bb74560c4085299, type: 3}
   spawnPoints:
   - {fileID: 1566102485}
-  reinforcementCount: 6
+  reinforcementCount: 1
   spawnSpacing: 30
   missionCompleteData: {fileID: 11400000, guid: 5bf503e6e6d32494f87facfae6ad7611,
     type: 2}
@@ -21176,6 +21170,7 @@ Transform:
   - {fileID: 792932911802802576}
   - {fileID: 673119839}
   - {fileID: 828724182}
+  - {fileID: 635153562}
   m_Father: {fileID: 711577501}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!33 &3991765031522938781
