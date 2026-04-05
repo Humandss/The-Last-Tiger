@@ -3250,8 +3250,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   driver: {fileID: 6673708618160038884}
-  agent: {fileID: 0}
-  wreckObstacle: {fileID: 0}
+  agent: {fileID: 1276126816927654824}
+  wreckObstacle: {fileID: 233533784138653019}
   arrivalRadius: 1.5
   angleToMove: 25
   pivotThreshold: 60
@@ -3282,7 +3282,7 @@ MonoBehaviour:
   gunnerTaskBlocked: 0
   useDispersion: 1
   dispersionAt100mDeg: 0.01
-  dispersionAt2000mDeg: 0.1
+  dispersionAt2000mDeg: 0.08
   maxGunnerDispersionPenalty: 1.8
   maxGunDispersionPenalty: 2.2
   gunHpRatio: 1
@@ -3638,7 +3638,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d594eb8b967e1334cb65407fbf3b678d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  exhaustPrefab: {fileID: 0}
+  exhaustPrefab: {fileID: 1193206252530958, guid: 8ac57215f58f2f64fb8d6de621bf7021,
+    type: 3}
   exhaustPoints:
   - {fileID: 5843341686695960461}
   - {fileID: 4891250592704388945}

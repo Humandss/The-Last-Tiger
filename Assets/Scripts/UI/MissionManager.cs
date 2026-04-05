@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 using System;
 
 /// <summary>
@@ -30,6 +31,8 @@ public class MissionManager : MonoBehaviour
     [Header("Phase 4 — 작전 완료 보고서")]
     [SerializeField] private MissionBriefingData missionCompleteData;
     [SerializeField] private float missionCompleteDelay = 3f;
+    [SerializeField] private string briefingSceneName = "BriefingScene";
+    [SerializeField] private float returnFadeDuration = 0.8f;
 
     [Header("킬 카운터 HUD")]
     [SerializeField] private bool  showKillCounter  = true;
@@ -223,6 +226,44 @@ public class MissionManager : MonoBehaviour
         var go = new GameObject("MissionCompleteUI");
         var ui = go.AddComponent<MissionOrderUI>();
         ui.SetData(missionCompleteData);
+        ui.OnConfirmed += () => StartCoroutine(ReturnToBriefing());
+    }
+
+    // ── 브리핑 씬 복귀 ────────────────────────────────────
+    private IEnumerator ReturnToBriefing()
+    {
+        // 검정 페이드인
+        var canvasGo = new GameObject("ReturnFadeCanvas",
+            typeof(Canvas), typeof(CanvasScaler));
+        DontDestroyOnLoad(canvasGo);
+        var canvas          = canvasGo.GetComponent<Canvas>();
+        canvas.renderMode   = RenderMode.ScreenSpaceOverlay;
+        canvas.sortingOrder = 32767;
+
+        var cg               = canvasGo.AddComponent<CanvasGroup>();
+        cg.alpha             = 0f;
+        cg.blocksRaycasts    = true;
+        cg.interactable      = false;
+
+        var bgGo   = new GameObject("Black", typeof(RectTransform), typeof(UnityEngine.UI.Image));
+        bgGo.transform.SetParent(canvasGo.transform, false);
+        var bgRect = bgGo.GetComponent<RectTransform>();
+        bgRect.anchorMin = Vector2.zero;
+        bgRect.anchorMax = Vector2.one;
+        bgRect.offsetMin = Vector2.zero;
+        bgRect.offsetMax = Vector2.zero;
+        bgGo.GetComponent<UnityEngine.UI.Image>().color = Color.black;
+
+        float t = 0f;
+        while (t < returnFadeDuration)
+        {
+            t += Time.unscaledDeltaTime;
+            cg.alpha = Mathf.Clamp01(t / returnFadeDuration);
+            yield return null;
+        }
+        cg.alpha = 1f;
+
+        SceneManager.LoadScene(briefingSceneName);
     }
 
     // ── 킬 카운터 HUD ────────────────────────────────────

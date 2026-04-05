@@ -22,9 +22,16 @@ public class PoolManager : MonoBehaviour
     [SerializeField] private int soundPoolInitialSize = 16;
     [SerializeField] private int soundPoolMaxSize = 32;
 
+    [Header("Speed of Sound")]
+    [SerializeField] private float speedOfSound  = 343f;   // m/s
+    [SerializeField] private float maxSoundDelay = 5f;     // 너무 먼 거리 딜레이 상한 (초)
+    [SerializeField] private float minSoundDelay = 0.02f;  // 이 미만은 즉시 재생 (약 7m)
+
     private readonly Queue<AudioSource> soundPool = new Queue<AudioSource>();
     private readonly Queue<AudioSource> activeSounds = new Queue<AudioSource>();
     private readonly Dictionary<AudioSource, Coroutine> soundCoroutines = new Dictionary<AudioSource, Coroutine>();
+
+    private AudioListener _listener;
 
     // ── 초기화 ──────────────────────────────────────────────
 
@@ -41,6 +48,8 @@ public class PoolManager : MonoBehaviour
 
         for (int i = 0; i < soundPoolInitialSize; i++)
             soundPool.Enqueue(CreateAudioSource());
+
+        UnityEngine.SceneManagement.SceneManager.sceneLoaded += (s, m) => _listener = null;
     }
 
     // ── Sound Pool API ──────────────────────────────────────
@@ -49,11 +58,34 @@ public class PoolManager : MonoBehaviour
     {
         if (clip == null) return;
 
+        float delay = CalcSoundDelay(position);
+
+        if (delay < minSoundDelay)
+        {
+            // 즉시 재생 — AudioSource 바로 할당
+            PlayImmediate(clip, position, volume);
+        }
+        else
+        {
+            // 딜레이 중에는 AudioSource를 점유하지 않음
+            // → evict(강제 반환)로 소리가 취소되는 문제 방지
+            StartCoroutine(CoPlayDelayed(clip, position, volume, delay));
+        }
+    }
+
+    private IEnumerator CoPlayDelayed(AudioClip clip, Vector3 position, float volume, float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        PlayImmediate(clip, position, volume);
+    }
+
+    private void PlayImmediate(AudioClip clip, Vector3 position, float volume)
+    {
         AudioSource source = GetAudioSource();
         if (source == null) return;
 
         source.transform.position = position;
-        source.clip = clip;
+        source.clip   = clip;
         source.volume = volume;
         source.gameObject.SetActive(true);
         source.Play();
@@ -62,6 +94,22 @@ public class PoolManager : MonoBehaviour
         Coroutine coroutine = StartCoroutine(CoReturnSound(source, clip.length));
         soundCoroutines[source] = coroutine;
     }
+
+    /// <summary>
+    /// 외부에서 음속 딜레이만 계산할 때 사용 (SoundController 등)
+    /// </summary>
+    public float GetSoundDelay(Vector3 worldPos)
+    {
+        if (_listener == null)
+            _listener = FindAnyObjectByType<AudioListener>();
+
+        if (_listener == null) return 0f;
+
+        float dist = Vector3.Distance(worldPos, _listener.transform.position);
+        return Mathf.Clamp(dist / speedOfSound, 0f, maxSoundDelay);
+    }
+
+    private float CalcSoundDelay(Vector3 worldPos) => GetSoundDelay(worldPos);
 
     private AudioSource GetAudioSource()
     {

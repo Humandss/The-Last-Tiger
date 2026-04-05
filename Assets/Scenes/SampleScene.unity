@@ -3257,6 +3257,84 @@ MonoBehaviour:
     m_MipBias: 0
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
+--- !u!1001 &333924532
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 2516454100071688905, guid: ddc1c5c943720794187a891c585b792b,
+        type: 3}
+      propertyPath: reloadTime
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 3992133602491520243, guid: ddc1c5c943720794187a891c585b792b,
+        type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -81.203674
+      objectReference: {fileID: 0}
+    - target: {fileID: 3992133602491520243, guid: ddc1c5c943720794187a891c585b792b,
+        type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.000030517578
+      objectReference: {fileID: 0}
+    - target: {fileID: 3992133602491520243, guid: ddc1c5c943720794187a891c585b792b,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 1142.6644
+      objectReference: {fileID: 0}
+    - target: {fileID: 3992133602491520243, guid: ddc1c5c943720794187a891c585b792b,
+        type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3992133602491520243, guid: ddc1c5c943720794187a891c585b792b,
+        type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3992133602491520243, guid: ddc1c5c943720794187a891c585b792b,
+        type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3992133602491520243, guid: ddc1c5c943720794187a891c585b792b,
+        type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3992133602491520243, guid: ddc1c5c943720794187a891c585b792b,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3992133602491520243, guid: ddc1c5c943720794187a891c585b792b,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 180
+      objectReference: {fileID: 0}
+    - target: {fileID: 3992133602491520243, guid: ddc1c5c943720794187a891c585b792b,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8176546671022141468, guid: ddc1c5c943720794187a891c585b792b,
+        type: 3}
+      propertyPath: m_Name
+      value: IS-2 1944 (2)
+      objectReference: {fileID: 0}
+    - target: {fileID: 8176546671022141468, guid: ddc1c5c943720794187a891c585b792b,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: ddc1c5c943720794187a891c585b792b, type: 3}
 --- !u!1 &342756878
 GameObject:
   m_ObjectHideFlags: 0
@@ -6575,6 +6653,9 @@ MonoBehaviour:
   isExpandable: 1
   soundPoolInitialSize: 16
   soundPoolMaxSize: 32
+  speedOfSound: 343
+  maxSoundDelay: 10
+  minSoundDelay: 0.02
 --- !u!4 &821579443
 Transform:
   m_ObjectHideFlags: 0
@@ -13885,7 +13966,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   isAI: 0
   soundController: {fileID: 0}
-  reloadTime: 1
+  reloadTime: 7.5
   loaderDead: 0
   loaderTaskBlocked: 0
   reloadTimeMul: 1
@@ -14057,6 +14138,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   normalSource: {fileID: 1644377961}
   loopSource: {fileID: 1644377962}
+  normalSourceMinDist: 200
+  normalSourceMaxDist: 3000
   turretAudioSource: {fileID: 1644377962}
   turretMovingClip: {fileID: 8300000, guid: 44800a82773ce804c9be71bea125cc00, type: 3}
   fadeSpeed: 3
@@ -20281,7 +20364,7 @@ PrefabInstance:
     - target: {fileID: 4674044262786224552, guid: a4b2e9e9e2299a840bb74560c4085299,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: 52.87
+      value: 7.1
       objectReference: {fileID: 0}
     - target: {fileID: 4674044262786224552, guid: a4b2e9e9e2299a840bb74560c4085299,
         type: 3}
@@ -20291,7 +20374,7 @@ PrefabInstance:
     - target: {fileID: 4674044262786224552, guid: a4b2e9e9e2299a840bb74560c4085299,
         type: 3}
       propertyPath: m_LocalPosition.z
-      value: 635.96
+      value: 1161.7
       objectReference: {fileID: 0}
     - target: {fileID: 4674044262786224552, guid: a4b2e9e9e2299a840bb74560c4085299,
         type: 3}
@@ -23347,6 +23430,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   normalSource: {fileID: 8454932911522925388}
   loopSource: {fileID: 5045670140634112200}
+  normalSourceMinDist: 200
+  normalSourceMaxDist: 3000
   turretAudioSource: {fileID: 0}
   turretMovingClip: {fileID: 8300000, guid: 44800a82773ce804c9be71bea125cc00, type: 3}
   fadeSpeed: 3
@@ -25799,3 +25884,4 @@ SceneRoots:
   - {fileID: 1870781293}
   - {fileID: 1566102485}
   - {fileID: 1053322129}
+  - {fileID: 333924532}

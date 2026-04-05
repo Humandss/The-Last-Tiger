@@ -154,6 +154,9 @@ public class PlayerTankSoundController : SoundController
         PlayCrewVoicesWithRadio(tankDestroyedCrewClip, 1f, CrewSubtitleCue.TargetTankDown);
     }
 
+    // 플레이어 사운드는 딜레이 없이 즉시 재생
+    protected override bool UseSpeedOfSound => false;
+
     private bool _crewSilenced = false;
 
     /// <summary>

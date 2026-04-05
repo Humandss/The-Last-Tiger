@@ -7,6 +7,8 @@ public abstract class SoundController : MonoBehaviour
     [Header("Audio")]
     [SerializeField] protected AudioSource normalSource;
     [SerializeField] protected AudioSource loopSource;
+    [SerializeField] private float normalSourceMinDist = 200f;
+    [SerializeField] private float normalSourceMaxDist = 3000f;
 
     [Header("Turret Traverse")]
     [SerializeField] private AudioSource turretAudioSource;
@@ -61,6 +63,11 @@ public abstract class SoundController : MonoBehaviour
     protected virtual void Awake()
     {
         EnsureDedicatedAudioSources();
+
+        normalSource.spatialBlend = 1f;
+        normalSource.rolloffMode  = AudioRolloffMode.Logarithmic;
+        normalSource.minDistance  = normalSourceMinDist;
+        normalSource.maxDistance  = normalSourceMaxDist;
 
         turretAudioSource.clip = turretMovingClip;
         turretAudioSource.loop = true;
@@ -157,10 +164,35 @@ public abstract class SoundController : MonoBehaviour
     }
 
 
+    /// <summary>
+    /// true: 음속 딜레이 적용 (적 탱크)
+    /// false: 즉시 재생 (플레이어 - 딜레이 불필요)
+    /// </summary>
+    protected virtual bool UseSpeedOfSound => true;
+
     protected void PlayEffectSounds(AudioClip[] clips, float volume)
     {
         if (clips == null || clips.Length == 0 || normalSource == null) return;
         AudioClip clip = clips[Random.Range(0, clips.Length)];
-        normalSource.PlayOneShot(clip, volume);
+
+        if (UseSpeedOfSound && PoolManager.Instance != null)
+        {
+            float delay = PoolManager.Instance.GetSoundDelay(transform.position);
+            if (delay < 0.02f)
+                normalSource.PlayOneShot(clip, volume);
+            else
+                StartCoroutine(CoPlayDelayed(clip, volume, delay));
+        }
+        else
+        {
+            normalSource.PlayOneShot(clip, volume);
+        }
+    }
+
+    private IEnumerator CoPlayDelayed(AudioClip clip, float volume, float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        if (normalSource != null)
+            normalSource.PlayOneShot(clip, volume);
     }
 }
