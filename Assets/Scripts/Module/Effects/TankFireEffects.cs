@@ -61,7 +61,7 @@ public class TankFireEffects : TankEffectsManager
         if (onFire) return;
         if (who.Type != ModuleType.FuelTank) return;
         if (who.State != ModuleState.Destroyed) return; //파괴되지 않은 상태면 호출x
-        
+
         SpawnFire();
     }
 

@@ -1003,6 +1003,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   normalSource: {fileID: 7841405004846078306}
   loopSource: {fileID: 1138440378896423724}
+  normalSourceMinDist: 200
+  normalSourceMaxDist: 3000
   turretAudioSource: {fileID: 0}
   turretMovingClip: {fileID: 8300000, guid: 44800a82773ce804c9be71bea125cc00, type: 3}
   fadeSpeed: 3
@@ -3144,6 +3146,8 @@ MonoBehaviour:
   fireSpawnPoint: {fileID: 4167132661648962908}
   explosionPoint: {fileID: 3922589247667602667}
   blowoff: {fileID: 6993128148527834154}
+  shockWavePrefab: {fileID: 1684488725729502, guid: c44c4c982666c8441b67519e57f8c1dd,
+    type: 3}
   ammoExplosionPrefab: {fileID: 3036022590825715946, guid: 097376dea5e9b6c48944abcf351ff284,
     type: 3}
   ammoFirePrefab: {fileID: 3494904463166963530, guid: e03ac3080d5efdb46b76adf0f358a905,
@@ -4657,6 +4661,8 @@ MonoBehaviour:
   fireSpawnPoint: {fileID: 4167132661648962908}
   explosionPoint: {fileID: 3922589247667602667}
   blowoff: {fileID: 2192917009822756924}
+  shockWavePrefab: {fileID: 1684488725729502, guid: c44c4c982666c8441b67519e57f8c1dd,
+    type: 3}
   ammoExplosionPrefab: {fileID: 3036022590825715946, guid: 097376dea5e9b6c48944abcf351ff284,
     type: 3}
   ammoFirePrefab: {fileID: 3494904463166963530, guid: e03ac3080d5efdb46b76adf0f358a905,

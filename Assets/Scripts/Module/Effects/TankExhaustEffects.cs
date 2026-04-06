@@ -49,6 +49,7 @@ public class TankExhaustEffects : MonoBehaviour
 
     private ExhaustState _state = ExhaustState.Idle;
     private bool _dead;
+    private bool _poolReturned; // OnTankDestroyed에서 이미 반환했으면 OnDestroy 중복 방지
 
     private ParticleSystem[]                _psList;
     private ParticleSystem.EmissionModule[] _emissions;
@@ -80,7 +81,8 @@ public class TankExhaustEffects : MonoBehaviour
         for (int i = 0; i < exhaustPoints.Length; i++)
         {
             Transform spawnAt = exhaustPoints[i] != null ? exhaustPoints[i] : transform;
-            var go = Instantiate(exhaustPrefab, spawnAt.position, spawnAt.rotation, spawnAt);
+            var go = PoolManager.Instance.Spawn(exhaustPrefab, spawnAt.position, spawnAt.rotation);
+            go.transform.SetParent(spawnAt, worldPositionStays: true);
 
             var ps = go.GetComponent<ParticleSystem>();
             if (ps == null)
@@ -88,6 +90,8 @@ public class TankExhaustEffects : MonoBehaviour
                 Debug.LogWarning($"[TankExhaustEffects] exhaust 프리팹에 ParticleSystem이 없습니다. (index {i})");
                 continue;
             }
+
+            if (!ps.isPlaying) ps.Play(withChildren: true);
 
             _psList[i]    = ps;
             _emissions[i] = ps.emission;
@@ -108,6 +112,18 @@ public class TankExhaustEffects : MonoBehaviour
     {
         if (moduleManager != null)
             moduleManager.OnTankDestroyed -= OnTankDestroyed;
+
+        // OnTankDestroyed에서 이미 ReturnDelayed 처리한 경우 중복 반환 방지
+        if (_poolReturned || _psList == null) return;
+
+        for (int i = 0; i < _psList.Length; i++)
+        {
+            if (_psList[i] == null) continue;
+            var go = _psList[i].gameObject;
+            if (go == null) continue;
+            go.transform.SetParent(null);
+            PoolManager.Instance?.Return(go);
+        }
     }
 
     private void Update()
@@ -197,7 +213,7 @@ public class TankExhaustEffects : MonoBehaviour
         }
     }
 
-    // ── 격파 시 정지 ─────────────────────────────
+    // ── 격파 시 정지 + 풀 반환 ───────────────────
     private void OnTankDestroyed()
     {
         _dead = true;
@@ -206,9 +222,19 @@ public class TankExhaustEffects : MonoBehaviour
         for (int i = 0; i < _psList.Length; i++)
         {
             if (_psList[i] == null) continue;
+
             _emissions[i].rateOverTime = 0f;
             _psList[i].Stop(withChildren: true,
                 stopBehavior: ParticleSystemStopBehavior.StopEmitting);
+
+            // 기존 파티클이 자연 소멸한 뒤 풀에 반환
+            float maxLife = _psList[i].main.startLifetime.constantMax;
+            var go = _psList[i].gameObject;
+            go.transform.SetParent(null);
+            PoolManager.Instance.ReturnDelayed(go, Mathf.Max(maxLife, 1f) + 0.3f);
         }
+
+        _poolReturned = true;
+        _psList       = null;
     }
 }

@@ -263,7 +263,43 @@ public class MissionManager : MonoBehaviour
         }
         cg.alpha = 1f;
 
+        // 씬 로드 후 페이드아웃을 담당할 컴포넌트 부착
+        canvasGo.AddComponent<ReturnFadeOut>().Init(cg, returnFadeDuration);
+
         SceneManager.LoadScene(briefingSceneName);
+    }
+
+    // ── 씬 로드 후 페이드아웃 컴포넌트 ───────────────────
+    private class ReturnFadeOut : MonoBehaviour
+    {
+        private CanvasGroup _cg;
+        private float       _duration;
+
+        public void Init(CanvasGroup cg, float duration)
+        {
+            _cg       = cg;
+            _duration = duration;
+            SceneManager.sceneLoaded += OnSceneLoaded;
+        }
+
+        private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            SceneManager.sceneLoaded -= OnSceneLoaded;
+            StartCoroutine(FadeOut());
+        }
+
+        private IEnumerator FadeOut()
+        {
+            yield return new WaitForSeconds(0.1f);
+            float t = 0f;
+            while (t < _duration)
+            {
+                t += Time.deltaTime;
+                if (_cg != null) _cg.alpha = 1f - Mathf.Clamp01(t / _duration);
+                yield return null;
+            }
+            Destroy(gameObject);
+        }
     }
 
     // ── 킬 카운터 HUD ────────────────────────────────────

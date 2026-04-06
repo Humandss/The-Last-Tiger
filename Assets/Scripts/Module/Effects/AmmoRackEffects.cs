@@ -13,6 +13,7 @@ public class AmmoRackEffects : TankEffectsManager
     [SerializeField] private TurretBlowOff blowoff;
 
     [Header("Prefabs")]
+    [SerializeField] private GameObject shockWavePrefab;
     [SerializeField] private GameObject ammoExplosionPrefab;
     [SerializeField] private GameObject ammoFirePrefab;
     [SerializeField] private GameObject ammoSmokePrefab;
@@ -36,6 +37,7 @@ public class AmmoRackEffects : TankEffectsManager
     private GameObject fireInstance;
     private GameObject smokeInstance;
     private GameObject explosionInstance;
+    private GameObject shockWaveInstance;
 
     private Coroutine ammoPopRoutine;
     private bool ammoEventTriggered = false;
@@ -43,7 +45,7 @@ public class AmmoRackEffects : TankEffectsManager
     protected override void Awake()
     {
         base.Awake();
-    
+
     }
 
     protected override void OnDestroy()
@@ -95,6 +97,7 @@ public class AmmoRackEffects : TankEffectsManager
         Transform t = explosionPoint ? explosionPoint : transform;
         Vector3 spawnPos = t.TransformPoint(localOffset);
 
+        shockWaveInstance = PoolManager.Instance.Spawn(shockWavePrefab, spawnPos, Quaternion.identity);
         explosionInstance = PoolManager.Instance.Spawn(ammoExplosionPrefab, spawnPos, Quaternion.identity);
 
         blowoff.BlowOff(explosionPoint.position);
@@ -137,9 +140,8 @@ public class AmmoRackEffects : TankEffectsManager
             smokeInstance.transform.SetParent(t, worldPositionStays: true);
 
         WreckEffectManager.Instance?.Register(smokeInstance, t);
-        //Debug.Log($"[FIRE] AmmoRack Finish -> smoke spawned on {gameObject.name}");
     }
-  
+
 
     private void StopVfxSlow(GameObject vfx)
     {
@@ -203,7 +205,7 @@ public class AmmoRackEffects : TankEffectsManager
             Debug.LogWarning("[AmmoRackEffects] firePrefab not set!");
             return;
         }
-   
+
         onFire = true;
         StartAmmoPopLoop();
         Transform t = fireSpawnPoint ? fireSpawnPoint : transform;

@@ -15,10 +15,10 @@ OcclusionCullingSettings:
 RenderSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 9
-  m_Fog: 0
+  m_Fog: 1
   m_FogColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
   m_FogMode: 3
-  m_FogDensity: 0.01
+  m_FogDensity: 0.0005
   m_LinearFogStart: 0
   m_LinearFogEnd: 300
   m_AmbientSkyColor: {r: 0.212, g: 0.227, b: 0.259, a: 1}
@@ -6683,7 +6683,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3380d95b05eb5934c9c69e06252827ed, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxConcurrentFires: 20
+  maxConcurrentFires: 50
   baseCullDistance: 300
   evalInterval: 1
 --- !u!1 &822029517
@@ -8322,6 +8322,8 @@ MonoBehaviour:
   fireSpawnPoint: {fileID: 1763614345}
   explosionPoint: {fileID: 1324072338}
   blowoff: {fileID: 959147072}
+  shockWavePrefab: {fileID: 1684488725729502, guid: c44c4c982666c8441b67519e57f8c1dd,
+    type: 3}
   ammoExplosionPrefab: {fileID: 3036022590825715946, guid: 097376dea5e9b6c48944abcf351ff284,
     type: 3}
   ammoFirePrefab: {fileID: 1344049707605344, guid: 0fec24248c09444459612b794514e226,
@@ -11404,6 +11406,7 @@ MonoBehaviour:
   fireSpawnPoint: {fileID: 1763614345}
   explosionPoint: {fileID: 1324072338}
   blowoff: {fileID: 1438332392}
+  shockWavePrefab: {fileID: 0}
   ammoExplosionPrefab: {fileID: 3036022590825715946, guid: 097376dea5e9b6c48944abcf351ff284,
     type: 3}
   ammoFirePrefab: {fileID: 1344049707605344, guid: 0fec24248c09444459612b794514e226,
@@ -12606,6 +12609,8 @@ MonoBehaviour:
   fireSpawnPoint: {fileID: 1763614345}
   explosionPoint: {fileID: 1324072338}
   blowoff: {fileID: 1567205750}
+  shockWavePrefab: {fileID: 1684488725729502, guid: c44c4c982666c8441b67519e57f8c1dd,
+    type: 3}
   ammoExplosionPrefab: {fileID: 3036022590825715946, guid: 097376dea5e9b6c48944abcf351ff284,
     type: 3}
   ammoFirePrefab: {fileID: 1344049707605344, guid: 0fec24248c09444459612b794514e226,
@@ -13510,6 +13515,7 @@ MonoBehaviour:
   fireSpawnPoint: {fileID: 1763614345}
   explosionPoint: {fileID: 1324072338}
   blowoff: {fileID: 1629556572}
+  shockWavePrefab: {fileID: 0}
   ammoExplosionPrefab: {fileID: 3036022590825715946, guid: 097376dea5e9b6c48944abcf351ff284,
     type: 3}
   ammoFirePrefab: {fileID: 1344049707605344, guid: 0fec24248c09444459612b794514e226,
@@ -16676,6 +16682,11 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1431581868816094338, guid: 39c76de7b13f93049902793148a9eda2,
+        type: 3}
+      propertyPath: hp
+      value: 30
+      objectReference: {fileID: 0}
     - target: {fileID: 1552317482492427507, guid: 39c76de7b13f93049902793148a9eda2,
         type: 3}
       propertyPath: player
@@ -16715,6 +16726,11 @@ PrefabInstance:
         type: 3}
       propertyPath: reloadTime
       value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 3794729514060486971, guid: 39c76de7b13f93049902793148a9eda2,
+        type: 3}
+      propertyPath: ammoExplosionChance
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5491432210558896199, guid: 39c76de7b13f93049902793148a9eda2,
         type: 3}
@@ -17094,6 +17110,8 @@ MonoBehaviour:
   missionCompleteData: {fileID: 11400000, guid: 5bf503e6e6d32494f87facfae6ad7611,
     type: 2}
   missionCompleteDelay: 2
+  briefingSceneName: BriefingScene
+  returnFadeDuration: 0.8
   showKillCounter: 1
   killCounterColor: {r: 0.85, g: 0.72, b: 0.2, a: 1}
   killCounterSize: 26
@@ -19157,6 +19175,7 @@ MonoBehaviour:
   fireSpawnPoint: {fileID: 7250644047792215523}
   explosionPoint: {fileID: 6741929386027665958}
   blowoff: {fileID: 7599573897454916726}
+  shockWavePrefab: {fileID: 0}
   ammoExplosionPrefab: {fileID: 3036022590825715946, guid: 097376dea5e9b6c48944abcf351ff284,
     type: 3}
   ammoFirePrefab: {fileID: 3494904463166963530, guid: e03ac3080d5efdb46b76adf0f358a905,
@@ -22328,6 +22347,7 @@ MonoBehaviour:
   fireSpawnPoint: {fileID: 7250644047792215523}
   explosionPoint: {fileID: 6741929386027665958}
   blowoff: {fileID: 8482257223703459323}
+  shockWavePrefab: {fileID: 0}
   ammoExplosionPrefab: {fileID: 3036022590825715946, guid: 097376dea5e9b6c48944abcf351ff284,
     type: 3}
   ammoFirePrefab: {fileID: 3494904463166963530, guid: e03ac3080d5efdb46b76adf0f358a905,
