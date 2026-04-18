@@ -192,6 +192,10 @@ MonoBehaviour:
   shell: {fileID: 11400000, guid: da8c1eaf4bdf24b4c98f3712771e9f11, type: 2}
   explosionPrefab: {fileID: 1836639356757348, guid: 90275866da1844b42a6ede3f4ee0c68b,
     type: 3}
+  impactDecalPrefab: {fileID: 8584159175086151540, guid: d1d8977f9bdb86542927f7c46f51f772,
+    type: 3}
+  decalLifetime: 30
+  decalSurfaceOffset: 0.05
   worldMask:
     serializedVersion: 2
     m_Bits: 4294967295

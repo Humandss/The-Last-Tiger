@@ -1541,6 +1541,59 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 185408872}
   m_CullTransparentMesh: 1
+--- !u!1 &187508029
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 187508031}
+  - component: {fileID: 187508030}
+  m_Layer: 0
+  m_Name: ' _DecalSpawnTest'
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!114 &187508030
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 187508029}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e200f0f0b77dfe04cbd45c6cf00ee50d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  decalPrefab: {fileID: 8584159175086151540, guid: d1d8977f9bdb86542927f7c46f51f772,
+    type: 3}
+  spawnKey: 323
+  hitMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  maxDistance: 500
+  lifetime: 30
+  surfaceOffset: 0.05
+--- !u!4 &187508031
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 187508029}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 359, y: 9.763572, z: 261}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &195951582
 GameObject:
   m_ObjectHideFlags: 0
@@ -2350,7 +2403,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &246555633
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -25903,5 +25956,6 @@ SceneRoots:
   - {fileID: 1637352772}
   - {fileID: 1870781293}
   - {fileID: 1566102485}
+  - {fileID: 187508031}
   - {fileID: 1053322129}
   - {fileID: 333924532}

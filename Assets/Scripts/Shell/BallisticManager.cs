@@ -2,12 +2,26 @@ using System;
 using System.Collections;
 using UnityEngine;
 
+public enum ImpactType
+{
+    Penetration,
+    Ricochet,
+    NoPenetration,
+}
+
 public class BallisticManager : MonoBehaviour
 {
     [Header("Refs")]
     private ShellSoundController shellSoundController;
     [SerializeField] private ShellData shell;
     [SerializeField] private GameObject explosionPrefab;
+
+    [Header("Impact Decals")]
+    [SerializeField] private GameObject decalPenetrationPrefab;
+    [SerializeField] private GameObject decalRicochetPrefab;
+    [SerializeField] private GameObject decalNoPenPrefab;
+    [SerializeField] private float decalLifetime = 30f;
+    [SerializeField] private float decalSurfaceOffset = 0.05f;
 
     [Header("Hit Layers")]
     [SerializeField] private LayerMask worldMask;
@@ -286,9 +300,10 @@ public class BallisticManager : MonoBehaviour
         float ricTh = zone.GetRicochetThresholdDeg(shell.baseRicochetAngleDeg);
         if (shell.canRicochet && angleToNormal >= ricTh)
         {
+            SpawnImpactDecal(hit, ImpactType.Ricochet);
             HandleRicochet(hit, segDir);
             if (isPlayerShell) OnEnemyRicocheted?.Invoke();
-            
+
             return false;
         }
 
@@ -306,6 +321,7 @@ public class BallisticManager : MonoBehaviour
         {
             float penLeft = penMm - effectiveMm;
             Debug.Log($"[PEN] zone={zone.zoneName}, original pen ={pen:0}, effective pen={penMm:0}, original armor ={baseArmorMm:0}, eff={effectiveMm:0} angleN={angleToNormal:0}");
+            SpawnImpactDecal(hit, ImpactType.Penetration);
             if (isPlayerShell) OnEnemyPenetrated?.Invoke();
             if (shell.canExplode)
                 TryArmFuzeAfterPen(effectiveMm, hit.point, segDir);
@@ -314,6 +330,7 @@ public class BallisticManager : MonoBehaviour
         }
 
         Debug.Log($"[NO PEN] zone={zone.zoneName}, original pen ={pen:0}, effective pen={penMm:0} eff={effectiveMm:0} angleN={angleToNormal:0}");
+        SpawnImpactDecal(hit, ImpactType.NoPenetration);
         if (isPlayerShell) OnEnemyNoPenetration?.Invoke();
         if (shell.type == AmmoType.HE) ExplodeNow();
         else PoolManager.Instance.Return(gameObject);
@@ -561,6 +578,35 @@ public class BallisticManager : MonoBehaviour
         ParticleSystem ps = go.GetComponentInChildren<ParticleSystem>();
         float delay = ps ? ps.main.duration + ps.main.startLifetime.constantMax + 0.5f : 1.3f;
         PoolManager.Instance.ReturnDelayed(go, delay);
+    }
+
+    private void SpawnImpactDecal(RaycastHit hit, ImpactType type)
+    {
+        GameObject prefab = type switch
+        {
+            ImpactType.Penetration => decalPenetrationPrefab,
+            ImpactType.Ricochet => decalRicochetPrefab,
+            ImpactType.NoPenetration => decalNoPenPrefab,
+            _ => null,
+        };
+
+        if (prefab == null) return;
+
+        int layerBit = 1 << hit.collider.gameObject.layer;
+        bool isValidSurface =
+            (hitMeshMask.value & layerBit) != 0 ||
+            (armorZoneMask.value & layerBit) != 0;
+
+        if (!isValidSurface) return;
+
+        Vector3 spawnPos = hit.point + hit.normal * decalSurfaceOffset;
+        Quaternion rot = Quaternion.LookRotation(-hit.normal, Vector3.up);
+        rot *= Quaternion.Euler(0f, 0f, UnityEngine.Random.Range(0f, 360f));
+
+        GameObject decal = PoolManager.Instance.Spawn(prefab, spawnPos, rot);
+        if (decal == null) return;
+
+        PoolManager.Instance.ReturnDelayed(decal, decalLifetime);
     }
 
     private void NotifyNearbyAI(Vector3 from, Vector3 to)
