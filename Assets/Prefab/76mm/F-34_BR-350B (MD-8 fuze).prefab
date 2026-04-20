@@ -224,7 +224,11 @@ MonoBehaviour:
   shell: {fileID: 11400000, guid: 1180f4ea68bd25548b84805af70f9454, type: 2}
   explosionPrefab: {fileID: 1836639356757348, guid: 90275866da1844b42a6ede3f4ee0c68b,
     type: 3}
-  impactDecalPrefab: {fileID: 8584159175086151540, guid: d1d8977f9bdb86542927f7c46f51f772,
+  decalPenetrationPrefab: {fileID: 8584159175086151501, guid: aa11bb22cc33dd44ee55ff6677889901,
+    type: 3}
+  decalRicochetPrefab: {fileID: 8584159175086151502, guid: bb22cc33dd44ee55ff6677889900aa01,
+    type: 3}
+  decalNoPenPrefab: {fileID: 8584159175086151503, guid: cc33dd44ee55ff6677889900aabbcc02,
     type: 3}
   decalLifetime: 30
   decalSurfaceOffset: 0.05
