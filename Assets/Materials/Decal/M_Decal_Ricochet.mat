@@ -38,11 +38,11 @@ Material:
     serializedVersion: 3
     m_TexEnvs:
     - _NonPenMap:
-        m_Texture: {fileID: 2800000, guid: ac8da7f02704bdd4b8d550cdf5246117, type: 3}
+        m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _PenMap:
-        m_Texture: {fileID: 2800000, guid: 99ec3bac5c51f6c4f9258f39b39d54f1, type: 3}
+        m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _RicochetMap:
@@ -67,6 +67,6 @@ Material:
     - _DecalMeshDepthBias: 0
     - _DecalMeshViewBias: 0
     - _DrawOrder: 0
-    - _ImpactType: 1
+    - _ImpactType: 2
     m_Colors: []
   m_BuildTextureStacks: []

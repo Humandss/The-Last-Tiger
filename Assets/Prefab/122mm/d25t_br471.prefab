@@ -200,6 +200,9 @@ MonoBehaviour:
     type: 3}
   decalLifetime: 30
   decalSurfaceOffset: 0.05
+  decalReferenceCaliberMm: 75
+  decalMinScale: 0.5
+  decalMaxScale: 5
   worldMask:
     serializedVersion: 2
     m_Bits: 4294967295

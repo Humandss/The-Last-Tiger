@@ -20,8 +20,15 @@ public class BallisticManager : MonoBehaviour
     [SerializeField] private GameObject decalPenetrationPrefab;
     [SerializeField] private GameObject decalRicochetPrefab;
     [SerializeField] private GameObject decalNoPenPrefab;
-    [SerializeField] private float decalLifetime = 30f;
     [SerializeField] private float decalSurfaceOffset = 0.05f;
+
+    [Header("Decal Caliber Scaling")]
+    [Tooltip("이 구경(mm)일 때 데칼 크기 1.0배. 큰 구경일수록 비례해서 크게.")]
+    [SerializeField] private float decalReferenceCaliberMm = 75f;
+    [Tooltip("최소 스케일 배수 (작은 구경 하한)")]
+    [SerializeField] private float decalMinScale = 0.5f;
+    [Tooltip("최대 스케일 배수 (큰 구경 상한)")]
+    [SerializeField] private float decalMaxScale = 2.5f;
 
     [Header("Hit Layers")]
     [SerializeField] private LayerMask worldMask;
@@ -300,6 +307,7 @@ public class BallisticManager : MonoBehaviour
         float ricTh = zone.GetRicochetThresholdDeg(shell.baseRicochetAngleDeg);
         if (shell.canRicochet && angleToNormal >= ricTh)
         {
+            Debug.Log($"[RICOCHET] zone={zone.zoneName} angle={angleToNormal:0.0} threshold={ricTh:0.0}");
             SpawnImpactDecal(hit, ImpactType.Ricochet);
             HandleRicochet(hit, segDir);
             if (isPlayerShell) OnEnemyRicocheted?.Invoke();
@@ -606,7 +614,14 @@ public class BallisticManager : MonoBehaviour
         GameObject decal = PoolManager.Instance.Spawn(prefab, spawnPos, rot);
         if (decal == null) return;
 
-        PoolManager.Instance.ReturnDelayed(decal, decalLifetime);
+        // 구경 기반 데칼 크기 — 프리팹 원본 스케일 × 구경 비율
+        float caliberRatio = shell.caliber / Mathf.Max(1f, decalReferenceCaliberMm);
+        float caliberScale = Mathf.Clamp(caliberRatio, decalMinScale, decalMaxScale);
+        decal.transform.localScale = prefab.transform.localScale * caliberScale;
+
+        // 버젯 매니저 등록 — 라이프타임 대신 버젯 초과 시 LRU 회수
+        if (DecalBudgetManager.Instance != null)
+            DecalBudgetManager.Instance.Register(decal);
     }
 
     private void NotifyNearbyAI(Vector3 from, Vector3 to)

@@ -67,6 +67,6 @@ Material:
     - _DecalMeshDepthBias: 0
     - _DecalMeshViewBias: 0
     - _DrawOrder: 0
-    - _ImpactType: 2
+    - _ImpactType: 1
     m_Colors: []
   m_BuildTextureStacks: []
