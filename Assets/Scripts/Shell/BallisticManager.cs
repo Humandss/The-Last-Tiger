@@ -23,12 +23,8 @@ public class BallisticManager : MonoBehaviour
     [SerializeField] private float decalSurfaceOffset = 0.05f;
 
     [Header("Decal Caliber Scaling")]
-    [Tooltip("이 구경(mm)일 때 데칼 크기 1.0배. 큰 구경일수록 비례해서 크게.")]
-    [SerializeField] private float decalReferenceCaliberMm = 75f;
-    [Tooltip("최소 스케일 배수 (작은 구경 하한)")]
-    [SerializeField] private float decalMinScale = 0.5f;
-    [Tooltip("최대 스케일 배수 (큰 구경 상한)")]
-    [SerializeField] private float decalMaxScale = 2.5f;
+    [Tooltip("데칼 스케일 = 구경(mm) × 이 값")]
+    [SerializeField] private float decalCaliberFactor = 0.04f;
 
     [Header("Hit Layers")]
     [SerializeField] private LayerMask worldMask;
@@ -614,10 +610,25 @@ public class BallisticManager : MonoBehaviour
         GameObject decal = PoolManager.Instance.Spawn(prefab, spawnPos, rot);
         if (decal == null) return;
 
-        // 구경 기반 데칼 크기 — 프리팹 원본 스케일 × 구경 비율
-        float caliberRatio = shell.caliber / Mathf.Max(1f, decalReferenceCaliberMm);
-        float caliberScale = Mathf.Clamp(caliberRatio, decalMinScale, decalMaxScale);
+        // 1) 부모 연결 전에 월드 스케일 먼저 세팅
+        //    (이 시점엔 부모 없으므로 localScale = worldScale)
+        float caliberScale = shell.caliber * decalCaliberFactor;
         decal.transform.localScale = prefab.transform.localScale * caliberScale;
+
+        // [DEBUG] 값 흐름 추적
+        Debug.Log($"[Decal] shell={shell.name} caliber={shell.caliber} " +
+                  $"factor={decalCaliberFactor} caliberScale={caliberScale:F3} | " +
+                  $"prefabScale={prefab.transform.localScale} | " +
+                  $"setLocalScale={decal.transform.localScale}");
+
+        // 2) 그 후 부모 연결 (worldPositionStays:true → 월드 스케일 보존)
+        //    Unity가 부모 lossyScale을 고려해 localScale을 자동 계산하므로
+        //    실제 화면상 크기는 1)에서 정한 값 그대로 유지됨
+        decal.transform.SetParent(hit.collider.transform, worldPositionStays: true);
+
+        // [DEBUG] 부모 연결 후 검증
+        Debug.Log($"[Decal-Post] parent={hit.collider.name} parentLossy={hit.collider.transform.lossyScale} " +
+                  $"| local={decal.transform.localScale} worldLossy={decal.transform.lossyScale}");
 
         // 버젯 매니저 등록 — 라이프타임 대신 버젯 초과 시 LRU 회수
         if (DecalBudgetManager.Instance != null)

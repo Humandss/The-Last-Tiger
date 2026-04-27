@@ -230,11 +230,8 @@ MonoBehaviour:
     type: 3}
   decalNoPenPrefab: {fileID: 8584159175086151503, guid: cc33dd44ee55ff6677889900aabbcc02,
     type: 3}
-  decalLifetime: 30
   decalSurfaceOffset: 0.05
-  decalReferenceCaliberMm: 75
-  decalMinScale: 0.5
-  decalMaxScale: 5
+  decalCaliberFactor: 0.04
   worldMask:
     serializedVersion: 2
     m_Bits: 4294967295

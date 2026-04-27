@@ -558,6 +558,11 @@ public class TankAIController : MonoBehaviour
         driver.SetDriverDead();
         gunner.SetGunnerDead();
         SetCommanderDead(true);
+
+        // 컴포넌트 자체 비활성화 — 외부에서 재활성화되더라도 Update 호출 차단
+        if (gunner != null) (gunner as MonoBehaviour).enabled = false;
+        if (driver != null) (driver as MonoBehaviour).enabled = false;
+
         enabled = false;
         Debug.LogWarning($"[TankAI] {gameObject.name} dead -> AI stopped");
     }

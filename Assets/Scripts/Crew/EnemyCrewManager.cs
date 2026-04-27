@@ -12,20 +12,42 @@ public class EnemyCrewManager : TankCrewManagerBase
     private bool driverSwapPending = false;
     private bool loaderSwapPending = false;
 
+    // 탱크 파괴 후 크루 상태 갱신 차단 (부활 버그 방지)
+    private bool tankDestroyed = false;
+
 
     protected override void Start()
     {
         base.Start();
+        if (moduleManager != null)
+            moduleManager.OnTankDestroyed += OnTankDestroyed;
         ApplyInitialStates();
     }
 
     protected override void OnDestroy()
     {
         base.OnDestroy();
+        if (moduleManager != null)
+            moduleManager.OnTankDestroyed -= OnTankDestroyed;
+    }
+
+    private void OnTankDestroyed()
+    {
+        tankDestroyed = true;
+
+        // 모든 크루 강제 사망 처리 — 이후 모듈 상태 변화 이벤트로 부활 못 함
+        gunnerController?.SetGunnerState(true, 0f);
+        driverController?.SetDriverState(true, 0f);
+        loaderController?.SetLoaderState(true, 0f);
+
+        Debug.Log($"[EnemyCrewManager] {gameObject.name} tank destroyed -> crew swap locked");
     }
 
     private void UpdateAICrewSwap()
     {
+        // 탱크 파괴 후엔 크루 상태 갱신 안 함 (부활 방지)
+        if (tankDestroyed) return;
+
         bool gunnerDead = IsDestroyed(gunnerModule) || gunnerSwapPending;
         bool driverDead = IsDestroyed(driverModule) || driverSwapPending;
         bool loaderDead = IsDestroyed(loaderModule) || loaderSwapPending;

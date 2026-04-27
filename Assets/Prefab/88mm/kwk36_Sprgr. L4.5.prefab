@@ -227,11 +227,8 @@ MonoBehaviour:
   decalPenetrationPrefab: {fileID: 0}
   decalRicochetPrefab: {fileID: 0}
   decalNoPenPrefab: {fileID: 0}
-  decalLifetime: 30
   decalSurfaceOffset: 0.05
-  decalReferenceCaliberMm: 75
-  decalMinScale: 0.5
-  decalMaxScale: 5
+  decalCaliberFactor: 0.04
   worldMask:
     serializedVersion: 2
     m_Bits: 4294967295
