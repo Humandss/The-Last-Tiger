@@ -17,6 +17,8 @@ public class AmmoRackEffects : TankEffectsManager
     [SerializeField] private GameObject ammoExplosionPrefab;
     [SerializeField] private GameObject ammoFirePrefab;
     [SerializeField] private GameObject ammoSmokePrefab;
+    [SerializeField] private GameObject heatHazePrefab;
+    [SerializeField] private float heatHazeLife = 1.5f;
 
 
     [Header("Ammo Rack Failure")]
@@ -99,6 +101,14 @@ public class AmmoRackEffects : TankEffectsManager
 
         shockWaveInstance = PoolManager.Instance.Spawn(shockWavePrefab, spawnPos, Quaternion.identity);
         explosionInstance = PoolManager.Instance.Spawn(ammoExplosionPrefab, spawnPos, Quaternion.identity);
+
+        // 열왜곡 (아지랑이) — 폭발 잔열로 공기 일렁임
+        if (heatHazePrefab != null)
+        {
+            GameObject hazeInstance = PoolManager.Instance.Spawn(heatHazePrefab, spawnPos, Quaternion.identity);
+            if (hazeInstance != null)
+                PoolManager.Instance.ReturnDelayed(hazeInstance, heatHazeLife);
+        }
 
         blowoff.BlowOff(explosionPoint.position);
 

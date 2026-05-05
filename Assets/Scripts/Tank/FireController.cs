@@ -14,13 +14,17 @@ public abstract class FireController : MonoBehaviour
     [Header("Effects")]
     [SerializeField] private GameObject muzzleFlashPrefab;
     [SerializeField] private GameObject dustSmokePrefab;
+    [SerializeField] private GameObject heatHazePrefab;
     [SerializeField] private Transform muzzleFxSocket;
     [SerializeField] private Transform dustSpot;
     [SerializeField] private float muzzleFlashLife = 0.15f;
+    [SerializeField] private float heatHazeLife = 0.6f;
 
     [SerializeField] private Vector3 muzzleFlashLocalOffset = Vector3.zero;
     [SerializeField] private Vector3 dustSmokeLocalOffset = Vector3.zero;
+    [SerializeField] private Vector3 heatHazeLocalOffset = Vector3.zero;
     [SerializeField] private bool muzzleFlashFollowMuzzle = true;
+    [SerializeField] private bool heatHazeFollowMuzzle = true;
 
     protected virtual bool IsPlayerShell => false;
 
@@ -50,6 +54,25 @@ public abstract class FireController : MonoBehaviour
         GameObject fx = PoolManager.Instance.Spawn(dustSmokePrefab, pos, rot);
         if (fx == null) return;
         StartCoroutine(ReturnAfterDelay(fx, 1.5f));
+    }
+
+    protected void SpawnHeatHaze()
+    {
+        if (!heatHazePrefab) return;
+
+        Transform fxT = muzzleFxSocket ? muzzleFxSocket : muzzle;
+        if (!fxT) return;
+
+        Vector3 pos = fxT.TransformPoint(heatHazeLocalOffset);
+        Quaternion rot = fxT.rotation;
+
+        GameObject fx = PoolManager.Instance.Spawn(heatHazePrefab, pos, rot);
+        if (fx == null) return;
+
+        if (heatHazeFollowMuzzle)
+            fx.transform.SetParent(fxT, worldPositionStays: true);
+
+        StartCoroutine(ReturnAfterDelay(fx, heatHazeLife));
     }
 
     private IEnumerator ReturnAfterDelay(GameObject obj, float delay)
@@ -103,5 +126,6 @@ public abstract class FireController : MonoBehaviour
 
         SpawnMuzzleFlash();
         SpawnFireDust();
+        SpawnHeatHaze();
     }
 }

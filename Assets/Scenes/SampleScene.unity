@@ -8384,6 +8384,8 @@ MonoBehaviour:
     type: 3}
   ammoSmokePrefab: {fileID: 1193206252530958, guid: 0fe24a5ceb127f14eb19a30565685075,
     type: 3}
+  heatHazePrefab: {fileID: 0}
+  heatHazeLife: 1.5
   ammoExplosionChance: 0.75
   popMinInterval: 0.25
   popMaxInterval: 1.2
@@ -11467,6 +11469,8 @@ MonoBehaviour:
     type: 3}
   ammoSmokePrefab: {fileID: 1193206252530958, guid: 0fe24a5ceb127f14eb19a30565685075,
     type: 3}
+  heatHazePrefab: {fileID: 0}
+  heatHazeLife: 1.5
   ammoExplosionChance: 0.75
   popMinInterval: 0.25
   popMaxInterval: 1.2
@@ -12671,6 +12675,8 @@ MonoBehaviour:
     type: 3}
   ammoSmokePrefab: {fileID: 1193206252530958, guid: 0fe24a5ceb127f14eb19a30565685075,
     type: 3}
+  heatHazePrefab: {fileID: 0}
+  heatHazeLife: 1.5
   ammoExplosionChance: 0.75
   popMinInterval: 0.25
   popMaxInterval: 1.2
@@ -13576,6 +13582,8 @@ MonoBehaviour:
     type: 3}
   ammoSmokePrefab: {fileID: 1193206252530958, guid: 0fe24a5ceb127f14eb19a30565685075,
     type: 3}
+  heatHazePrefab: {fileID: 0}
+  heatHazeLife: 1.5
   ammoExplosionChance: 0.75
   popMinInterval: 0.25
   popMaxInterval: 1.2
@@ -14104,7 +14112,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   isAI: 0
   soundController: {fileID: 0}
-  reloadTime: 7.5
+  reloadTime: 1
   loaderDead: 0
   loaderTaskBlocked: 0
   reloadTimeMul: 1
@@ -14133,12 +14141,17 @@ MonoBehaviour:
     type: 3}
   dustSmokePrefab: {fileID: 1355631944197212, guid: 10c010e679890e243beafa574f44a31a,
     type: 3}
+  heatHazePrefab: {fileID: 1763852626043150806, guid: 09ffe26a48a52634abc8efa00742c355,
+    type: 3}
   muzzleFxSocket: {fileID: 800276850}
   dustSpot: {fileID: 630393308}
   muzzleFlashLife: 1.75
+  heatHazeLife: 1.5
   muzzleFlashLocalOffset: {x: 0, y: 0, z: 0}
   dustSmokeLocalOffset: {x: 0, y: 0, z: 0}
+  heatHazeLocalOffset: {x: 0, y: 0, z: 0}
   muzzleFlashFollowMuzzle: 0
+  heatHazeFollowMuzzle: 1
   cameraShotShake: {fileID: 729043131}
   cameraShakeIntensity: 1
   turretShakeIntensity: 0.45
@@ -19314,6 +19327,8 @@ MonoBehaviour:
     type: 3}
   ammoSmokePrefab: {fileID: 5062541781294046866, guid: 636d480bc187bae4f99517e6e5c677f3,
     type: 3}
+  heatHazePrefab: {fileID: 0}
+  heatHazeLife: 1.5
   ammoExplosionChance: 0.75
   popMinInterval: 0.25
   popMaxInterval: 1.2
@@ -21681,7 +21696,7 @@ PrefabInstance:
     - target: {fileID: 1590004571228132334, guid: 39c76de7b13f93049902793148a9eda2,
         type: 3}
       propertyPath: reloadTime
-      value: 1
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 5491432210558896199, guid: 39c76de7b13f93049902793148a9eda2,
         type: 3}
@@ -21940,12 +21955,16 @@ MonoBehaviour:
     type: 3}
   dustSmokePrefab: {fileID: 1355631944197212, guid: 10c010e679890e243beafa574f44a31a,
     type: 3}
+  heatHazePrefab: {fileID: 0}
   muzzleFxSocket: {fileID: 1576067323165877491}
   dustSpot: {fileID: 954712310289375348}
   muzzleFlashLife: 1.75
+  heatHazeLife: 0.6
   muzzleFlashLocalOffset: {x: 0, y: 0, z: 0}
   dustSmokeLocalOffset: {x: 0, y: 0, z: 0}
+  heatHazeLocalOffset: {x: 0, y: 0, z: 0}
   muzzleFlashFollowMuzzle: 1
+  heatHazeFollowMuzzle: 1
 --- !u!4 &4909835910711726204
 Transform:
   m_ObjectHideFlags: 0
@@ -22490,6 +22509,8 @@ MonoBehaviour:
     type: 3}
   ammoSmokePrefab: {fileID: 5062541781294046866, guid: 636d480bc187bae4f99517e6e5c677f3,
     type: 3}
+  heatHazePrefab: {fileID: 0}
+  heatHazeLife: 1.5
   ammoExplosionChance: 0.75
   popMinInterval: 0.25
   popMaxInterval: 1.2

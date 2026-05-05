@@ -934,12 +934,17 @@ MonoBehaviour:
     type: 3}
   dustSmokePrefab: {fileID: 1355631944197212, guid: 10c010e679890e243beafa574f44a31a,
     type: 3}
+  heatHazePrefab: {fileID: 1763852626043150806, guid: 09ffe26a48a52634abc8efa00742c355,
+    type: 3}
   muzzleFxSocket: {fileID: 7131662093248560676}
   dustSpot: {fileID: 8456364345983662131}
   muzzleFlashLife: 1.75
+  heatHazeLife: 0.6
   muzzleFlashLocalOffset: {x: 0, y: 0, z: 0}
   dustSmokeLocalOffset: {x: 0, y: 0, z: 0}
+  heatHazeLocalOffset: {x: 0, y: 0, z: 0}
   muzzleFlashFollowMuzzle: 1
+  heatHazeFollowMuzzle: 1
 --- !u!54 &1898167225628763723
 Rigidbody:
   m_ObjectHideFlags: 0
