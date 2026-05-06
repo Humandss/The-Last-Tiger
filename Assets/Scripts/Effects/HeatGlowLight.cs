@@ -4,11 +4,6 @@ using UnityEngine;
 /// 피격 후 뜨거운 금속이 천천히 식는 효과를 라이트로 표현.
 /// 시간 따라 색상은 흰빛/노랑 → 주황 → 빨강 → 어두운 빨강으로,
 /// 강도는 처음 강하게 시작해 부드럽게 사그라듦.
-///
-/// 사용법:
-/// - 데칼 프리팹의 자식으로 빈 GameObject + Light + 이 스크립트
-/// - 데칼이 PoolManager로 spawn 되면 OnEnable 자동 시작
-/// - duration 끝나면 라이트 OFF, 데칼은 BudgetManager가 회수
 /// </summary>
 public class HeatGlowLight : MonoBehaviour
 {

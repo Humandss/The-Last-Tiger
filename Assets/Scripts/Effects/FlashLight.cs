@@ -3,11 +3,7 @@ using UnityEngine;
 /// <summary>
 /// 짧은 순간 번쩍이고 페이드되는 라이트 효과.
 /// 머즐 플래시, 착탄 폭발, 탄약 유폭 등에 부착하여 자동으로 빛이 사라짐.
-///
-/// 사용법:
-/// - 빈 GameObject에 Light 컴포넌트 + 이 스크립트 부착
-/// - 또는 기존 이펙트 프리팹의 자식으로 Light + FlashLight 추가
-/// - PoolManager.Spawn 시 OnEnable에서 자동 시작 → duration 후 자동 페이드아웃
+
 /// </summary>
 public class FlashLight : MonoBehaviour
 {
