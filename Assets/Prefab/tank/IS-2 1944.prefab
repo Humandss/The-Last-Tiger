@@ -2086,6 +2086,9 @@ MonoBehaviour:
     type: 3}
   ammoSmokePrefab: {fileID: 5062541781294046866, guid: 636d480bc187bae4f99517e6e5c677f3,
     type: 3}
+  heatHazePrefab: {fileID: 1763852626043150806, guid: 09a4031f7514dc94e8e5cc5ac0488622,
+    type: 3}
+  heatHazeLife: 1.5
   ammoExplosionChance: 0.75
   popMinInterval: 0.25
   popMaxInterval: 1.2
@@ -4059,6 +4062,9 @@ MonoBehaviour:
     type: 3}
   ammoSmokePrefab: {fileID: 5062541781294046866, guid: 636d480bc187bae4f99517e6e5c677f3,
     type: 3}
+  heatHazePrefab: {fileID: 1763852626043150806, guid: 09a4031f7514dc94e8e5cc5ac0488622,
+    type: 3}
+  heatHazeLife: 1.5
   ammoExplosionChance: 0.75
   popMinInterval: 0.25
   popMaxInterval: 1.2

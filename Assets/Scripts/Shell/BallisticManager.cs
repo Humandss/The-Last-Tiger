@@ -206,6 +206,14 @@ public class BallisticManager : MonoBehaviour
         float cosToNormal = Mathf.Clamp(Vector3.Dot(-segDir, hit.normal.normalized), -1f, 1f);
         float angleToNormal = Mathf.Acos(cosToNormal) * Mathf.Rad2Deg;
 
+        // 카메라 흔들림 — 플레이어 탱크 hit이면 (지면 제외) 항상 발동
+        // 모듈/장갑/월드 분기와 무관하게 통합 처리
+        if (hit.collider.transform.root.CompareTag("Player") &&
+            (groundMask.value & layerBit) == 0)
+        {
+            TryTriggerHitShake(segDir);
+        }
+
         if ((moduleMask.value & layerBit) != 0 && HandleModuleHit(hit, segDir, segLen, depth))
             return;
 
@@ -289,17 +297,22 @@ public class BallisticManager : MonoBehaviour
         return best;
     }
 
+    private void TryTriggerHitShake(Vector3 segDir)
+    {
+        if (CameraController.cameraInstance == null) return;
+
+        // 속도비 (현재 속도 / 머즐 속도) — 0~1
+        float speedRatio = Mathf.Clamp01(speed / Mathf.Max(1e-3f, shell.muzzleVelocity));
+
+        // 무게비 — 30kg 기준 정규화 (이전엔 1kg+ 다 1.0이라 변별력 없었음)
+        float massRatio = Mathf.Clamp01(shell.projectileMass / 30f);
+
+        float intensity = speedRatio * massRatio;
+        CameraController.cameraInstance.TriggerHitShake(segDir, intensity);
+    }
+
     private bool HandleArmorHit(RaycastHit hit, Vector3 segDir, float cosToNormal, float angleToNormal, ArmorManager zone)
     {
-        if (hit.collider.transform.root.CompareTag("Player")) 
-        {
-            float speedRatio = Mathf.Clamp01(speed / shell.muzzleVelocity);
-            float massRatio = Mathf.Clamp01(shell.projectileMass);
-            float intensity = speedRatio * massRatio;
-            CameraController.cameraInstance?.TriggerHitShake(segDir, intensity);
-           
-        }
-          
         float ricTh = zone.GetRicochetThresholdDeg(shell.baseRicochetAngleDeg);
         if (shell.canRicochet && angleToNormal >= ricTh)
         {
