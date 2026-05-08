@@ -6158,6 +6158,8 @@ MonoBehaviour:
   maxHitKickEuler: {x: 10, y: 6, z: 4}
   hitKickInSpeed: 25
   hitReturnSpeed: 10
+  shakeReturnSmoothTime: 0.18
+  shakeReturnSmoothThreshold: 1.5
 --- !u!1 &736254522
 GameObject:
   m_ObjectHideFlags: 0
@@ -7140,6 +7142,7 @@ GameObject:
   m_Component:
   - component: {fileID: 832575519}
   - component: {fileID: 832575518}
+  - component: {fileID: 832575520}
   m_Layer: 0
   m_Name: Global Volume
   m_TagString: Untagged
@@ -7179,6 +7182,23 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &832575520
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 832575517}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c02e6a1e7a7e0c4cb76e51b31b98d75, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  targetVolume: {fileID: 832575518}
+  maxBoost: 2
+  decayRate: 1.5
+  intensityCeiling: 0.85
+  debugLog: 1
 --- !u!1 &834501600
 GameObject:
   m_ObjectHideFlags: 0
@@ -14486,7 +14506,7 @@ MonoBehaviour:
   loaderReadyClip: {fileID: 8300000, guid: 03c939f0ad988544d93e4cc2b67b2b68, type: 3}
   clipGap: 0.5
   crewVoiceStartDelay: 0.15
-  flyByRadius: 20
+  flyByRadius: 10
   shellMask:
     serializedVersion: 2
     m_Bits: 4096

@@ -44,6 +44,12 @@ public class CameraController : MonoBehaviour
     [SerializeField] private float hitKickInSpeed = 25f;
     [SerializeField] private float hitReturnSpeed = 4f;
 
+    [Header("Shake Return Smoothing")]
+    [Tooltip("복귀 마무리 부드럽게 — SmoothDamp time. 작을수록 빠른 복귀, 클수록 부드러운 마무리")]
+    [SerializeField] private float shakeReturnSmoothTime = 0.18f;
+    [Tooltip("이 임계값 이내면 SmoothDamp로 부드럽게 마무리, 초과면 기존 MoveTowards로 빠르게")]
+    [SerializeField] private float shakeReturnSmoothThreshold = 1.5f;
+
     private Quaternion _baseLocalRot;
     private Vector3 _curEuler;
     private Vector3 _targetEuler;
@@ -51,6 +57,7 @@ public class CameraController : MonoBehaviour
     private bool _returning;
     private float _curKickInSpeed;
     private float _curReturnSpeed;
+    private Vector3 _shakeSmoothVelocity; // SmoothDamp 내부 상태
 
     private CursorLockMode _prevCursorLock;
     private bool _prevCursorVisible;
@@ -237,13 +244,33 @@ public class CameraController : MonoBehaviour
 
     private void UpdateShake(float dt)
     {
-        float speed = _returning ? _curReturnSpeed : _curKickInSpeed;
-        _curEuler = Vector3.MoveTowards(_curEuler, _targetEuler, speed * dt);
+        if (_returning)
+        {
+            // 복귀 단계: 임계값 안쪽이면 SmoothDamp로 부드럽게 마무리,
+            // 임계값 바깥이면 MoveTowards로 빠르게 줄임 → 마지막 0 근처 전환 매끄러움
+            if (_curEuler.magnitude <= shakeReturnSmoothThreshold)
+            {
+                _curEuler = Vector3.SmoothDamp(
+                    _curEuler, _targetEuler,
+                    ref _shakeSmoothVelocity,
+                    shakeReturnSmoothTime);
+            }
+            else
+            {
+                _curEuler = Vector3.MoveTowards(_curEuler, _targetEuler, _curReturnSpeed * dt);
+            }
+        }
+        else
+        {
+            // 킥인 단계: 그대로 MoveTowards (선명한 충격감)
+            _curEuler = Vector3.MoveTowards(_curEuler, _targetEuler, _curKickInSpeed * dt);
+        }
 
         if (!_returning && (_curEuler - _targetEuler).sqrMagnitude <= 0.0001f)
         {
             _returning = true;
             _targetEuler = Vector3.zero;
+            _shakeSmoothVelocity = Vector3.zero;
         }
 
         Vector3 noise = Vector3.zero;

@@ -26,6 +26,12 @@ public class BallisticManager : MonoBehaviour
     [Tooltip("데칼 스케일 = 구경(mm) × 이 값")]
     [SerializeField] private float decalCaliberFactor = 0.04f;
 
+    [Header("Flyby Vignette")]
+    [Tooltip("이 거리(m) 이내로 카메라에 접근 시 Vignette 부스트")]
+    [SerializeField] private float flybyRadius = 8f;
+    [Tooltip("초당 부스트량 (가까울수록 비례해서 강해짐). decay보다 커야 누적됨")]
+    [SerializeField] private float flybyBoostPerSecond = 6f;
+
     [Header("Hit Layers")]
     [SerializeField] private LayerMask worldMask;
     [SerializeField] private LayerMask moduleMask;
@@ -183,10 +189,26 @@ public class BallisticManager : MonoBehaviour
         pos += velocity * dt;
 
         NotifyNearbyAI(prevPos, pos);
+        TryReportFlyby(dt);
         HandleImpactSegment(prevPos, pos, maxImpactChainPerStep);
 
         transform.position = pos;
         TickFuze(dt);
+    }
+
+    private void TryReportFlyby(float dt)
+    {
+        if (VignetteFlybyController.Instance == null) return;
+        if (CameraController.cameraInstance == null) return;
+
+        Vector3 camPos = CameraController.cameraInstance.transform.position;
+        float dist = Vector3.Distance(pos, camPos);
+        if (dist > flybyRadius) return;
+
+        // 가까울수록 강하게 (선형)
+        float closeness = 1f - (dist / flybyRadius);
+        float amount = closeness * flybyBoostPerSecond * dt;
+        VignetteFlybyController.Instance.Boost(amount);
     }
 
     private void HandleImpactSegment(Vector3 start, Vector3 end, int depth)
@@ -214,11 +236,14 @@ public class BallisticManager : MonoBehaviour
             TryTriggerHitShake(segDir);
         }
 
+        // 피격 사운드 — 모듈/장갑/지면/월드 어디든 명중 시 항상 재생
+        // 분기 전에 호출해서 조기 return으로 누락되지 않게
+        shellSoundController.PlayHit(hit.point);
+
         if ((moduleMask.value & layerBit) != 0 && HandleModuleHit(hit, segDir, segLen, depth))
             return;
 
         SpawnExplosion(hit);
-        shellSoundController.PlayHit(hit.point);
 
         if ((groundMask.value & layerBit) != 0)
         {
@@ -375,7 +400,9 @@ public class BallisticManager : MonoBehaviour
 
         lifeTime = flightTime + lifeTimeAfterRicochet;
 
-        if(isPlayerShell) shellSoundController.PlayRicochet(hit.point);
+        // 모든 도탄에 사운드 재생 — 플레이어 탱크에 맞고 튕기는 케이스도 커버
+        // (Spatial audio라 거리 따라 자연 감쇠됨)
+        shellSoundController.PlayRicochet(hit.point);
 
         Vector3 recochetAngle = Vector3.Reflect(dirN, hit.normal).normalized;
         Vector3 axis = Vector3.Cross(hit.normal, recochetAngle);
