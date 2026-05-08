@@ -3687,6 +3687,7 @@ GameObject:
   - component: {fileID: 2206948858404334872}
   - component: {fileID: 4601580023070131863}
   - component: {fileID: 3562889007647398947}
+  - component: {fileID: 958050608121397641}
   m_Layer: 10
   m_Name: 'T-34-76 '
   m_TagString: Untagged
@@ -3979,6 +3980,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   muzzle: {fileID: 22972826750240024}
+  tankRecoil: {fileID: 958050608121397641}
   APShell: {fileID: 7643823996785504197, guid: 8c90a85d7905700498966ea54f29cdad, type: 3}
   HEShell: {fileID: 0}
   muzzleFlashPrefab: {fileID: 1164749952747979384, guid: b00f407fae7fc4b4b92c15b95e101cc3,
@@ -4297,6 +4299,29 @@ MonoBehaviour:
   emissionLerpSpeed: 6
   sizeLerpSpeed: 3
   throttleThreshold: 0.15
+--- !u!114 &958050608121397641
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5491432210558896199}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d92fc1c4a6419b244b51881a9e025452, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  chassisVisual: {fileID: 5479642025828966871}
+  gunBarrel: {fileID: 2258130861096186613}
+  gunPushBack: 0.5
+  gunReturnTime: 0.35
+  chassisPushBack: 0.3
+  chassisHorizontalOnly: 1
+  chassisPosReturnTime: 0.55
+  chassisPitchUp: 1.2
+  chassisRollAmount: 0.4
+  chassisRotReturnTime: 0.5
+  kickInTime: 0.04
 --- !u!1 &5513810072534890598
 GameObject:
   m_ObjectHideFlags: 0

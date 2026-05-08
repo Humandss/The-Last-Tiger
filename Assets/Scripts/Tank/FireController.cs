@@ -6,6 +6,7 @@ public abstract class FireController : MonoBehaviour
 {
     [Header("Refs")]
     [SerializeField] private Transform muzzle;
+    [SerializeField] private TankRecoil tankRecoil;
 
     [Header("Projectiles")]
     [SerializeField] private BallisticManager APShell;
@@ -127,5 +128,8 @@ public abstract class FireController : MonoBehaviour
         SpawnMuzzleFlash();
         SpawnFireDust();
         SpawnHeatHaze();
+
+        // 차체/포신 반동
+        if (tankRecoil != null) tankRecoil.Fire(shotDir);
     }
 }
