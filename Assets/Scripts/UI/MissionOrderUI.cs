@@ -14,6 +14,12 @@ public class MissionOrderUI : MonoBehaviour
     [Header("데이터")]
     [SerializeField] private MissionBriefingData data;
 
+    [Header("조작 교범 (게임 시작 작전지령에서만 체크)")]
+    [Tooltip("확인 후 조작 교범을 표시한 뒤 게임을 시작한다. 긴급지령/작전완료에는 끈다.")]
+    [SerializeField] private bool showManualAfterConfirm = false;
+    [Tooltip("교범을 표시할 ControlsManualUI (씬에 배치된 것 연결).")]
+    [SerializeField] private ControlsManualUI manualUI;
+
     // ── 타이밍 ──────────────────────────────────────────
     [Header("타이밍 (초)")]
     [SerializeField] private float showDelay        = 1.1f;
@@ -102,8 +108,21 @@ public class MissionOrderUI : MonoBehaviour
 
     private IEnumerator HideAndResume()
     {
+        // 작전 지령 페이드아웃
         yield return FadeCg(_rootCg, 1f, 0f, 0.4f);
         if (ModuleDebugHUD.Instance != null) ModuleDebugHUD.Instance.show = true;
+
+        // 게임 시작 작전지령이면 교범을 띄우고, 교범이 닫힐 때 게임 재개
+        if (showManualAfterConfirm && manualUI != null)
+        {
+            manualUI.OpenIntro(() =>
+            {
+                OnConfirmed?.Invoke();
+                Destroy(gameObject);
+            });
+            yield break;   // timeScale 복구는 ControlsManualUI가 담당
+        }
+
         Time.timeScale = 1f;
         OnConfirmed?.Invoke();
         Destroy(gameObject);

@@ -47,7 +47,7 @@ public class CommanderController : MonoBehaviour
     {
         if (PlayerCrewInteriorOverlay.IsInputCaptured) return;
 
-        HandleViewModeInput();
+        // ìžìœ  ì‹œì  ì œê±°: V í‚¤ëŠ” ìŒì„± PTT(VoiceRealtimeClient) ì „ìš©. ì‹œì  í† ê¸€ ìž…ë ¥ì„ ë°›ì§€ ì•ŠëŠ”ë‹¤.
 
         if (requireRightMouse && !Input.GetMouseButton(1)) return;
 
@@ -55,7 +55,7 @@ public class CommanderController : MonoBehaviour
         float mx = Input.GetAxisRaw("Mouse X");
         float my = Input.GetAxisRaw("Mouse Y");
 
-        // °¨µµ ¹èÀ²Àº CameraController¿¡¼­ °¡Á®¿È
+        // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ CameraControllerï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         float sensMul = cameraController != null ? cameraController.GetSensitivityMultiplier() : 1f;
         mx *= sensMul;
         my *= sensMul;
@@ -70,24 +70,6 @@ public class CommanderController : MonoBehaviour
         pitch = Mathf.Clamp(pitch, pitchLimits.x, pitchLimits.y);
 
         ApplyRotation();
-    }
-
-    private void HandleViewModeInput()
-    {
-        if (!enableToggleKey || !Input.GetKeyDown(freeLookToggleKey)) return;
-
-        if (mode != ViewMode.FreeLook)
-        {
-            yawWorld = yawPivot.eulerAngles.y;
-            mode = ViewMode.FreeLook;
-        }
-        else
-        {
-            yawLocal = NormalizeAngle(yawPivot.localEulerAngles.y);
-            mode = ViewMode.TurretLinked;
-        }
-
-        if (debugLog) Debug.Log($"[CommanderView] Mode -> {mode}");
     }
 
     private void ApplyRotation()
