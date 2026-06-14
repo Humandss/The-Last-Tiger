@@ -2,8 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using static UnityEngine.CullingGroup;
-using static UnityEngine.InputManagerEntry;
 
 public enum DamageType { DirectHit, Fragment, DefaultFire, AmmoRack, AmmoFire }
 
