@@ -111,3 +111,8 @@ Assets/TerrainDemoScene_URP/Terrain/Textures/
 # due to copyright, sounds are excluded
 Assets/Sound/PS/
 Assets/Sound/PS.meta
+*.pdf
+/.claude
+
+# Superpowers brainstorm mockups (visual companion)
+.superpowers/

@@ -6,11 +6,6 @@
 //
 // 피격 타입(관통/도탄/무관통)에 따라 다른 비주얼을 출력하는
 // Shader Graph Custom Function용 HLSL 파일.
-//
-// 참고:
-// - Shader Graph Custom Function은 함수명 뒤에 _float 또는 _half 붙여야 함
-// - UnityTexture2D 타입은 Shader Graph에서 자동으로 sampler까지 묶어서 넘겨줌
-// - SAMPLE_TEXTURE2D 매크로 사용 (URP Core.hlsl에 정의됨)
 // =========================================================
 
 void ImpactDecal_float(
